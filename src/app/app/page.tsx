@@ -1,0 +1,125 @@
+"use client";
+
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "../../components/ui/Card";
+import { mockTemplates } from "../../data/mock/templates";
+import { Sparkles, ArrowRight, BookOpen, Dumbbell, Wallet, Flower } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const iconMap: Record<string, React.ReactNode> = {
+  "dumbbell": <Dumbbell className="w-6 h-6 text-primary" />,
+  "book-open": <BookOpen className="w-6 h-6 text-primary" />,
+  "wallet": <Wallet className="w-6 h-6 text-primary" />,
+  "flower": <Flower className="w-6 h-6 text-primary" />
+};
+
+export default function AppEntryPage() {
+  const [prompt, setPrompt] = useState("");
+  const router = useRouter();
+
+  const handleTemplateClick = (templateId: string) => {
+    // Navigate to dashboard based on template
+    router.push("/app/dashboard");
+  };
+
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (prompt.trim()) {
+      router.push("/app/dashboard");
+    }
+  };
+
+  return (
+    <div className="h-full min-h-[80vh] flex flex-col items-center justify-center max-w-4xl mx-auto pt-10 pb-20">
+      
+      <div className="text-center space-y-6 mb-16 w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-80" />
+          <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight mb-4">
+            What are we focusing on today?
+          </h1>
+          <p className="text-xl text-muted-foreground font-light">
+            I'm here to help you build habits, track progress, and stay accountable.
+          </p>
+        </motion.div>
+      </div>
+
+      <motion.div 
+        className="w-full max-w-2xl mb-20 relative z-20"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <form onSubmit={handlePromptSubmit} className="relative group">
+          <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-all duration-500 opacity-50 group-hover:opacity-80"></div>
+          <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
+            <input 
+              type="text" 
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="e.g. 'I want to build a morning routine'"
+              className="flex-1 bg-transparent border-none outline-none text-foreground px-6 py-4 text-lg placeholder:text-muted-foreground/60"
+            />
+            <button 
+              type="submit"
+              className="bg-primary text-primary-foreground p-3 rounded-xl hover:bg-primary/90 transition-colors mr-1"
+            >
+              <ArrowRight className="w-6 h-6" />
+            </button>
+          </div>
+        </form>
+        
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+          {["Improve fitness", "Study better", "Fix spending", "Build discipline"].map((chip) => (
+            <button 
+              key={chip}
+              onClick={() => setPrompt(chip)}
+              className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all backdrop-blur-sm hover:-translate-y-0.5"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div 
+        className="w-full grid grid-cols-1 md:grid-cols-2 gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <div className="col-span-full mb-4">
+          <h2 className="font-playfair text-2xl font-medium tracking-tight">Quick Start Templates</h2>
+        </div>
+        
+        {mockTemplates.map((template) => (
+          <motion.div 
+            key={template.id}
+            whileHover={{ y: -5, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            onClick={() => handleTemplateClick(template.id)}
+            className="cursor-pointer"
+          >
+            <Card className="h-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10 group">
+              <CardContent className="p-8 flex items-start gap-5">
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
+                  {iconMap[template.icon]}
+                </div>
+                <div>
+                  <h3 className="font-playfair font-semibold text-xl mb-2 text-foreground/90">{template.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{template.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}

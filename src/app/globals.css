@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+
+  --font-lora: var(--font-lora);
+  --font-playfair: var(--font-playfair);
+  
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  /* Premium Deep Black and Vibrant Neon Green Theme */
+  --background: #030303;
+  --foreground: #f8fafc;
+  
+  --card: rgba(255, 255, 255, 0.02);
+  --card-foreground: #f8fafc;
+  
+  --primary: #00e575; /* Vibrant Neon Green */
+  --primary-foreground: #030303;
+  
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #94a3b8;
+  
+  --accent: rgba(0, 229, 117, 0.15);
+  --accent-foreground: #ffffff;
+  
+  --border: rgba(255, 255, 255, 0.06);
+  
+  --radius: 1.25rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-lora), serif;
+  background-image: radial-gradient(circle at 50% -20%, rgba(0, 229, 117, 0.08) 0%, rgba(3, 3, 3, 0) 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }

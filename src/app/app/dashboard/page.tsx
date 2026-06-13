@@ -1,0 +1,338 @@
+"use client";
+
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
+import { ProgressBar } from "../../../components/ui/ProgressBar";
+import { Mascot } from "../../../components/mascot/Mascot";
+import { LottieAnimation } from "../../../components/ui/LottieAnimation";
+import { mockUser } from "../../../data/mock/user";
+import { mockHabits as initialHabits } from "../../../data/mock/habits";
+import { mockTasks as initialTasks } from "../../../data/mock/tasks";
+import { mockSpending } from "../../../data/mock/spending";
+import { Star, TrendingUp, CheckCircle, Brain, Book, Dumbbell, Wallet, Award, Sparkles, Check, Play } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+
+// Lottie Assets
+import fireStreak from "../../../../public/lottie/fire_streak.json";
+import xpAnimation from "../../../../public/lottie/xp.json";
+import successTrophy from "../../../../public/lottie/succes_trophy.json";
+
+const iconMap: Record<string, React.ReactNode> = {
+  "brain": <Brain className="w-4 h-4" />,
+  "book": <Book className="w-4 h-4" />,
+  "dumbbell": <Dumbbell className="w-4 h-4" />
+};
+
+const chartData = [
+  { name: 'Mon', score: 40 },
+  { name: 'Tue', score: 30 },
+  { name: 'Wed', score: 55 },
+  { name: 'Thu', score: 45 },
+  { name: 'Fri', score: 70 },
+  { name: 'Sat', score: 65 },
+  { name: 'Sun', score: 85 },
+];
+
+export default function DashboardPage() {
+  const [habits, setHabits] = useState(initialHabits);
+  const [tasks, setTasks] = useState(initialTasks);
+  const [xpGain, setXpGain] = useState(false);
+  const [streakCelebration, setStreakCelebration] = useState(false);
+
+  const handleHabitToggle = (id: string) => {
+    setHabits(habits.map(h => {
+      if (h.id === id) {
+        const nextState = !h.completed;
+        if (nextState) {
+          // Play XP reward animation
+          setXpGain(true);
+          setTimeout(() => setXpGain(false), 1200);
+        }
+        return { ...h, completed: nextState };
+      }
+      return h;
+    }));
+  };
+
+  const handleTaskToggle = (id: string) => {
+    setTasks(tasks.map(t => {
+      if (t.id === id) {
+        const nextState = !t.completed;
+        if (nextState) {
+          setXpGain(true);
+          setTimeout(() => setXpGain(false), 1200);
+        }
+        return { ...t, completed: nextState };
+      }
+      return t;
+    }));
+  };
+
+  return (
+    <div className="space-y-10 pb-16 relative">
+      {/* Floating XP Reward Overlay */}
+      <AnimatePresence>
+        {xpGain && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: -50 }}
+            className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-black/40 border border-primary/20 backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]"
+          >
+            <LottieAnimation animationData={xpAnimation} loop={false} className="w-16 h-16" />
+            <span className="text-primary font-bold text-sm -mt-2">+50 XP</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Achievement Milestone overlay */}
+      <AnimatePresence>
+        {streakCelebration && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setStreakCelebration(false)}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer"
+          >
+            <div className="max-w-md w-full bg-[#070709] border border-white/10 p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]">
+              <LottieAnimation animationData={successTrophy} loop={false} className="w-48 h-48 mx-auto" />
+              <h3 className="font-playfair text-3xl font-bold">Milestone Unlocked</h3>
+              <p className="text-muted-foreground font-light">
+                Congratulations! You reached a new productivity peak. Your companion evolution progress is accelerating.
+              </p>
+              <span className="text-xs text-primary font-semibold tracking-widest uppercase">Click to close</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header and Hero Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        
+        {/* Left Welcome panel */}
+        <div className="lg:col-span-2 flex flex-col justify-between space-y-6 py-2">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-white/5 border border-white/5 text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
+              <Sparkles className="w-4 h-4" />
+              Focus Mode Active
+            </div>
+            <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
+              Good morning, {mockUser.name}.
+            </h1>
+            <p className="text-lg text-muted-foreground font-light max-w-lg leading-relaxed">
+              Your focus and habits are building momentum. Continue your loops to maintain the streak.
+            </p>
+          </div>
+
+          {/* Quick Info Bar */}
+          <div className="flex flex-wrap gap-4 pt-4">
+            <button 
+              onClick={() => setStreakCelebration(true)}
+              className="flex items-center gap-3 bg-white/5 border border-white/5 hover:border-primary/20 rounded-2xl px-5 py-3 transition-all duration-300 text-left hover:-translate-y-0.5"
+            >
+              <div className="w-10 h-10 flex-shrink-0">
+                <LottieAnimation animationData={fireStreak} loop={true} className="w-full h-full scale-125" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Streak</p>
+                <p className="font-semibold text-base text-primary">{mockUser.streak} Days</p>
+              </div>
+            </button>
+            <div className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <Star className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Companion</p>
+                <p className="font-semibold text-base">Level {mockUser.level}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Specimen Display Companion Panel */}
+        <div className="relative rounded-3xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent p-8 flex flex-col items-center justify-center text-center overflow-hidden">
+          <div className="absolute top-2 right-3 px-3 py-1 bg-white/5 rounded-full text-[10px] text-muted-foreground font-mono uppercase tracking-widest border border-white/5">
+            Companion Specimen
+          </div>
+          
+          <div className="absolute inset-0 bg-primary/5 rounded-full blur-[60px] pointer-events-none"></div>
+          
+          <Mascot level={mockUser.level} className="relative z-10 w-44 h-44 mb-4" />
+          
+          <div className="space-y-1 z-10">
+            <h3 className="font-playfair text-xl font-bold tracking-wide">Evolving Parrot</h3>
+            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {mockUser.level} • Adult</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* XP Ledger */}
+        <Card className="col-span-1 md:col-span-3 bg-[#070709] border border-white/5">
+          <CardContent className="p-8 space-y-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">XP Evolution Progress</p>
+                <h3 className="font-playfair text-2xl font-bold">Level {mockUser.level}</h3>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-primary">{mockUser.xp} / {mockUser.nextLevelXp} XP</p>
+              </div>
+            </div>
+            <ProgressBar value={mockUser.xp} max={mockUser.nextLevelXp} className="h-2.5 bg-white/5" />
+          </CardContent>
+        </Card>
+
+        {/* Editorial Habits Card */}
+        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
+          <CardHeader className="border-b border-white/5 pb-4">
+            <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Ritual Tracker
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-3.5 flex-1">
+            {habits.map(habit => (
+              <div 
+                key={habit.id}
+                className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                  habit.completed 
+                    ? "bg-primary/[0.02] border-primary/20" 
+                    : "bg-white/[0.01] border-white/5 hover:border-white/10"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl border transition-colors ${
+                    habit.completed 
+                      ? "bg-primary/20 border-primary/30 text-primary" 
+                      : "bg-white/5 border-white/5 text-muted-foreground"
+                  }`}>
+                    {iconMap[habit.icon] || <CheckCircle className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground/90">{habit.title}</p>
+                    <p className="text-[11px] text-muted-foreground font-light mt-0.5">{habit.streak} day streak</p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => handleHabitToggle(habit.id)}
+                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                    habit.completed 
+                      ? "border-primary bg-primary text-primary-foreground" 
+                      : "border-muted-foreground/30 text-transparent hover:border-primary"
+                  }`}
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Minimalist Tasks Card */}
+        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
+          <CardHeader className="border-b border-white/5 pb-4">
+            <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
+              <CheckCircle className="w-5 h-5 text-primary" />
+              Daily Focus
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-3.5 flex-1">
+            {tasks.map(task => (
+              <div 
+                key={task.id} 
+                className={`flex items-center gap-3.5 p-4 rounded-2xl border transition-all duration-300 ${
+                  task.completed 
+                    ? "bg-white/[0.01] border-white/5 opacity-60" 
+                    : "bg-white/[0.01] border-white/5 hover:border-white/10"
+                }`}
+              >
+                <button
+                  onClick={() => handleTaskToggle(task.id)}
+                  className={`w-6 h-6 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all ${
+                    task.completed 
+                      ? "border-primary bg-primary text-primary-foreground" 
+                      : "border-muted-foreground/30 text-transparent hover:border-primary"
+                  }`}
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium text-sm truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground/90'}`}>{task.title}</p>
+                  <p className="text-[11px] text-muted-foreground font-light mt-0.5">{task.dueTime}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Minimalist Ledger Spending Card */}
+        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
+          <CardHeader className="border-b border-white/5 pb-4">
+            <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
+              <Wallet className="w-5 h-5 text-primary" />
+              Resource Allocation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 flex-1 flex flex-col justify-between">
+            <div className="mb-4">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1.5">Spent Today</p>
+              <p className="font-playfair text-3xl font-bold text-foreground">
+                {mockSpending.currency}{mockSpending.totalSpent.toFixed(2)}
+              </p>
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-3 font-light">
+                <span>Budget Limit</span>
+                <span>{mockSpending.currency}{mockSpending.budget.toFixed(2)}</span>
+              </div>
+              <ProgressBar value={mockSpending.totalSpent} max={mockSpending.budget} className="mt-2 h-1.5 bg-white/5" />
+            </div>
+            
+            <div className="space-y-2.5 border-t border-white/5 pt-4 mt-auto">
+              {mockSpending.recentTransactions.slice(0, 2).map(tx => (
+                <div key={tx.id} className="flex justify-between items-center text-xs font-light">
+                  <span className="text-muted-foreground">{tx.title}</span>
+                  <span className="font-medium text-foreground">-{mockSpending.currency}{tx.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* High-End Weekly Area Chart */}
+        <Card className="col-span-1 md:col-span-3 bg-[#070709] border border-white/5">
+          <CardHeader className="border-b border-white/5 pb-4">
+            <CardTitle className="text-lg font-medium">Weekly Performance Curve</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72 w-full pt-6 pb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00e575" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#00e575" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
+                <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
+                <YAxis stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#070709', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '12px' }}
+                  itemStyle={{ color: '#00e575' }}
+                />
+                <Area type="monotone" dataKey="score" stroke="#00e575" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+      </div>
+    </div>
+  );
+}
