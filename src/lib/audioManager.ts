@@ -26,6 +26,12 @@ class AudioManager {
     Object.entries(soundPaths).forEach(([type, path]) => {
       const audio = new Audio(path);
       audio.preload = 'auto';
+      audio.addEventListener('error', (e) => {
+        console.error(`Failed to load audio ${type} from ${path}:`, e);
+      });
+      audio.addEventListener('canplaythrough', () => {
+        console.log(`Audio ${type} loaded successfully from ${path}`);
+      });
       this.sounds.set(type as SoundType, audio);
     });
   }
@@ -33,10 +39,19 @@ class AudioManager {
   play(sound: SoundType) {
     if (typeof window === 'undefined') return;
     
+    // Resume audio context if suspended (browser autoplay policy)
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+    
     const audio = this.sounds.get(sound);
     if (audio) {
       audio.currentTime = 0;
-      audio.play().catch(console.error);
+      audio.play().catch(err => {
+        console.error(`Failed to play sound ${sound}:`, err);
+      });
+    } else {
+      console.error(`Sound ${sound} not found`);
     }
   }
 

@@ -14,6 +14,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { Sun, Moon } from "lucide-react";
+import { audioManager } from "../../../lib/audioManager";
 
 // Lottie Assets
 import fireStreak from "../../../../public/lottie/fire_streak.json";
@@ -58,7 +60,7 @@ function getCurrentStageIndex(level: number): number {
 }
 
 export default function DashboardPage() {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [habits, setHabits] = useState(initialHabits);
   const [tasks, setTasks] = useState(initialTasks);
   const [xpGain, setXpGain] = useState(false);
@@ -66,8 +68,6 @@ export default function DashboardPage() {
 
   // Import audio manager
   useEffect(() => {
-    const { audioManager } = require("../../../lib/audioManager");
-    
     // Add click sound to streak button
     const streakButton = document.querySelector('[data-streak-button]');
     if (streakButton) {
@@ -113,66 +113,78 @@ export default function DashboardPage() {
   };
 
   const handleHabitToggle = (id: string) => {
-    const { audioManager } = require("../../../lib/audioManager");
     const previousLevel = mockUser.level;
     
     setHabits(prevHabits => {
+      const habit = prevHabits.find(h => h.id === id);
+      if (!habit) return prevHabits;
+      
+      const nextState = !habit.completed;
       const updatedHabits = prevHabits.map(h => {
         if (h.id === id) {
-          const nextState = !h.completed;
           return { ...h, completed: nextState };
         }
         return h;
       });
       
-      // Recalculate with updated state
-      const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(updatedHabits, tasks);
-      
-      // Check if level changed
-      if (mockUser.level > previousLevel) {
-        audioManager.play('evolve');
-        setStreakCelebration(true);
-      } else if (mockUser.level < previousLevel) {
-        // Level down - no sound
+      // Only play sounds and show XP gain if checking (not unchecking)
+      if (nextState) {
+        // Recalculate with updated state
+        const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(updatedHabits, tasks);
+        
+        // Check if level changed
+        if (mockUser.level > previousLevel) {
+          audioManager.play('evolve');
+          setStreakCelebration(true);
+        } else {
+          audioManager.play('success');
+        }
+        
+        setXpGain(true);
+        setTimeout(() => setXpGain(false), 1200);
       } else {
-        audioManager.play('success');
+        // Unchecking - just recalculate without sounds or XP animation
+        recalculateLevelAndXP(updatedHabits, tasks);
       }
-      
-      setXpGain(true);
-      setTimeout(() => setXpGain(false), 1200);
       
       return updatedHabits;
     });
   };
 
   const handleTaskToggle = (id: string) => {
-    const { audioManager } = require("../../../lib/audioManager");
     const previousLevel = mockUser.level;
     
     setTasks(prevTasks => {
+      const task = prevTasks.find(t => t.id === id);
+      if (!task) return prevTasks;
+      
+      const nextState = !task.completed;
       const updatedTasks = prevTasks.map(t => {
         if (t.id === id) {
-          const nextState = !t.completed;
           return { ...t, completed: nextState };
         }
         return t;
       });
       
-      // Recalculate with updated state
-      const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(habits, updatedTasks);
-      
-      // Check if level changed
-      if (mockUser.level > previousLevel) {
-        audioManager.play('evolve');
-        setStreakCelebration(true);
-      } else if (mockUser.level < previousLevel) {
-        // Level down - no sound
+      // Only play sounds and show XP gain if checking (not unchecking)
+      if (nextState) {
+        // Recalculate with updated state
+        const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(habits, updatedTasks);
+        
+        // Check if level changed
+        if (mockUser.level > previousLevel) {
+          audioManager.play('evolve');
+          setStreakCelebration(true);
+        } else {
+          audioManager.play('success');
+        }
+        
+        setXpGain(true);
+        setTimeout(() => setXpGain(false), 1200);
       } else {
-        audioManager.play('success');
+        // Unchecking - just recalculate without sounds or XP animation
+        recalculateLevelAndXP(habits, updatedTasks);
       }
-      
-      setXpGain(true);
-      setTimeout(() => setXpGain(false), 1200);
       
       return updatedTasks;
     });
@@ -193,7 +205,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -50 }}
-            className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-black/40 border border-primary/20 backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]"
+            className={`fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 ${theme === 'dark' ? 'bg-black/40 border-primary/20' : 'bg-white/80 border-green-500/30'} backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]`}
           >
             <LottieAnimation animationData={xpAnimation} loop={false} className="w-16 h-16" />
             <span className="text-primary font-bold text-sm -mt-2">+50 XP</span>
@@ -209,9 +221,9 @@ export default function DashboardPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setStreakCelebration(false)}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer"
+            className={`fixed inset-0 ${theme === 'dark' ? 'bg-black/70' : 'bg-black/50'} backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer`}
           >
-            <div className="max-w-md w-full bg-[#070709] border border-white/10 p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]">
+            <div className={`max-w-md w-full ${theme === 'dark' ? 'bg-[#070709] border-white/10' : 'bg-white border-green-500/20'} p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]`}>
               <LottieAnimation animationData={successTrophy} loop={false} className="w-48 h-48 mx-auto" />
               <h3 className="font-playfair text-3xl font-bold">Milestone Unlocked</h3>
               <p className="text-muted-foreground font-light">
@@ -229,9 +241,20 @@ export default function DashboardPage() {
         {/* Left Welcome panel */}
         <div className="lg:col-span-2 flex flex-col justify-between space-y-6 py-2">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-white/5 border border-white/5 text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
-              <Sparkles className="w-4 h-4" />
-              Focus Mode Active
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-white/5 border border-white/5 text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
+                <Sparkles className="w-4 h-4" />
+                Focus Mode Active
+              </div>
+              <button
+                onClick={() => {
+                  audioManager.play('click');
+                  toggleTheme();
+                }}
+                className={`p-2 rounded-full ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-primary/30' : 'bg-green-500/10 border-green-500/30 hover:border-green-500'} transition-all duration-300`}
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
+              </button>
             </div>
             <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
               Good morning, {mockUser.name}.
@@ -246,7 +269,6 @@ export default function DashboardPage() {
             <button 
               data-streak-button
               onClick={() => {
-                const { audioManager } = require("../../../lib/audioManager");
                 audioManager.play('click');
                 setStreakCelebration(true);
               }}
@@ -263,7 +285,6 @@ export default function DashboardPage() {
             <div 
               data-companion
               onClick={() => {
-                const { audioManager } = require("../../../lib/audioManager");
                 audioManager.play('click');
               }}
               className={`flex items-center gap-3 ${theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-primary/20' : 'bg-green-500/5 border-green-500/20 hover:border-green-500'} rounded-2xl px-5 py-3 transition-all duration-300 cursor-pointer hover:-translate-y-0.5`}
@@ -335,7 +356,6 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => {
-                  const { audioManager } = require("../../../lib/audioManager");
                   audioManager.play('click');
                   const newHabit = {
                     id: Date.now().toString(),
@@ -390,7 +410,6 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const { audioManager } = require("../../../lib/audioManager");
                       audioManager.play('click');
                       setHabits(habits.filter(h => h.id !== habit.id));
                       setTimeout(() => recalculateLevelAndXP(habits.filter(h => h.id !== habit.id), tasks), 0);
@@ -415,7 +434,6 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => {
-                  const { audioManager } = require("../../../lib/audioManager");
                   audioManager.play('click');
                   const newTask = {
                     id: Date.now().toString(),
@@ -455,7 +473,6 @@ export default function DashboardPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const { audioManager } = require("../../../lib/audioManager");
                       audioManager.play('click');
                       setTasks(tasks.filter(t => t.id !== task.id));
                       setTimeout(() => recalculateLevelAndXP(habits, tasks.filter(t => t.id !== task.id)), 0);
@@ -507,8 +524,8 @@ export default function DashboardPage() {
         </Card>
 
         {/* High-End Weekly Area Chart */}
-        <Card className="col-span-1 md:col-span-3 bg-[#070709] border border-white/5">
-          <CardHeader className="border-b border-white/5 pb-4">
+        <Card className={`col-span-1 md:col-span-3 ${theme === 'dark' ? 'bg-[#070709] border-white/5' : 'bg-white border-green-500/20'}`}>
+          <CardHeader className={`border-b ${theme === 'dark' ? 'border-white/5' : 'border-green-500/20'} pb-4`}>
             <CardTitle className="text-lg font-medium">Weekly Performance Curve</CardTitle>
           </CardHeader>
           <CardContent className="h-72 w-full pt-6 pb-6">
@@ -520,14 +537,14 @@ export default function DashboardPage() {
                     <stop offset="95%" stopColor="#00e575" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
-                <YAxis stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,200,83,0.1)'} vertical={false} />
+                <XAxis dataKey="name" stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,200,83,0.3)'} tick={{fill: theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,200,83,0.6)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
+                <YAxis stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,200,83,0.3)'} tick={{fill: theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,200,83,0.6)', fontSize: 11}} axisLine={false} tickLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#070709', borderColor: 'rgba(255,255,255,0.06)', borderRadius: '12px' }}
-                  itemStyle={{ color: '#00e575' }}
+                  contentStyle={{ backgroundColor: theme === 'dark' ? '#070709' : '#ffffff', borderColor: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,200,83,0.2)', borderRadius: '12px' }}
+                  itemStyle={{ color: theme === 'dark' ? '#00e575' : '#00c853' }}
                 />
-                <Area type="monotone" dataKey="score" stroke="#00e575" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
+                <Area type="monotone" dataKey="score" stroke={theme === 'dark' ? '#00e575' : '#00c853'} strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
