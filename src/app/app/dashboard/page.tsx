@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { ProgressBar } from "../../../components/ui/ProgressBar";
 import { Mascot } from "../../../components/mascot/Mascot";
@@ -9,15 +9,17 @@ import { mockUser } from "../../../data/mock/user";
 import { mockHabits as initialHabits } from "../../../data/mock/habits";
 import { mockTasks as initialTasks } from "../../../data/mock/tasks";
 import { mockSpending } from "../../../data/mock/spending";
-import { Star, TrendingUp, CheckCircle, Brain, Book, Dumbbell, Wallet, Award, Sparkles, Check, Play } from "lucide-react";
+import { Star, TrendingUp, CheckCircle, Brain, Book, Dumbbell, Wallet, Award, Sparkles, Check, Play, Plus, X } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 // Lottie Assets
 import fireStreak from "../../../../public/lottie/fire_streak.json";
 import xpAnimation from "../../../../public/lottie/xp.json";
 import successTrophy from "../../../../public/lottie/succes_trophy.json";
+import blueBirdsFlying from "../../../../public/lottie/blue_birds_flying_in_white_background.json";
 
 const iconMap: Record<string, React.ReactNode> = {
   "brain": <Brain className="w-4 h-4" />,
@@ -35,43 +37,155 @@ const chartData = [
   { name: 'Sun', score: 85 },
 ];
 
+function getParrotStage(level: number): string {
+  if (level <= 3) return "Baby Parrot";
+  if (level <= 7) return "Young Parrot";
+  if (level <= 12) return "Adult Parrot";
+  if (level <= 18) return "Mature Parrot";
+  return "Elder Parrot";
+}
+
+function getParrotStages(): string[] {
+  return ["Baby Parrot", "Young Parrot", "Adult Parrot", "Mature Parrot", "Elder Parrot"];
+}
+
+function getCurrentStageIndex(level: number): number {
+  if (level <= 3) return 0;
+  if (level <= 7) return 1;
+  if (level <= 12) return 2;
+  if (level <= 18) return 3;
+  return 4;
+}
+
 export default function DashboardPage() {
+  const { theme } = useTheme();
   const [habits, setHabits] = useState(initialHabits);
   const [tasks, setTasks] = useState(initialTasks);
   const [xpGain, setXpGain] = useState(false);
   const [streakCelebration, setStreakCelebration] = useState(false);
 
+  // Import audio manager
+  useEffect(() => {
+    const { audioManager } = require("../../../lib/audioManager");
+    
+    // Add click sound to streak button
+    const streakButton = document.querySelector('[data-streak-button]');
+    if (streakButton) {
+      streakButton.addEventListener('click', () => audioManager.play('click'));
+    }
+
+    // Add click sound to companion
+    const companionElement = document.querySelector('[data-companion]');
+    if (companionElement) {
+      companionElement.addEventListener('click', () => audioManager.play('click'));
+    }
+
+    // Start idle detection
+    audioManager.startIdleDetection(() => {
+      console.log('Parrot is idle');
+    });
+
+    return () => {
+      audioManager.cleanup();
+    };
+  }, []);
+
+  const recalculateLevelAndXP = (currentHabits: typeof habits, currentTasks: typeof tasks) => {
+    const totalItems = currentHabits.length + currentTasks.length;
+    const completedItems = currentHabits.filter(h => h.completed).length + currentTasks.filter(t => t.completed).length;
+    const completionPercentage = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+    
+    // Update level based on percentage
+    if (completionPercentage >= 100) {
+      mockUser.level = 4;
+    } else if (completionPercentage >= 50) {
+      mockUser.level = 3;
+    } else if (completionPercentage >= 25) {
+      mockUser.level = 2;
+    } else {
+      mockUser.level = 1;
+    }
+    
+    mockUser.xp = Math.floor(completionPercentage);
+    mockUser.nextLevelXp = 100;
+    
+    return { completionPercentage, previousLevel: mockUser.level };
+  };
+
   const handleHabitToggle = (id: string) => {
-    setHabits(habits.map(h => {
-      if (h.id === id) {
-        const nextState = !h.completed;
-        if (nextState) {
-          // Play XP reward animation
-          setXpGain(true);
-          setTimeout(() => setXpGain(false), 1200);
+    const { audioManager } = require("../../../lib/audioManager");
+    const previousLevel = mockUser.level;
+    
+    setHabits(prevHabits => {
+      const updatedHabits = prevHabits.map(h => {
+        if (h.id === id) {
+          const nextState = !h.completed;
+          return { ...h, completed: nextState };
         }
-        return { ...h, completed: nextState };
+        return h;
+      });
+      
+      // Recalculate with updated state
+      const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(updatedHabits, tasks);
+      
+      // Check if level changed
+      if (mockUser.level > previousLevel) {
+        audioManager.play('evolve');
+        setStreakCelebration(true);
+      } else if (mockUser.level < previousLevel) {
+        // Level down - no sound
+      } else {
+        audioManager.play('success');
       }
-      return h;
-    }));
+      
+      setXpGain(true);
+      setTimeout(() => setXpGain(false), 1200);
+      
+      return updatedHabits;
+    });
   };
 
   const handleTaskToggle = (id: string) => {
-    setTasks(tasks.map(t => {
-      if (t.id === id) {
-        const nextState = !t.completed;
-        if (nextState) {
-          setXpGain(true);
-          setTimeout(() => setXpGain(false), 1200);
+    const { audioManager } = require("../../../lib/audioManager");
+    const previousLevel = mockUser.level;
+    
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(t => {
+        if (t.id === id) {
+          const nextState = !t.completed;
+          return { ...t, completed: nextState };
         }
-        return { ...t, completed: nextState };
+        return t;
+      });
+      
+      // Recalculate with updated state
+      const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(habits, updatedTasks);
+      
+      // Check if level changed
+      if (mockUser.level > previousLevel) {
+        audioManager.play('evolve');
+        setStreakCelebration(true);
+      } else if (mockUser.level < previousLevel) {
+        // Level down - no sound
+      } else {
+        audioManager.play('success');
       }
-      return t;
-    }));
+      
+      setXpGain(true);
+      setTimeout(() => setXpGain(false), 1200);
+      
+      return updatedTasks;
+    });
   };
 
   return (
-    <div className="space-y-10 pb-16 relative">
+    <div className={`space-y-10 pb-16 relative ${theme === 'dark' ? '' : 'bg-white text-foreground'}`}>
+      {/* Blue Bird Flying Animation at Top */}
+      <div className="absolute top-0 left-0 right-0 h-32 overflow-hidden pointer-events-none z-0">
+        <div className={`absolute inset-0 bg-gradient-to-b ${theme === 'dark' ? 'from-white/5' : 'from-green-500/10'} to-transparent`} />
+        <LottieAnimation animationData={blueBirdsFlying} loop={true} className="w-full h-full opacity-60" />
+      </div>
+
       {/* Floating XP Reward Overlay */}
       <AnimatePresence>
         {xpGain && (
@@ -110,7 +224,7 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* Header and Hero Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch relative z-10">
         
         {/* Left Welcome panel */}
         <div className="lg:col-span-2 flex flex-col justify-between space-y-6 py-2">
@@ -130,19 +244,31 @@ export default function DashboardPage() {
           {/* Quick Info Bar */}
           <div className="flex flex-wrap gap-4 pt-4">
             <button 
-              onClick={() => setStreakCelebration(true)}
-              className="flex items-center gap-3 bg-white/5 border border-white/5 hover:border-primary/20 rounded-2xl px-5 py-3 transition-all duration-300 text-left hover:-translate-y-0.5"
+              data-streak-button
+              onClick={() => {
+                const { audioManager } = require("../../../lib/audioManager");
+                audioManager.play('click');
+                setStreakCelebration(true);
+              }}
+              className={`flex items-center gap-3 ${theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-primary/20' : 'bg-green-500/5 border-green-500/20 hover:border-green-500'} rounded-2xl px-5 py-3 transition-all duration-300 text-left hover:-translate-y-0.5`}
             >
-              <div className="w-10 h-10 flex-shrink-0">
-                <LottieAnimation animationData={fireStreak} loop={true} className="w-full h-full scale-125" />
+              <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                <LottieAnimation animationData={fireStreak} loop={true} className="w-full h-full" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Streak</p>
                 <p className="font-semibold text-base text-primary">{mockUser.streak} Days</p>
               </div>
             </button>
-            <div className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+            <div 
+              data-companion
+              onClick={() => {
+                const { audioManager } = require("../../../lib/audioManager");
+                audioManager.play('click');
+              }}
+              className={`flex items-center gap-3 ${theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-primary/20' : 'bg-green-500/5 border-green-500/20 hover:border-green-500'} rounded-2xl px-5 py-3 transition-all duration-300 cursor-pointer hover:-translate-y-0.5`}
+            >
+              <div className={`w-12 h-12 rounded-xl ${theme === 'dark' ? 'bg-primary/10 border-primary/20' : 'bg-green-500/10 border-green-500/30'} flex items-center justify-center text-primary`}>
                 <Star className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -154,8 +280,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Specimen Display Companion Panel */}
-        <div className="relative rounded-3xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent p-8 flex flex-col items-center justify-center text-center overflow-hidden">
-          <div className="absolute top-2 right-3 px-3 py-1 bg-white/5 rounded-full text-[10px] text-muted-foreground font-mono uppercase tracking-widest border border-white/5">
+        <div className={`relative rounded-3xl border ${theme === 'dark' ? 'border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent' : 'border-green-500/20 bg-gradient-to-b from-green-500/5 to-transparent'} p-8 flex flex-col items-center justify-center text-center overflow-hidden`}>
+          <div className={`absolute top-2 right-3 px-3 py-1 ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-green-500/10 border-green-500/30'} rounded-full text-[10px] text-muted-foreground font-mono uppercase tracking-widest`}>
             Companion Specimen
           </div>
           
@@ -174,27 +300,57 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* XP Ledger */}
-        <Card className="col-span-1 md:col-span-3 bg-[#070709] border border-white/5">
+        <Card className={`col-span-1 md:col-span-3 ${theme === 'dark' ? 'bg-[#070709] border-white/5' : 'bg-white border-green-500/20'}`}>
           <CardContent className="p-8 space-y-4">
             <div className="flex justify-between items-end">
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">XP Evolution Progress</p>
-                <h3 className="font-playfair text-2xl font-bold">Level {mockUser.level}</h3>
+                <h3 className="font-playfair text-2xl font-bold">Level {mockUser.level} - {getParrotStage(mockUser.level)}</h3>
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-primary">{mockUser.xp} / {mockUser.nextLevelXp} XP</p>
               </div>
             </div>
-            <ProgressBar value={mockUser.xp} max={mockUser.nextLevelXp} className="h-2.5 bg-white/5" />
+            <ProgressBar value={mockUser.xp} max={mockUser.nextLevelXp} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              {getParrotStages().map((stage, index) => (
+                <span 
+                  key={index} 
+                  className={index <= getCurrentStageIndex(mockUser.level) ? "text-primary font-semibold" : ""}
+                >
+                  {stage}
+                </span>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
         {/* Editorial Habits Card */}
-        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
-          <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Ritual Tracker
+        <Card className={`col-span-1 ${theme === 'dark' ? 'bg-[#070709] border-white/5' : 'bg-white border-green-500/20'} flex flex-col justify-between`}>
+          <CardHeader className={`border-b ${theme === 'dark' ? 'border-white/5' : 'border-green-500/20'} pb-4`}>
+            <CardTitle className="flex items-center justify-between text-lg font-medium">
+              <div className="flex items-center gap-2.5">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Ritual Tracker
+              </div>
+              <button
+                onClick={() => {
+                  const { audioManager } = require("../../../lib/audioManager");
+                  audioManager.play('click');
+                  const newHabit = {
+                    id: Date.now().toString(),
+                    title: 'New habit',
+                    completed: false,
+                    streak: 0,
+                    icon: 'brain'
+                  };
+                  setHabits([...habits, newHabit]);
+                  setTimeout(() => recalculateLevelAndXP([...habits, newHabit], tasks), 0);
+                }}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-3.5 flex-1">
@@ -221,27 +377,59 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 
-                <button
-                  onClick={() => handleHabitToggle(habit.id)}
-                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
-                    habit.completed 
-                      ? "border-primary bg-primary text-primary-foreground" 
-                      : "border-muted-foreground/30 text-transparent hover:border-primary"
-                  }`}
-                >
-                  <Check className="w-4 h-4 stroke-[3]" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleHabitToggle(habit.id)}
+                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                      habit.completed 
+                        ? "border-primary bg-primary text-primary-foreground" 
+                        : "border-muted-foreground/30 text-transparent hover:border-primary"
+                    }`}
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const { audioManager } = require("../../../lib/audioManager");
+                      audioManager.play('click');
+                      setHabits(habits.filter(h => h.id !== habit.id));
+                      setTimeout(() => recalculateLevelAndXP(habits.filter(h => h.id !== habit.id), tasks), 0);
+                    }}
+                    className="w-7 h-7 rounded-full border-2 border-red-500/30 text-red-500/50 hover:border-red-500 hover:text-red-500 flex items-center justify-center transition-all"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
         {/* Minimalist Tasks Card */}
-        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
-          <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              Daily Focus
+        <Card className={`col-span-1 ${theme === 'dark' ? 'bg-[#070709] border-white/5' : 'bg-white border-green-500/20'} flex flex-col justify-between`}>
+          <CardHeader className={`border-b ${theme === 'dark' ? 'border-white/5' : 'border-green-500/20'} pb-4`}>
+            <CardTitle className="flex items-center justify-between text-lg font-medium">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                Daily Focus
+              </div>
+              <button
+                onClick={() => {
+                  const { audioManager } = require("../../../lib/audioManager");
+                  audioManager.play('click');
+                  const newTask = {
+                    id: Date.now().toString(),
+                    title: 'New task',
+                    completed: false,
+                    dueTime: 'Today'
+                  };
+                  setTasks([...tasks, newTask]);
+                  setTimeout(() => recalculateLevelAndXP(habits, [...tasks, newTask]), 0);
+                }}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-3.5 flex-1">
@@ -254,16 +442,29 @@ export default function DashboardPage() {
                     : "bg-white/[0.01] border-white/5 hover:border-white/10"
                 }`}
               >
-                <button
-                  onClick={() => handleTaskToggle(task.id)}
-                  className={`w-6 h-6 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all ${
-                    task.completed 
-                      ? "border-primary bg-primary text-primary-foreground" 
-                      : "border-muted-foreground/30 text-transparent hover:border-primary"
-                  }`}
-                >
-                  <Check className="w-4 h-4 stroke-[3]" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleTaskToggle(task.id)}
+                    className={`w-6 h-6 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all ${
+                      task.completed 
+                        ? "border-primary bg-primary text-primary-foreground" 
+                        : "border-muted-foreground/30 text-transparent hover:border-primary"
+                    }`}
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const { audioManager } = require("../../../lib/audioManager");
+                      audioManager.play('click');
+                      setTasks(tasks.filter(t => t.id !== task.id));
+                      setTimeout(() => recalculateLevelAndXP(habits, tasks.filter(t => t.id !== task.id)), 0);
+                    }}
+                    className="w-6 h-6 rounded-lg border-2 border-red-500/30 text-red-500/50 hover:border-red-500 hover:text-red-500 flex items-center justify-center flex-shrink-0 transition-all"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className={`font-medium text-sm truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground/90'}`}>{task.title}</p>
                   <p className="text-[11px] text-muted-foreground font-light mt-0.5">{task.dueTime}</p>
@@ -274,8 +475,8 @@ export default function DashboardPage() {
         </Card>
 
         {/* Minimalist Ledger Spending Card */}
-        <Card className="col-span-1 bg-[#070709] border border-white/5 flex flex-col justify-between">
-          <CardHeader className="border-b border-white/5 pb-4">
+        <Card className={`col-span-1 ${theme === 'dark' ? 'bg-[#070709] border-white/5' : 'bg-white border-green-500/20'} flex flex-col justify-between`}>
+          <CardHeader className={`border-b ${theme === 'dark' ? 'border-white/5' : 'border-green-500/20'} pb-4`}>
             <CardTitle className="flex items-center gap-2.5 text-lg font-medium">
               <Wallet className="w-5 h-5 text-primary" />
               Resource Allocation

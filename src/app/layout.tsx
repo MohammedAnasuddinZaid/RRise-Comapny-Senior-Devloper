@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "../contexts/ThemeContext";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -28,7 +29,9 @@ export default function RootLayout({
       className={`${lora.variable} ${playfair.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans font-lora">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

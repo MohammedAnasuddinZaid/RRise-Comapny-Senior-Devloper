@@ -2,13 +2,15 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Home, CheckSquare, Target, CreditCard, Settings, Play } from "lucide-react";
+import { Home, CheckSquare, Target, CreditCard, Settings, Play, MessageSquare, Clock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 
 const NAV_ITEMS = [
   { icon: Home, label: "Home", href: "/app/dashboard" },
+  { icon: MessageSquare, label: "Chat", href: "/app/chat" },
+  { icon: Clock, label: "History", href: "/app/history" },
   { icon: CheckSquare, label: "Tasks", href: "/app/tasks" },
   { icon: Target, label: "Habits", href: "/app/habits" },
   { icon: CreditCard, label: "Spending", href: "/app/spending" },

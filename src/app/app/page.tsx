@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "../../components/ui/Card";
+import { LottieAnimation } from "../../components/ui/LottieAnimation";
 import { mockTemplates } from "../../data/mock/templates";
 import { Sparkles, ArrowRight, BookOpen, Dumbbell, Wallet, Flower } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { audioManager } from "../../lib/audioManager";
+import greenParrot from "../../../public/lottie/green_parrot.json";
 
 const iconMap: Record<string, React.ReactNode> = {
   "dumbbell": <Dumbbell className="w-6 h-6 text-primary" />,
@@ -17,18 +20,25 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function AppEntryPage() {
   const [prompt, setPrompt] = useState("");
+  const [showParrot, setShowParrot] = useState(true);
   const router = useRouter();
 
   const handleTemplateClick = (templateId: string) => {
-    // Navigate to dashboard based on template
+    audioManager.play('click');
     router.push("/app/dashboard");
   };
 
   const handlePromptSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim()) {
+      audioManager.play('click');
       router.push("/app/dashboard");
     }
+  };
+
+  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPrompt(e.target.value);
+    setShowParrot(false);
   };
 
   return (
@@ -56,13 +66,33 @@ export default function AppEntryPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
+        {/* Green Parrot Mascot above chat */}
+        <AnimatePresence>
+          {showParrot && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-center mb-4"
+            >
+              <div className="relative">
+                <LottieAnimation animationData={greenParrot} loop={true} className="w-24 h-24" />
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary/20 border border-primary/30 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-sans text-primary font-bold uppercase tracking-wider whitespace-nowrap">
+                  Your Companion
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <form onSubmit={handlePromptSubmit} className="relative group">
           <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-all duration-500 opacity-50 group-hover:opacity-80"></div>
           <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
             <input 
               type="text" 
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={handlePromptChange}
               placeholder="e.g. 'I want to build a morning routine'"
               className="flex-1 bg-transparent border-none outline-none text-foreground px-6 py-4 text-lg placeholder:text-muted-foreground/60"
             />
