@@ -1,21 +1,30 @@
 import type { Metadata } from "next";
-import { Lora, Playfair_Display } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
-const lora = Lora({
-  variable: "--font-lora",
+const inter = Inter({
+  variable: "--font-inter-next",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-next",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "RRise | Premium Productivity",
-  description: "Track habits, tasks, and spending with a premium experience.",
+  title: "RRise | Rise. Build. Become.",
+  description:
+    "RRise is a premium personal development workspace built by a high schooler obsessed with bridging the gap between knowing what to do and actually doing it.",
+  keywords: ["productivity", "habits", "personal development", "AI companion", "accountability"],
+  openGraph: {
+    title: "RRise | Rise. Build. Become.",
+    description: "Track habits, smash goals, and level up — with RRise.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -26,12 +35,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${lora.variable} ${playfair.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans font-lora">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -1,5 +1,11 @@
+/* ─── Premium Font Imports ───────────────────────────────────────────── */
+@import url('https://fonts.cdnfonts.com/css/monument-extended');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
+/* ─── Tailwind Theme ─────────────────────────────────────────────────── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -7,68 +13,239 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
 
-  --font-lora: var(--font-lora);
-  --font-playfair: var(--font-playfair);
-  
+  --font-monument: 'Monument Extended', sans-serif;
+  --font-clash: 'Clash Display', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-space: 'Space Grotesk', sans-serif;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root {
-  /* Premium Deep Black and Vibrant Neon Green Theme */
-  --background: #030303;
-  --foreground: #f8fafc;
-  
-  --card: rgba(255, 255, 255, 0.02);
-  --card-foreground: #f8fafc;
-  
-  --primary: #00e575; /* Vibrant Neon Green */
-  --primary-foreground: #030303;
-  
+/* ─── Dark Mode (default) ────────────────────────────────────────────── */
+:root,
+.dark {
+  --background: #020408;
+  --foreground: #f0f6ff;
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: #f0f6ff;
+  --primary: #00ff87;
+  --primary-foreground: #020408;
+  --secondary: #00e5ff;
+  --secondary-foreground: #020408;
   --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: #94a3b8;
-  
-  --accent: rgba(0, 229, 117, 0.15);
+  --muted-foreground: #8899aa;
+  --accent: rgba(0, 229, 255, 0.12);
   --accent-foreground: #ffffff;
-  
-  --border: rgba(255, 255, 255, 0.06);
-  
+  --border: rgba(255, 255, 255, 0.08);
   --radius: 1.25rem;
+  --glow-green: 0 0 40px rgba(0, 255, 135, 0.35);
+  --glow-blue: 0 0 40px rgba(0, 229, 255, 0.35);
+  --glow-both: 0 0 60px rgba(0, 255, 135, 0.2), 0 0 100px rgba(0, 229, 255, 0.15);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-border: rgba(255, 255, 255, 0.08);
 }
 
+/* ─── Light Mode ─────────────────────────────────────────────────────── */
 .light {
-  /* Light Mode - Green and White Theme */
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  
-  --card: rgba(0, 229, 117, 0.05);
-  --card-foreground: #1a1a1a;
-  
-  --primary: #00c853; /* Green */
+  --background: #f8fafc;
+  --foreground: #0a1628;
+  --card: rgba(255, 255, 255, 0.9);
+  --card-foreground: #0a1628;
+  --primary: #00b85a;
   --primary-foreground: #ffffff;
-  
-  --muted: rgba(0, 229, 117, 0.08);
-  --muted-foreground: #6b7280;
-  
-  --accent: rgba(0, 200, 83, 0.1);
-  --accent-foreground: #1a1a1a;
-  
-  --border: rgba(0, 229, 117, 0.15);
+  --secondary: #0099cc;
+  --secondary-foreground: #ffffff;
+  --muted: rgba(0, 0, 0, 0.04);
+  --muted-foreground: #556677;
+  --accent: rgba(0, 184, 90, 0.08);
+  --accent-foreground: #0a1628;
+  --border: rgba(0, 0, 0, 0.1);
+  --radius: 1.25rem;
+  --glow-green: 0 0 30px rgba(0, 184, 90, 0.2);
+  --glow-blue: 0 0 30px rgba(0, 153, 204, 0.2);
+  --glow-both: 0 4px 30px rgba(0, 184, 90, 0.12), 0 0 60px rgba(0, 153, 204, 0.08);
+  --surface: rgba(255, 255, 255, 0.8);
+  --surface-hover: rgba(255, 255, 255, 0.95);
+  --surface-border: rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Base Styles ────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-lora), serif;
-  background-image: radial-gradient(circle at 50% -20%, rgba(0, 229, 117, 0.08) 0%, rgba(3, 3, 3, 0) 60%);
-  background-attachment: fixed;
+  font-family: 'Inter', sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 255, 135, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0, 229, 255, 0.05) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+.light body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 184, 90, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0, 153, 204, 0.03) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* ─── Typography Helpers ─────────────────────────────────────────────── */
+.font-monument { font-family: 'Monument Extended', sans-serif !important; }
+.font-clash    { font-family: 'Clash Display', sans-serif !important; }
+.font-inter    { font-family: 'Inter', sans-serif !important; }
+.font-space    { font-family: 'Space Grotesk', sans-serif !important; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Clash Display', sans-serif;
+}
+
+/* ─── Neon Gradient Text ─────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-green {
+  background: linear-gradient(135deg, #00ff87 0%, #00cc6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glassmorphic Utility ───────────────────────────────────────────── */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--surface-border);
+}
+
+.glass-green {
+  background: rgba(0, 255, 135, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 255, 135, 0.15);
+}
+
+.glass-blue {
+  background: rgba(0, 229, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+/* ─── Neon Glow Utilities ────────────────────────────────────────────── */
+.glow-green { box-shadow: var(--glow-green); }
+.glow-blue  { box-shadow: var(--glow-blue); }
+.glow-both  { box-shadow: var(--glow-both); }
+
+.text-glow-green { text-shadow: 0 0 20px rgba(0, 255, 135, 0.6); }
+.text-glow-blue  { text-shadow: 0 0 20px rgba(0, 229, 255, 0.6); }
+
+/* ─── 3D Flip Card ───────────────────────────────────────────────────── */
+.flip-card {
+  perspective: 1200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1.5rem;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+/* ─── Parrot Eye Glow Animation ──────────────────────────────────────── */
+@keyframes eyeGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px #00e5ff) drop-shadow(0 0 12px #00ff87); }
+  50%       { filter: drop-shadow(0 0 14px #00e5ff) drop-shadow(0 0 28px #00ff87); }
+}
+
+@keyframes parrotFloat {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes parrotBlink {
+  0%, 90%, 100% { scaleY: 1; }
+  95%            { scaleY: 0; }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(0.95); opacity: 0.7; }
+  70%  { transform: scale(1.15); opacity: 0; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes neonFlicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.4; }
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00ff87, #00e5ff);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: #00ff87; }
+
+/* ─── Selection ──────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(0, 255, 135, 0.2);
+  color: #00ff87;
 }

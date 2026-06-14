@@ -1,270 +1,303 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { LottieAnimation } from "../../components/ui/LottieAnimation";
-import { Button } from "../../components/ui/Button";
-import creditCardLock from "../../../public/lottie/credit_card_lock.json";
-import happyParrot from "../../../public/lottie/happy_parrot_with_blue_hat.json";
-import { audioManager } from "../../lib/audioManager";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Header } from "../../components/layout/Header";
+import { Check } from "lucide-react";
 import Link from "next/link";
 
-export default function PricingPage() {
-  const [showLockAnimation, setShowLockAnimation] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+const PLANS = [
+  {
+    id: "free",
+    name: "rrise free",
+    price: "$0",
+    period: "forever",
+    tagline: "Everything you need to start",
+    color: "from-white/[0.06] to-white/[0.02]",
+    border: "border-white/8",
+    glow: "rgba(0,255,135,0.05)",
+    hoverGlow: "rgba(0,255,135,0.15)",
+    badge: null,
+    ctaLabel: "Get started free",
+    ctaVariant: "glass" as const,
+    features: [
+      "goals",
+      "habits",
+      "tasks",
+      "daily loop",
+      "dashboards",
+      "streaks",
+      "mascot",
+      "limited alex usage",
+    ],
+    accentColor: "text-primary",
+    dotColor: "bg-primary",
+  },
+  {
+    id: "pro",
+    name: "rrise pro",
+    price: "$20",
+    period: "per month",
+    tagline: "For those serious about growth",
+    color: "from-primary/15 to-secondary/10",
+    border: "border-primary/30",
+    glow: "rgba(0,255,135,0.12)",
+    hoverGlow: "rgba(0,255,135,0.28)",
+    badge: "Most Popular",
+    ctaLabel: "Start pro",
+    ctaVariant: "gradient" as const,
+    features: [
+      "unlimited alex",
+      "ai insights",
+      "ai recommendations",
+      "ai generated plans",
+      "advanced analytics",
+      "deeper personalisation",
+    ],
+    accentColor: "text-primary",
+    dotColor: "bg-primary",
+  },
+  {
+    id: "elite",
+    name: "rrise elite",
+    price: "$49",
+    period: "per month",
+    tagline: "The full system, plus human touch",
+    color: "from-secondary/15 to-primary/10",
+    border: "border-secondary/30",
+    glow: "rgba(0,229,255,0.10)",
+    hoverGlow: "rgba(0,229,255,0.25)",
+    badge: "Most Complete",
+    ctaLabel: "Go elite",
+    ctaVariant: "gradient-blue" as const,
+    features: [
+      "everything in pro",
+      "human accountability",
+      "accountability check-ins",
+      "personalised feedback",
+      "future community access",
+    ],
+    accentColor: "text-secondary",
+    dotColor: "bg-secondary",
+  },
+];
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLockAnimation(false);
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handlePlanSelect = (planId: string) => {
-    audioManager.play('click');
-    setSelectedPlan(planId);
-  };
-
-  const handleSubscribe = (planId: string) => {
-    audioManager.play('click');
-    // TODO: Connect to Stripe
-    console.log(`Subscribe to plan: ${planId}`);
-  };
+function PricingCard({
+  plan,
+  index,
+}: {
+  plan: (typeof PLANS)[0];
+  index: number;
+}) {
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#030303] text-foreground relative overflow-hidden">
-      {/* Lock Animation Overlay */}
-      <AnimatePresence>
-        {showLockAnimation && (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, delay: index * 0.15 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      className="flip-card h-auto min-h-[520px]"
+    >
+      <motion.div
+        animate={{ y: hovered ? -8 : 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className={`relative p-8 rounded-3xl bg-gradient-to-br ${plan.color} border ${plan.border} backdrop-blur-xl h-full flex flex-col transition-all duration-500`}
+        style={{
+          boxShadow: hovered
+            ? `0 24px 80px ${plan.hoverGlow}`
+            : `0 8px 40px ${plan.glow}`,
+        }}
+      >
+        {/* Hover shimmer */}
+        {hovered && (
           <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-[#030303] z-50 flex items-center justify-center"
+            className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            <div className="text-center">
-              <LottieAnimation animationData={creditCardLock} loop={false} className="w-64 h-64 mx-auto" />
-              <p className="text-primary font-semibold mt-4 animate-pulse">Loading secure pricing...</p>
-            </div>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+              animate={{ x: ["-100%", "200%"] }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            />
           </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* Background Effects */}
-      <div className="absolute top-[-20%] left-[30%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-primary/3 rounded-full blur-[130px] pointer-events-none" />
+        {/* Badge */}
+        {plan.badge && (
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+            <div
+              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#020408] ${
+                plan.id === "pro"
+                  ? "bg-gradient-to-r from-primary to-secondary"
+                  : "bg-gradient-to-r from-secondary to-primary"
+              }`}
+            >
+              {plan.badge}
+            </div>
+          </div>
+        )}
 
-      {/* Header */}
-      <header className="flex items-center justify-between p-6 md:px-12 backdrop-blur-xl bg-black/30 border-b border-white/5 fixed top-0 w-full z-40">
-        <div className="flex items-center gap-3">
-          <img 
-            src="/images/RRISE NEW LOGO.png" 
-            alt="RRise Logo" 
-            className="h-10 w-auto object-contain"
-          />
+        {/* Plan name */}
+        <div className="mb-6 mt-2">
+          <p
+            className="font-monument text-xs tracking-widest text-muted-foreground uppercase mb-3"
+            style={{ fontFamily: "'Monument Extended', sans-serif" }}
+          >
+            {plan.name}
+          </p>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span
+              className={`font-space text-5xl font-bold ${plan.accentColor}`}
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {plan.price}
+            </span>
+            <span className="font-inter text-sm text-muted-foreground">/{plan.period}</span>
+          </div>
+          <p className="font-inter text-sm text-muted-foreground">{plan.tagline}</p>
         </div>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link href="/" className="hover:text-primary transition-all duration-300">Home</Link>
-          <Link href="/#features" className="hover:text-primary transition-all duration-300">Features</Link>
-          <Link href="/#testimonials" className="hover:text-primary transition-all duration-300">Testimonials</Link>
-        </nav>
-        <div>
-          <Link href="/app">
-            <Button variant="glass" className="hidden md:flex border-white/5 hover:border-primary/30">Sign In</Button>
-          </Link>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-36 pb-24 relative z-10">
+        {/* Divider */}
+        <div
+          className={`h-px w-full mb-6 ${
+            plan.id === "elite"
+              ? "bg-gradient-to-r from-transparent via-secondary/40 to-transparent"
+              : "bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+          }`}
+        />
+
+        {/* Features */}
+        <ul className="space-y-3 flex-1 mb-8">
+          {plan.features.map((feat) => (
+            <li key={feat} className="flex items-center gap-3">
+              <div
+                className={`w-5 h-5 rounded-full ${plan.dotColor} bg-opacity-20 border ${
+                  plan.id === "elite" ? "border-secondary/40" : "border-primary/40"
+                } flex items-center justify-center flex-shrink-0`}
+              >
+                <Check
+                  className={`w-3 h-3 ${plan.accentColor}`}
+                  strokeWidth={3}
+                />
+              </div>
+              <span className="font-inter text-sm text-foreground/80 capitalize">{feat}</span>
+            </li>
+          ))}
+        </ul>
+
+        {/* CTA */}
+        <Link href="/app">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className={`w-full py-3.5 rounded-xl font-clash font-semibold text-sm transition-all duration-300 ${
+              plan.ctaVariant === "glass"
+                ? "glass border border-white/10 hover:border-primary/30 text-foreground"
+                : plan.ctaVariant === "gradient"
+                ? "bg-gradient-to-r from-primary to-secondary text-[#020408]"
+                : "bg-gradient-to-r from-secondary to-primary text-[#020408]"
+            }`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            {plan.ctaLabel}
+          </motion.button>
+        </Link>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <div className="relative min-h-screen bg-background">
+      {/* Ambient */}
+      <div className="dark:block hidden absolute top-[-5%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-primary/5 blur-[200px] pointer-events-none" />
+      <div className="dark:block hidden absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full bg-secondary/4 blur-[160px] pointer-events-none" />
+
+      <Header />
+
+      <main className="relative z-10 px-6 md:px-12 pt-32 pb-24 max-w-6xl mx-auto">
+        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto space-y-8"
+          className="text-center mb-16"
         >
-          <h1 className="font-playfair text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-tight">
-            Choose Your Plan
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs font-space text-primary tracking-widest uppercase mb-6">
+            Simple pricing
+          </div>
+          <h1
+            className="font-clash text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Choose your level
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
-            Unlock the full potential of Rise with our flexible pricing plans. Start free and upgrade as you grow.
+          <p className="font-inter text-lg text-muted-foreground max-w-xl mx-auto">
+            Start free, scale as you grow. No surprise charges, no lock-in.
           </p>
         </motion.div>
 
-        {/* Pricing Cards */}
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-start mb-20">
+          {PLANS.map((plan, i) => (
+            <PricingCard key={plan.id} plan={plan} index={i} />
+          ))}
+        </div>
+
+        {/* FAQ */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="mt-16 w-full max-w-6xl px-4"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="max-w-2xl mx-auto"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Free Plan */}
-            <motion.div
-              className="relative p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.15)] transition-all duration-500 text-left space-y-6"
-              whileHover={{ y: -5 }}
-            >
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <div className="relative z-10">
-                <div>
-                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">Free Plan</h3>
-                  <p className="text-4xl font-bold text-primary">$0<span className="text-lg text-muted-foreground font-normal">/forever</span></p>
-                </div>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Template-based limited AI use
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Bring your own key system
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Mascot streak management
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Management reminders
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Daily tracking
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Finance tracking
-                  </li>
-                </ul>
-                <Button
-                  variant="glass"
-                  className="w-full border-white/10 hover:border-primary/20"
-                  onClick={() => handleSubscribe('free')}
+          <h2
+            className="font-clash text-3xl font-semibold text-center text-foreground mb-10"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Common questions
+          </h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: "Can I change plans anytime?",
+                a: "Yes — upgrade or downgrade at any time. Changes take effect immediately.",
+              },
+              {
+                q: "What is Alex?",
+                a: "Alex is your AI companion inside RRise. Think of it as a coach that knows your patterns and pushes you at exactly the right moment.",
+              },
+              {
+                q: "What does 'human accountability' mean in Elite?",
+                a: "You get real check-ins from a human accountability partner — not just an AI. Someone who reviews your progress and gives personalised feedback.",
+              },
+              {
+                q: "Is there a free trial for Pro or Elite?",
+                a: "The Free plan is available forever. Pro and Elite plans include a 14-day money-back guarantee.",
+              },
+            ].map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 rounded-2xl glass border border-white/8 hover:border-primary/15 transition-all duration-300"
+              >
+                <h3
+                  className="font-clash text-sm font-semibold text-foreground mb-2"
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
-                  Get Started Free
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Individual Premium Plan */}
-            <motion.div
-              className="relative p-8 rounded-3xl border border-primary/30 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.25)] transition-all duration-500 text-left space-y-6"
-              whileHover={{ y: -5 }}
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider z-20">
-                Most Popular
-              </div>
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 to-transparent opacity-50 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <div className="relative z-10 pt-4">
-                <div>
-                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">Individual Premium</h3>
-                  <p className="text-4xl font-bold text-primary">$20<span className="text-lg text-muted-foreground font-normal">/month</span></p>
-                </div>
-                <div className="flex justify-center mt-4">
-                  <LottieAnimation animationData={happyParrot} loop={false} className="w-20 h-20" />
-                </div>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Everything in Free plan
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    1M AI tokens per month
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Advanced analytics
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Priority support
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Custom templates
-                  </li>
-                </ul>
-                <Button
-                  className="w-full"
-                  onClick={() => handleSubscribe('premium')}
-                >
-                  Upgrade to Premium
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Team Pro Plan */}
-            <motion.div
-              className="relative p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(34,197,94,0.15)] transition-all duration-500 text-left space-y-6"
-              whileHover={{ y: -5 }}
-            >
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <div className="relative z-10">
-                <div>
-                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">Team Pro</h3>
-                  <p className="text-4xl font-bold text-primary">$49<span className="text-lg text-muted-foreground font-normal">/month</span></p>
-                </div>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Everything in Premium
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Unlimited AI credits
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Team collaboration
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Admin dashboard
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    API access
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full" />
-                    Custom integrations
-                  </li>
-                </ul>
-                <Button
-                  variant="glass"
-                  className="w-full border-white/10 hover:border-primary/20"
-                  onClick={() => handleSubscribe('team')}
-                >
-                  Contact Sales
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* FAQ Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
-          className="mt-24 w-full max-w-3xl px-4"
-        >
-          <h2 className="font-playfair text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-          <div className="space-y-4 text-left">
-            <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
-              <h3 className="font-semibold text-foreground mb-2">Can I change plans anytime?</h3>
-              <p className="text-sm text-muted-foreground">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
-            </div>
-            <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
-              <h3 className="font-semibold text-foreground mb-2">What payment methods do you accept?</h3>
-              <p className="text-sm text-muted-foreground">We accept all major credit cards, PayPal, and bank transfers for annual plans.</p>
-            </div>
-            <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
-              <h3 className="font-semibold text-foreground mb-2">Is there a free trial?</h3>
-              <p className="text-sm text-muted-foreground">The Free plan is available forever. Premium plans include a 14-day money-back guarantee.</p>
-            </div>
+                  {faq.q}
+                </h3>
+                <p className="font-inter text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </main>
