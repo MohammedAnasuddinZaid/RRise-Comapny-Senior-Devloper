@@ -9,7 +9,7 @@ import manManagingFinances from "../../../public/lottie/ManMangingFinances.json"
 
 const FEATURES = [
   {
-    icon: "🎯",
+    icon: "target",
     title: "Goals & Habits",
     desc: "Set meaningful goals and build habits that actually stick — with daily streaks and accountability loops.",
     back: "Track completion rates, streak history, and see your improvement curve over time with rich, beautiful charts.",
@@ -18,7 +18,7 @@ const FEATURES = [
     glowColor: "rgba(0,255,135,0.18)",
   },
   {
-    icon: "🤖",
+    icon: "bot",
     title: "Alex — AI Companion",
     desc: "Your always-on AI coach that helps you reflect, plan, and push through when motivation fades.",
     back: "Alex uses your personal data to give tailored insights, spot patterns, and suggest exactly when to push harder.",
@@ -27,7 +27,7 @@ const FEATURES = [
     glowColor: "rgba(0,229,255,0.18)",
   },
   {
-    icon: "📊",
+    icon: "chart",
     title: "Smart Analytics",
     desc: "Beautiful dashboards that show you exactly where your time, energy, and money are going.",
     back: "Weekly and monthly breakdowns with AI-powered pattern detection. Know yourself better than ever before.",
@@ -36,7 +36,7 @@ const FEATURES = [
     glowColor: "rgba(0,255,135,0.14)",
   },
   {
-    icon: "💸",
+    icon: "wallet",
     title: "Finance Tracking",
     desc: "Monitor spending, set budgets, and receive AI-powered insights to build financial discipline.",
     back: "Link categories, set limits, and watch Alex flag patterns that are silently draining your future.",
@@ -45,7 +45,7 @@ const FEATURES = [
     glowColor: "rgba(0,229,255,0.14)",
   },
   {
-    icon: "🔥",
+    icon: "flame",
     title: "Streaks & Daily Loop",
     desc: "The Daily Loop keeps your routine non-negotiable. Streaks make consistency addictive.",
     back: "Visual streak counters, recovery mechanics, and a mascot that evolves as you level up.",
@@ -54,7 +54,7 @@ const FEATURES = [
     glowColor: "rgba(0,255,135,0.12)",
   },
   {
-    icon: "🦜",
+    icon: "sparkles",
     title: "Mascot Evolution",
     desc: "Your parrot companion grows as you do — visible proof that your consistency is paying off.",
     back: "Four evolution tiers. The longer your streak, the more powerful and vibrant your companion becomes.",
@@ -102,7 +102,9 @@ function FeatureFlipCard({
           }}
         >
           <div>
-            <span className="text-4xl mb-4 block">{icon}</span>
+            <div className="w-12 h-12 mb-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+              <span className="text-2xl font-bold text-primary">{title.charAt(0)}</span>
+            </div>
             <h3
               className={`font-clash text-lg font-semibold text-foreground mb-2`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}

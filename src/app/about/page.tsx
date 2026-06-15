@@ -68,9 +68,9 @@ const SOCIALS = [
 ];
 
 const VALUES = [
-  { emoji: "🔥", title: "Relentless Consistency", desc: "The gap between dreaming and doing is just showing up every day." },
-  { emoji: "🧠", title: "Self-Awareness First", desc: "You can't improve what you don't understand. RRise helps you see yourself clearly." },
-  { emoji: "🦜", title: "Built with Honesty", desc: "No bloat. No hype. Just tools that genuinely make your life better." },
+  { icon: "flame", title: "Relentless Consistency", desc: "The gap between dreaming and doing is just showing up every day." },
+  { icon: "brain", title: "Self-Awareness First", desc: "You can't improve what you don't understand. RRise helps you see yourself clearly." },
+  { icon: "shield", title: "Built with Honesty", desc: "No bloat. No hype. Just tools that genuinely make your life better." },
 ];
 
 export default function AboutPage() {
@@ -197,7 +197,9 @@ export default function AboutPage() {
                 className="p-6 rounded-2xl glass border border-white/8 text-center group transition-all duration-300 hover:border-primary/20"
                 style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.2)" }}
               >
-                <span className="text-4xl block mb-4">{v.emoji}</span>
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-primary">{v.title.charAt(0)}</span>
+                </div>
                 <h3
                   className="font-clash text-lg font-semibold text-foreground mb-2"
                   style={{ fontFamily: "'Clash Display', sans-serif" }}

@@ -7,19 +7,19 @@ import { Send, CheckCircle, AlertCircle } from "lucide-react";
 
 const CONTACT_METHODS = [
   {
-    icon: "✉️",
+    icon: "mail",
     label: "Email",
     value: "rrisewebsite@gmail.com",
     color: "border-primary/20 bg-primary/5",
   },
   {
-    icon: "🦜",
+    icon: "clock",
     label: "Response time",
     value: "Usually within 24 hours",
     color: "border-secondary/20 bg-secondary/5",
   },
   {
-    icon: "📍",
+    icon: "map",
     label: "Based in",
     value: "Sydney, Australia",
     color: "border-white/10 bg-white/3",
@@ -109,7 +109,9 @@ export default function ContactPage() {
                   transition={{ delay: 0.3 + i * 0.1 }}
                   className={`flex items-center gap-4 p-4 rounded-2xl border ${m.color}`}
                 >
-                  <span className="text-2xl">{m.icon}</span>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg font-bold text-primary">{m.label.charAt(0)}</span>
+                  </div>
                   <div>
                     <p className="font-space text-xs text-muted-foreground uppercase tracking-widest">
                       {m.label}
@@ -134,7 +136,7 @@ export default function ContactPage() {
                   "Feature requests or bug reports",
                   "Partnership or collab ideas",
                   "Press or media inquiries",
-                  "Just saying hi 👋",
+                  "Just saying hello",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm font-inter text-muted-foreground">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />

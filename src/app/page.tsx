@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Header } from "../components/layout/Header";
-import { ParrotMascotChat } from "../components/mascot/ParrotMascotChat";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -139,14 +138,29 @@ export default function HomePage() {
           The premium personal development workspace that bridges the gap between knowing what to do — and actually doing it.
         </motion.p>
 
-        {/* Parrot mascot */}
+        {/* Logo button */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.9, type: "spring" }}
           className="mb-16"
         >
-          <ParrotMascotChat />
+          <Link href="/app">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative group"
+            >
+              <div className="relative w-32 h-32 md:w-40 md:h-40">
+                <img
+                  src="/images/Logo.png"
+                  alt="RRise Logo"
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+            </motion.button>
+          </Link>
         </motion.div>
 
         {/* CTA Buttons */}
