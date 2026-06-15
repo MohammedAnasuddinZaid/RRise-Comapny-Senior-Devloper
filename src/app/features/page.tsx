@@ -11,7 +11,7 @@ const FEATURES = [
   {
     icon: "target",
     title: "Goals & Habits",
-    desc: "Set meaningful goals and build habits that actually stick — with daily streaks and accountability loops.",
+    desc: "Set meaningful goals and build habits that actually stick , with daily streaks and accountability loops.",
     back: "Track completion rates, streak history, and see your improvement curve over time with rich, beautiful charts.",
     accentClass: "text-primary",
     borderHover: "hover:border-primary/30",
@@ -19,7 +19,7 @@ const FEATURES = [
   },
   {
     icon: "bot",
-    title: "Alex — AI Companion",
+    title: "Alex: AI Companion",
     desc: "Your always-on AI coach that helps you reflect, plan, and push through when motivation fades.",
     back: "Alex uses your personal data to give tailored insights, spot patterns, and suggest exactly when to push harder.",
     accentClass: "text-secondary",
@@ -56,7 +56,7 @@ const FEATURES = [
   {
     icon: "sparkles",
     title: "Mascot Evolution",
-    desc: "Your parrot companion grows as you do — visible proof that your consistency is paying off.",
+    desc: "Your parrot companion grows as you do , visible proof that your consistency is paying off.",
     back: "Four evolution tiers. The longer your streak, the more powerful and vibrant your companion becomes.",
     accentClass: "text-secondary",
     borderHover: "hover:border-secondary/30",
@@ -223,7 +223,7 @@ export default function FeaturesPage() {
                 Your Personal Operating System for Growth
               </h2>
               <p className="font-inter text-muted-foreground leading-relaxed">
-                RRise isn't just another productivity app — it's a comprehensive operating system for personal growth. AI-powered habit tracking, intelligent finance management, and an evolving mascot companion.
+                RRise isn't just another productivity app , it's a comprehensive operating system for personal growth. AI-powered habit tracking, intelligent finance management, and an evolving mascot companion.
               </p>
               <ul className="space-y-2">
                 {["Daily habit loops with streak protection", "AI-generated weekly reviews", "Goal decomposition engine", "Personalised push at exactly the right moment"].map(item => (
@@ -256,7 +256,7 @@ export default function FeaturesPage() {
                 Smart Finance. Real Results.
               </h2>
               <p className="font-inter text-muted-foreground leading-relaxed">
-                Take control of your finances with RRise's intelligent tracking system. Monitor spending, set budgets, and receive personalised insights — watch your financial health improve alongside your personal growth.
+                Take control of your finances with RRise's intelligent tracking system. Monitor spending, set budgets, and receive personalised insights, watch your financial health improve alongside your personal growth.
               </p>
               <ul className="space-y-2">
                 {["Category-based spending breakdowns", "AI alerts on overspending patterns", "Budget goal setting with progress tracking", "Monthly financial health score"].map(item => (

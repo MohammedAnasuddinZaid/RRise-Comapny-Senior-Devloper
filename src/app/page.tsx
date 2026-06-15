@@ -2,26 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Header } from "../components/layout/Header";
+import { GradientBackground } from "../components/ui/GradientBackground";
+import { GlassCard } from "../components/ui/GlassCard";
+import { AnimatedButton } from "../components/ui/AnimatedButton";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-function Particle({ x, delay, duration }: { x: number; delay: number; duration: number }) {
-  const isBlue = Math.random() > 0.5;
-  return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        left: `${x}%`,
-        width: Math.random() * 3 + 1,
-        height: Math.random() * 3 + 1,
-        background: isBlue ? "#00e5ff" : "#00ff87",
-      }}
-      initial={{ y: "105vh", opacity: 0 }}
-      animate={{ y: "-5vh", opacity: [0, 0.8, 0] }}
-      transition={{ duration, delay, repeat: Infinity, ease: "linear" }}
-    />
-  );
-}
 
 function TypingWordmark({ text }: { text: string }) {
   const [displayed, setDisplayed] = useState("");
@@ -51,148 +36,200 @@ function TypingWordmark({ text }: { text: string }) {
   );
 }
 
+const FEATURES = [
+  {
+    icon: "🎯",
+    title: "Goal Tracking",
+    description: "Set ambitious goals and break them down into actionable steps with smart progress tracking.",
+  },
+  {
+    icon: "📊",
+    title: "Analytics Dashboard",
+    description: "Visualize your growth with beautiful charts and insights that keep you motivated.",
+  },
+  {
+    icon: "🔄",
+    title: "Habit Building",
+    description: "Build lasting habits with streaks, reminders, and personalized coaching.",
+  },
+];
+
 export default function HomePage() {
-  const [particles, setParticles] = useState<{ x: number; delay: number; duration: number }[]>([]);
-
-  useEffect(() => {
-    setParticles(
-      Array.from({ length: 40 }, () => ({
-        x: Math.random() * 100,
-        delay: Math.random() * 8,
-        duration: Math.random() * 5 + 5,
-      }))
-    );
-  }, []);
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      {/* Particles — dark only */}
-      <div className="dark:block hidden absolute inset-0 pointer-events-none z-0">
-        {particles.map((p, i) => (
-          <Particle key={i} {...p} />
-        ))}
-      </div>
-
-      {/* Ambient glows — dark only */}
-      <div className="dark:block hidden absolute top-[-15%] left-[20%] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[160px] pointer-events-none" />
-      <div className="dark:block hidden absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/5 blur-[140px] pointer-events-none" />
-      <div className="dark:block hidden absolute bottom-[5%] left-[-5%] w-[400px] h-[400px] rounded-full bg-primary/4 blur-[120px] pointer-events-none" />
+      {/* Premium animated background */}
+      <GradientBackground />
 
       <Header />
 
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 pt-24 pb-16 text-center">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs font-space text-primary tracking-widest uppercase">
-            <motion.div
-              className="w-1.5 h-1.5 rounded-full bg-primary"
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-            Now in Early Access — Join the waitlist
-          </div>
-        </motion.div>
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 pt-28 pb-16 text-center">
+        {/* Hero Section */}
+        <div className="max-w-5xl mx-auto">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-10"
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-enhanced border border-primary/20 text-xs font-space text-primary tracking-widest uppercase">
+              <motion.div
+                className="w-2 h-2 rounded-full bg-primary"
+                animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              Now in Early Access , Join the waitlist
+            </div>
+          </motion.div>
 
-        {/* Hero wordmark */}
+          {/* Hero wordmark */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="mb-8"
+          >
+            <h1
+              className="font-monument text-7xl md:text-9xl lg:text-[10rem] tracking-widest leading-none gradient-text"
+              style={{ fontFamily: "'Monument Extended', sans-serif", letterSpacing: "0.08em" }}
+            >
+              <TypingWordmark text="RRise" />
+            </h1>
+          </motion.div>
+
+          {/* Tagline */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mb-6"
+          >
+            <h2
+              className="font-clash text-2xl md:text-4xl lg:text-5xl text-foreground/90 font-light tracking-wide"
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              Rise. Build. Become.
+            </h2>
+          </motion.div>
+
+          {/* Subline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="font-inter text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-12"
+          >
+            The premium personal development workspace that bridges the gap between knowing what to do , and actually doing it.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.7 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+          >
+            <AnimatedButton variant="primary" size="lg" href="/app">
+              Start for free
+            </AnimatedButton>
+            <AnimatedButton variant="secondary" size="lg" href="/features">
+              See how it works →
+            </AnimatedButton>
+          </motion.div>
+
+          {/* Hero Mockup Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, delay: 0.9, type: "spring" }}
+            className="perspective-container"
+          >
+            <GlassCard className="p-8 md:p-12 layered-card float-animation">
+              <div className="flex flex-col items-center gap-6">
+                <motion.div
+                  className="w-24 h-24 md:w-32 md:h-32 relative"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <img
+                    src="/images/Logo.png"
+                    alt="RRise Logo"
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-2xl opacity-50" />
+                </motion.div>
+                <div className="text-center">
+                  <h3 className="font-clash text-2xl md:text-3xl font-semibold text-foreground mb-3" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    Your Personal Growth Hub
+                  </h3>
+                  <p className="font-inter text-muted-foreground max-w-md">
+                    Track goals, build habits, and visualize your progress , all in one beautiful, intuitive workspace.
+                  </p>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+
+        {/* Features Section */}
+        <div className="max-w-6xl mx-auto mt-32 px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="font-clash text-4xl md:text-5xl font-semibold text-foreground mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              Everything you need to grow
+            </h2>
+            <p className="font-inter text-lg text-muted-foreground max-w-2xl mx-auto">
+              Powerful tools designed to help you achieve your personal development goals.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {FEATURES.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, delay: index * 0.15 }}
+              >
+                <GlassCard className="p-8 h-full layered-card">
+                  <div className="text-4xl mb-4">{feature.icon}</div>
+                  <h3 className="font-clash text-xl font-semibold text-foreground mb-3" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {feature.title}
+                  </h3>
+                  <p className="font-inter text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="mb-6"
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto mt-32 px-4 text-center"
         >
-          <h1
-            className="font-monument text-6xl md:text-8xl lg:text-9xl tracking-widest leading-none gradient-text"
-            style={{ fontFamily: "'Monument Extended', sans-serif", letterSpacing: "0.08em" }}
-          >
-            <TypingWordmark text="RRise" />
-          </h1>
-        </motion.div>
-
-        {/* Tagline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mb-4"
-        >
-          <h2
-            className="font-clash text-xl md:text-2xl lg:text-3xl text-foreground/80 font-light tracking-wide"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Rise. Build. Become.
-          </h2>
-        </motion.div>
-
-        {/* Subline */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-          className="font-inter text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed mb-14"
-        >
-          The premium personal development workspace that bridges the gap between knowing what to do — and actually doing it.
-        </motion.p>
-
-        {/* Logo button */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.9, type: "spring" }}
-          className="mb-16"
-        >
-          <Link href="/app">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="relative group"
-            >
-              <div className="relative w-32 h-32 md:w-40 md:h-40">
-                <img
-                  src="/images/Logo.png"
-                  alt="RRise Logo"
-                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-            </motion.button>
-          </Link>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 1.4 }}
-          className="flex flex-col sm:flex-row items-center gap-4"
-        >
-          <Link href="/app">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.96 }}
-              className="relative px-8 py-4 rounded-2xl font-clash font-semibold text-base overflow-hidden group"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-2xl opacity-0 group-hover:opacity-70 transition-opacity" />
-              <span className="relative z-10 text-[#020408] font-bold">Start for free</span>
-            </motion.button>
-          </Link>
-
-          <Link href="/features">
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-8 py-4 rounded-2xl font-clash font-medium text-base glass border border-white/10 hover:border-primary/30 text-foreground/80 hover:text-foreground transition-all"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              See how it works →
-            </motion.button>
-          </Link>
+          <GlassCard className="p-12 md:p-16 layered-card">
+            <h2 className="font-clash text-3xl md:text-4xl font-semibold text-foreground mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              Ready to start your journey?
+            </h2>
+            <p className="font-inter text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+              Join thousands of users who are already transforming their lives with RRise.
+            </p>
+            <AnimatedButton variant="primary" size="lg" href="/app">
+              Get started for free
+            </AnimatedButton>
+          </GlassCard>
         </motion.div>
       </main>
     </div>

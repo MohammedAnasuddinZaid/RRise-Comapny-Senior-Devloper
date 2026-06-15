@@ -55,7 +55,7 @@ const SOCIALS = [
   },
   {
     name: "YouTube",
-    href: "#youtube",
+    href: "https://www.youtube.com/@rrise.rev21",
     color: "from-[#ff0000]/30 to-[#ff0000]/10",
     border: "border-[#ff0000]/30",
     glow: "rgba(255,0,0,0.35)",
@@ -151,11 +151,11 @@ export default function AboutPage() {
                 <span className="text-primary font-semibold">revathy rajeswaran</span>, a high school student from australia who became obsessed with solving the gap between knowing what to do and actually doing it.
               </p>
               <p>
-                i'd read every book, watch every video, make every plan — and still wake up three weeks later having done nothing. the advice existed. the apps existed. but nothing made me{" "}
+                i'd read every book, watch every video, make every plan , and still wake up three weeks later having done nothing. the advice existed. the apps existed. but nothing made me{" "}
                 <span className="text-secondary italic">actually follow through.</span>
               </p>
               <p>
-                so i built rrise. not for a business pitch. not for a portfolio. because i genuinely needed it — and i figured if i needed it this badly, maybe you do too.
+                so i built rrise. not for a business pitch. not for a portfolio. because i genuinely needed it , and i figured if i needed it this badly, maybe you do too.
               </p>
               <p>
                 this isn't some random ai startup. it's a product built from frustration, late nights, and a stubborn belief that the right system can change everything.
@@ -227,7 +227,7 @@ export default function AboutPage() {
             Follow the journey
           </h2>
           <p className="font-inter text-sm text-muted-foreground mb-10">
-            Building in public — come along for the ride.
+            Building in public , come along for the ride.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {SOCIALS.map((s, i) => (
@@ -259,7 +259,7 @@ export default function AboutPage() {
             ))}
           </div>
           <p className="font-inter text-xs text-muted-foreground/50 mt-6">
-            Links coming soon — updating shortly.
+            Links coming soon , updating shortly.
           </p>
         </motion.div>
       </main>
