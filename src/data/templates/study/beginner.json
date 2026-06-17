@@ -1,0 +1,109 @@
+{
+  "id": "study-beginner-15-17",
+  "title": "Study Skills Foundation",
+  "category": "study",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "Build effective study habits and improve learning efficiency for academic success",
+  "goals": [
+    {
+      "title": "Establish Study Routine",
+      "description": "Study consistently at the same time every day",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Complete Assignments On Time",
+      "description": "Submit all assignments before deadlines",
+      "target_date": "Ongoing",
+      "xp_reward": 100
+    },
+    {
+      "title": "Improve Focus Duration",
+      "description": "Build up to 45-minute focused study sessions",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Study Session",
+      "description": "Study for at least 30 minutes every day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Review Notes",
+      "description": "Review class notes for 10 minutes after each class",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Organize Materials",
+      "description": "Keep study space and materials organized",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 3
+    },
+    {
+      "title": "Read for Learning",
+      "description": "Read educational material for 20 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Up Study Space",
+      "description": "Create a dedicated, distraction-free study area",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Study Schedule",
+      "description": "Plan specific times for each subject",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Gather Study Materials",
+      "description": "Organize textbooks, notes, and supplies",
+      "priority": "medium",
+      "xp_reward": 8
+    },
+    {
+      "title": "Learn Note-Taking Methods",
+      "description": "Research and practice effective note-taking techniques",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Academic Goals",
+      "description": "Define specific academic targets for the term",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Take regular breaks to avoid burnout",
+    "Get enough sleep for better memory retention",
+    "Don't compare your progress with others",
+    "Ask for help when you don't understand something"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 350,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["study", "academic", "learning", "education", "school"],
+  "keywords": ["study", "learn", "school", "academic", "education", "homework", "grades", "exam", "test", "coding", "programming"],
+  "fallback_message": "I found a great study skills template! Let me help you build effective study habits for academic success."
+}

@@ -16,6 +16,9 @@ import Link from "next/link";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Sun, Moon } from "lucide-react";
 import { audioManager } from "../../../lib/audioManager";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { getPlanDisplayName, getPlanBadgeColor } from "../../../lib/planLogic";
+import { loadUserProfile, loadHabits, loadTasks, loadMascotState, loadStreakCount, toggleHabitCompletion, toggleTaskCompletion } from "../../../lib/dataLoader";
 
 // Lottie Assets
 import fireStreak from "../../../../public/lottie/fire_streak.json";
@@ -61,10 +64,72 @@ function getCurrentStageIndex(level: number): number {
 
 export default function DashboardPage() {
   const { theme, toggleTheme } = useTheme();
+  const { user, loading } = useRequireAuth();
   const [habits, setHabits] = useState(initialHabits);
   const [tasks, setTasks] = useState(initialTasks);
   const [xpGain, setXpGain] = useState(false);
   const [streakCelebration, setStreakCelebration] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Load user data from Supabase
+  useEffect(() => {
+    async function loadUserData() {
+      if (!user) return;
+
+      setDataLoading(true);
+      try {
+        // Load profile data
+        const profile = await loadUserProfile(user.id);
+        if (profile) {
+          setUserData(profile);
+        }
+
+        // Load habits (now includes completed, streak, icon from dataLoader)
+        const userHabits = await loadHabits(user.id);
+        if (userHabits.length > 0) {
+          const transformedHabits = userHabits.map(h => ({
+            id: h.id,
+            title: h.title,
+            completed: h.completed,
+            streak: h.streak,
+            icon: h.icon,
+          }));
+          setHabits(transformedHabits);
+        }
+
+        // Load tasks (now includes completed, dueTime from dataLoader)
+        const userTasks = await loadTasks(user.id);
+        if (userTasks.length > 0) {
+          const transformedTasks = userTasks.map(t => ({
+            id: t.id,
+            title: t.title,
+            completed: t.completed,
+            dueTime: t.dueTime,
+          }));
+          setTasks(transformedTasks);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    loadUserData();
+  }, [user]);
+
+  // Show loading state while checking auth or loading data
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Import audio manager
   useEffect(() => {
@@ -241,10 +306,13 @@ export default function DashboardPage() {
         {/* Left Welcome panel */}
         <div className="lg:col-span-2 flex flex-col justify-between space-y-6 py-2">
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-white/5 border border-white/5 text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
                 <Sparkles className="w-4 h-4" />
                 Focus Mode Active
+              </div>
+              <div className={`inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-md border ${getPlanBadgeColor('free')}`}>
+                {getPlanDisplayName('free')}
               </div>
               <button
                 onClick={() => {

@@ -1,0 +1,96 @@
+{
+  "id": "general-weekly-recap-15-17",
+  "title": "Weekly Progress Review",
+  "category": "general",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A structured weekly review to reflect on progress and plan for the next week",
+  "goals": [
+    {
+      "title": "Complete Weekly Review",
+      "description": "Complete a comprehensive weekly review every Sunday",
+      "target_date": "Ongoing",
+      "xp_reward": 50
+    },
+    {
+      "title": "Track Weekly Progress",
+      "description": "Maintain consistent weekly progress tracking",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Sunday Review",
+      "description": "Complete weekly review every Sunday evening",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Plan Monday",
+      "description": "Plan your Monday tasks on Sunday",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Celebrate Wins",
+      "description": "Acknowledge and celebrate your weekly achievements",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Review Completed Tasks",
+      "description": "List all tasks completed this week",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Review Habits",
+      "description": "Check habit completion rates",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Identify Improvements",
+      "description": "Note what went well and what to improve",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Weekly Goals",
+      "description": "Define 3 main goals for next week",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Schedule Tasks",
+      "description": "Plan when to complete next week's tasks",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Be honest with yourself about progress",
+    "Focus on improvements, not failures",
+    "Keep reviews brief and actionable",
+    "Use insights to adjust your approach"
+  ],
+  "estimated_duration": "Ongoing",
+  "xp_rewards": {
+    "total": 150,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["general", "review", "reflection", "planning"],
+  "keywords": ["weekly", "review", "recap", "reflection", "progress", "plan", "weekly review"],
+  "fallback_message": "I found a great weekly review template! Let me help you track your progress and plan effectively."
+}

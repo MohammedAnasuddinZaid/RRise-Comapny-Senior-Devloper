@@ -1,0 +1,109 @@
+{
+  "id": "productivity-beginner-15-17",
+  "title": "Productivity Foundation",
+  "category": "productivity",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "Build productive habits and manage time effectively for better results",
+  "goals": [
+    {
+      "title": "Establish Morning Routine",
+      "description": "Create and follow a consistent morning routine",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Complete Daily Tasks",
+      "description": "Complete at least 3 important tasks each day",
+      "target_date": "Ongoing",
+      "xp_reward": 100
+    },
+    {
+      "title": "Reduce Procrastination",
+      "description": "Start tasks within 10 minutes of planning them",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Plan Tomorrow Today",
+      "description": "Write down 3 tasks for tomorrow before bed",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Time Blocking",
+      "description": "Schedule specific time blocks for focused work",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "No Phone First Hour",
+      "description": "Avoid phone for the first hour after waking up",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Weekly Review",
+      "description": "Review progress and plan for the next week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 15
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Up Task System",
+      "description": "Choose a task management method (app, notebook, etc.)",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Identify Time Wasters",
+      "description": "Track and identify activities that waste your time",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Morning Routine",
+      "description": "Design a morning routine that energizes you",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Set Up Distraction-Free Zone",
+      "description": "Create a workspace that minimizes distractions",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Learn Time Management",
+      "description": "Research basic time management techniques",
+      "priority": "medium",
+      "xp_reward": 8
+    }
+  ],
+  "warnings": [
+    "Don't over-schedule your day",
+    "Take breaks between focused work sessions",
+    "Start with small changes and build gradually",
+    "Be patient with yourself as you build new habits"
+  ],
+  "estimated_duration": "6 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["productivity", "time-management", "focus", "efficiency"],
+  "keywords": ["productive", "productivity", "time management", "focus", "efficient", "get things done", "organized", "discipline"],
+  "fallback_message": "I found a great productivity template! Let me help you build habits to manage your time effectively."
+}

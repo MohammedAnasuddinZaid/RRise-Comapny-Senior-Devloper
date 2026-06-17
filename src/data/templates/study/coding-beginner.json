@@ -1,0 +1,109 @@
+{
+  "id": "study-coding-beginner-15-17",
+  "title": "Coding Skills Foundation",
+  "category": "study",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "Build programming skills through consistent practice and project-based learning",
+  "goals": [
+    {
+      "title": "Learn Fundamentals",
+      "description": "Complete a beginner programming course or tutorial",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build First Project",
+      "description": "Complete your first independent coding project",
+      "target_date": "10 weeks from start",
+      "xp_reward": 125
+    },
+    {
+      "title": "Daily Coding Practice",
+      "description": "Code every day for 30 days",
+      "target_date": "30 days from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Coding",
+      "description": "Write code for at least 30 minutes every day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Learn New Concept",
+      "description": "Learn one new programming concept daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Code Review",
+      "description": "Review or debug code for 15 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Practice Problems",
+      "description": "Solve at least one coding problem",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Choose Programming Language",
+      "description": "Select your first programming language to learn",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Set Up Development Environment",
+      "description": "Install code editor and necessary tools",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Find Learning Resources",
+      "description": "Gather tutorials, courses, and documentation",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Join Coding Community",
+      "description": "Find forums or communities for support",
+      "priority": "medium",
+      "xp_reward": 8
+    },
+    {
+      "title": "Plan First Project",
+      "description": "Design a simple project to build",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Don't try to learn everything at once",
+    "Focus on understanding concepts over memorizing syntax",
+    "Debugging is normal - don't get discouraged",
+    "Build projects to apply what you learn"
+  ],
+  "estimated_duration": "10 weeks",
+  "xp_rewards": {
+    "total": 400,
+    "completion_bonus": 150
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["study", "coding", "programming", "development", "tech"],
+  "keywords": ["coding", "programming", "code", "developer", "software", "learn to code", "python", "javascript", "web development"],
+  "fallback_message": "I found a great coding template! Let me help you build programming skills through consistent practice."
+}

@@ -1,0 +1,109 @@
+{
+  "id": "fitness-intermediate-15-17",
+  "title": "Fitness Progression",
+  "category": "fitness",
+  "age_range": "15-17",
+  "difficulty": "intermediate",
+  "description": "Build on your fitness foundation with more challenging workouts and goals",
+  "goals": [
+    {
+      "title": "Increase Workout Intensity",
+      "description": "Exercise 5 times per week for 45 minutes",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build Muscle Strength",
+      "description": "Progressively increase weights or resistance",
+      "target_date": "10 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Improve Endurance",
+      "description": "Complete a 30-minute continuous cardio session",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Strength Training",
+      "description": "Complete strength training 3 times per week",
+      "frequency": "weekly",
+      "target_count": 3,
+      "xp_reward": 15
+    },
+    {
+      "title": "Cardio Sessions",
+      "description": "Complete cardio 2 times per week",
+      "frequency": "weekly",
+      "target_count": 2,
+      "xp_reward": 12
+    },
+    {
+      "title": "Protein Intake",
+      "description": "Eat protein with every meal",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 5
+    },
+    {
+      "title": "Active Recovery",
+      "description": "Do light activity or stretching on rest days",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Design Workout Split",
+      "description": "Create a structured workout plan",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Track Progress",
+      "description": "Set up a system to track weights and reps",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Learn Progressive Overload",
+      "description": "Understand how to progressively increase difficulty",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Plan Nutrition",
+      "description": "Create a basic nutrition plan to support goals",
+      "priority": "medium",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Strength Goals",
+      "description": "Define specific strength targets",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Focus on proper form over heavy weights",
+    "Allow adequate rest between muscle groups",
+    "Listen to your body and avoid overtraining",
+    "Progress gradually to prevent injury"
+  ],
+  "estimated_duration": "10 weeks",
+  "xp_rewards": {
+    "total": 400,
+    "completion_bonus": 150
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["fitness", "strength", "cardio", "intermediate"],
+  "keywords": ["fitness", "workout", "gym", "strength", "muscle", "cardio", "advanced", "progress"],
+  "fallback_message": "I found a great intermediate fitness template! Let me help you take your fitness to the next level."
+}

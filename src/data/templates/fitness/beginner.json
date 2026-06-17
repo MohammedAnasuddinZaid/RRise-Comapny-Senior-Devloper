@@ -1,0 +1,109 @@
+{
+  "id": "fitness-beginner-15-17",
+  "title": "Fitness Foundation for Beginners",
+  "category": "fitness",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A balanced fitness plan for beginners focusing on building healthy habits and consistency",
+  "goals": [
+    {
+      "title": "Build Consistent Exercise Habit",
+      "description": "Exercise at least 4 times per week for 30 minutes",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Improve Cardiovascular Health",
+      "description": "Complete 20 minutes of cardio 3 times per week",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Build Basic Strength",
+      "description": "Complete bodyweight exercises 2 times per week",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Stretch",
+      "description": "10 minutes of light stretching every morning",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Drink Water",
+      "description": "Drink 8 glasses of water throughout the day",
+      "frequency": "daily",
+      "target_count": 8,
+      "xp_reward": 3
+    },
+    {
+      "title": "No Screens Before Bed",
+      "description": "Avoid screens 30 minutes before sleep",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Exercise Session",
+      "description": "Complete a 30-minute workout session",
+      "frequency": "daily",
+      "target_count": 4,
+      "xp_reward": 15
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Create Workout Schedule",
+      "description": "Plan your weekly workout days and times",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Research Basic Exercises",
+      "description": "Learn proper form for push-ups, squats, and planks",
+      "priority": "medium",
+      "xp_reward": 8
+    },
+    {
+      "title": "Buy Workout Clothes",
+      "description": "Get comfortable clothes and shoes for exercising",
+      "priority": "medium",
+      "xp_reward": 5
+    },
+    {
+      "title": "Find Workout Space",
+      "description": "Identify where you'll exercise (home, gym, park)",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Up Music Playlist",
+      "description": "Create motivating music for workouts",
+      "priority": "low",
+      "xp_reward": 5
+    }
+  ],
+  "warnings": [
+    "Start slowly and gradually increase intensity",
+    "Listen to your body and rest when needed",
+    "Consult a doctor before starting any new exercise program",
+    "Stay hydrated during workouts"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["fitness", "health", "beginner", "exercise", "wellness"],
+  "keywords": ["fitness", "exercise", "workout", "gym", "health", "fit", "get in shape", "lose weight", "build muscle"],
+  "fallback_message": "I found a great fitness template for beginners! Let me set you up with a balanced plan to build healthy exercise habits."
+}

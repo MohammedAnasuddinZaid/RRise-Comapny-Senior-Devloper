@@ -1,0 +1,109 @@
+{
+  "id": "discipline-beginner-15-17",
+  "title": "Discipline Foundation",
+  "category": "discipline",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "Build self-discipline through consistent habits and mental training",
+  "goals": [
+    {
+      "title": "Build Consistency",
+      "description": "Complete your daily habits for 21 consecutive days",
+      "target_date": "21 days from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Overcome Procrastination",
+      "description": "Start tasks within 5 minutes of planning them",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Develop Willpower",
+      "description": "Resist distractions for increasing periods",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Wake Up On Time",
+      "description": "Wake up at your set time without snooze",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Do Hard Thing First",
+      "description": "Complete your most difficult task first",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "No Excuses",
+      "description": "Complete planned tasks regardless of mood",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Reflect on Discipline",
+      "description": "Review your discipline and identify improvements",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Identify Weaknesses",
+      "description": "List areas where you lack discipline",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Clear Rules",
+      "description": "Define non-negotiable rules for yourself",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Accountability System",
+      "description": "Set up ways to hold yourself accountable",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Remove Temptations",
+      "description": "Identify and remove distractions from your environment",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Practice Discomfort",
+      "description": "Do one uncomfortable thing daily to build resilience",
+      "priority": "medium",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Discipline is a muscle that builds over time",
+    "Don't be too hard on yourself when you slip",
+    "Focus on progress, not perfection",
+    "Start small and gradually increase difficulty"
+  ],
+  "estimated_duration": "6 weeks",
+  "xp_rewards": {
+    "total": 350,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["discipline", "self-control", "willpower", "consistency"],
+  "keywords": ["discipline", "self-discipline", "willpower", "self-control", "consistent", "stick to it", "no excuses"],
+  "fallback_message": "I found a great discipline template! Let me help you build self-discipline through consistent habits."
+}

@@ -1,16 +1,50 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
-import { mockTasks as initialTasks } from "../../../data/mock/tasks";
 import { CheckCircle2, Circle, Plus, Trash2, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { loadTasks, toggleTaskCompletion } from "../../../lib/dataLoader";
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { user, loading } = useRequireAuth();
+  const [tasks, setTasks] = useState<any[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskTime, setNewTaskTime] = useState("12:00 PM");
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Load tasks from Supabase
+  useEffect(() => {
+    async function loadUserData() {
+      if (!user) return;
+
+      setDataLoading(true);
+      try {
+        const userTasks = await loadTasks(user.id);
+        setTasks(userTasks);
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    loadUserData();
+  }, [user]);
+
+  // Show loading state
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +61,31 @@ export default function TasksPage() {
     setNewTaskTitle("");
   };
 
-  const toggleTask = (id: string) => {
+  const toggleTask = async (id: string) => {
+    if (!user) return;
+
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const nextCompleted = !task.completed;
+    
+    // Update local state optimistically
     setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
+      tasks.map((t) =>
+        t.id === id ? { ...t, completed: nextCompleted } : t
       )
     );
+
+    // Update Supabase
+    const result = await toggleTaskCompletion(id, user.id, nextCompleted);
+    if (!result.success) {
+      // Revert on error
+      setTasks(
+        tasks.map((t) =>
+          t.id === id ? { ...t, completed: task.completed } : t
+        )
+      );
+    }
   };
 
   const deleteTask = (id: string) => {

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
-import { mockHabits as initialHabits } from "../../../data/mock/habits";
 import { Plus, Flame, Check, Trash2, Brain, Book, Dumbbell, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { loadHabits, toggleHabitCompletion } from "../../../lib/dataLoader";
 
 const iconMap: Record<string, React.ReactNode> = {
   "brain": <Brain className="w-5 h-5 text-primary" />,
@@ -14,9 +15,42 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export default function HabitsPage() {
-  const [habits, setHabits] = useState(initialHabits);
+  const { user, loading } = useRequireAuth();
+  const [habits, setHabits] = useState<any[]>([]);
   const [newHabitTitle, setNewHabitTitle] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("brain");
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Load habits from Supabase
+  useEffect(() => {
+    async function loadUserData() {
+      if (!user) return;
+
+      setDataLoading(true);
+      try {
+        const userHabits = await loadHabits(user.id);
+        setHabits(userHabits);
+      } catch (error) {
+        console.error('Error loading habits:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    loadUserData();
+  }, [user]);
+
+  // Show loading state
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCreateHabit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,20 +68,45 @@ export default function HabitsPage() {
     setNewHabitTitle("");
   };
 
-  const toggleHabit = (id: string) => {
+  const toggleHabit = async (id: string) => {
+    if (!user) return;
+
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+
+    const nextCompleted = !habit.completed;
+    
+    // Update local state optimistically
     setHabits(
-      habits.map((habit) => {
-        if (habit.id === id) {
-          const nextCompleted = !habit.completed;
+      habits.map((h) => {
+        if (h.id === id) {
           return {
-            ...habit,
+            ...h,
             completed: nextCompleted,
-            streak: nextCompleted ? habit.streak + 1 : Math.max(0, habit.streak - 1),
+            streak: nextCompleted ? h.streak + 1 : Math.max(0, h.streak - 1),
           };
         }
-        return habit;
+        return h;
       })
     );
+
+    // Update Supabase
+    const result = await toggleHabitCompletion(id, user.id, nextCompleted);
+    if (!result.success) {
+      // Revert on error
+      setHabits(
+        habits.map((h) => {
+          if (h.id === id) {
+            return {
+              ...h,
+              completed: habit.completed,
+              streak: habit.streak,
+            };
+          }
+          return h;
+        })
+      );
+    }
   };
 
   const deleteHabit = (id: string) => {

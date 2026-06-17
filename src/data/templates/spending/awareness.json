@@ -1,0 +1,109 @@
+{
+  "id": "spending-awareness-15-17",
+  "title": "Spending Awareness",
+  "category": "spending",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "Build awareness of spending habits and develop basic financial management skills",
+  "goals": [
+    {
+      "title": "Track All Spending",
+      "description": "Record every expense for 30 days",
+      "target_date": "30 days from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Identify Spending Patterns",
+      "description": "Analyze where your money goes each month",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Set Savings Goal",
+      "description": "Save a specific amount each month",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    }
+  ],
+  "habits": [
+    {
+      "title": "Log Daily Spending",
+      "description": "Record every expense at the end of each day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Review Weekly Spending",
+      "description": "Review your spending summary each week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Think Before Buying",
+      "description": "Wait 24 hours before non-essential purchases",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Save First",
+      "description": "Put money into savings before spending",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Up Tracking Method",
+      "description": "Choose how to track spending (app, spreadsheet, notebook)",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "List Income Sources",
+      "description": "Document all sources of income",
+      "priority": "medium",
+      "xp_reward": 8
+    },
+    {
+      "title": "Categorize Expenses",
+      "description": "Create spending categories (food, entertainment, etc.)",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Monthly Budget",
+      "description": "Create a simple budget for each category",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Open Savings Account",
+      "description": "Set up a dedicated savings account if you don't have one",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Be honest with yourself about spending",
+    "Small purchases add up quickly",
+    "Don't be too restrictive - allow some fun money",
+    "Focus on progress, not perfection"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["spending", "finance", "money", "budget", "savings"],
+  "keywords": ["spending", "money", "finance", "budget", "save", "financial", "expenses", "track spending"],
+  "fallback_message": "I found a great spending awareness template! Let me help you build better financial habits."
+}

@@ -8,6 +8,7 @@ import { AnimatedButton } from "../components/ui/AnimatedButton";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Target, BarChart3, RefreshCw } from "lucide-react";
+import { AuthModal } from "../components/auth/AuthModal";
 
 function TypingWordmark({ text }: { text: string }) {
   const [displayed, setDisplayed] = useState("");
@@ -56,6 +57,8 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Premium animated background */}
@@ -130,7 +133,11 @@ export default function HomePage() {
             transition={{ duration: 1.2, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-24"
           >
-            <AnimatedButton variant="primary" size="lg" href="/app">
+            <AnimatedButton 
+              variant="primary" 
+              size="lg" 
+              onClick={() => setIsAuthModalOpen(true)}
+            >
               Start for free
             </AnimatedButton>
             <AnimatedButton variant="secondary" size="lg" href="/features">
@@ -212,6 +219,9 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

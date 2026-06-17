@@ -1,0 +1,128 @@
+{
+  "id": "combined-fitness-coding-15-17",
+  "title": "Fitness + Coding Balance",
+  "category": "combined",
+  "age_range": "15-17",
+  "difficulty": "intermediate",
+  "description": "Balance physical fitness with coding skills for holistic personal development",
+  "goals": [
+    {
+      "title": "Consistent Exercise",
+      "description": "Exercise 4 times per week while maintaining coding practice",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Daily Coding",
+      "description": "Code for at least 30 minutes every day",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build Coding Project",
+      "description": "Complete a meaningful coding project",
+      "target_date": "10 weeks from start",
+      "xp_reward": 125
+    },
+    {
+      "title": "Improve Fitness",
+      "description": "Achieve personal fitness milestone",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Exercise",
+      "description": "30 minutes of exercise in the morning",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Daily Coding",
+      "description": "Code for at least 30 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Healthy Meals",
+      "description": "Eat 3 healthy meals per day",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 5
+    },
+    {
+      "title": "Evening Review",
+      "description": "Review progress in both fitness and coding",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Stay Hydrated",
+      "description": "Drink 8 glasses of water",
+      "frequency": "daily",
+      "target_count": 8,
+      "xp_reward": 3
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Create Weekly Schedule",
+      "description": "Plan time for both fitness and coding",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Set Fitness Goals",
+      "description": "Define specific fitness targets",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Choose Coding Project",
+      "description": "Select a coding project to build",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Up Workout Space",
+      "description": "Prepare space for home workouts",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Up Coding Environment",
+      "description": "Configure development tools",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Plan Nutrition",
+      "description": "Create meal plan to support both goals",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Don't overcommit - balance is key",
+    "Listen to your body and rest when needed",
+    "Progress in both areas, even if one advances faster",
+    "Adjust schedule as needed based on energy levels"
+  ],
+  "estimated_duration": "10 weeks",
+  "xp_rewards": {
+    "total": 500,
+    "completion_bonus": 200
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.2,
+    "streak_bonus": 1.2
+  },
+  "plan_type": "free",
+  "tags": ["combined", "fitness", "coding", "balance", "holistic"],
+  "keywords": ["fitness", "coding", "programming", "exercise", "workout", "code", "both", "balance", "fit and code"],
+  "fallback_message": "I found a great combined fitness and coding template! Let me help you balance physical fitness with coding skills."
+}

@@ -1,0 +1,116 @@
+{
+  "id": "general-daily-loop-15-17",
+  "title": "Daily Growth Loop",
+  "category": "general",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A balanced daily routine for overall personal growth and well-being",
+  "goals": [
+    {
+      "title": "Consistent Daily Routine",
+      "description": "Follow your daily routine for 30 consecutive days",
+      "target_date": "30 days from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Complete All Daily Habits",
+      "description": "Complete all daily habits for a full week",
+      "target_date": "2 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Personal Growth Progress",
+      "description": "Show measurable improvement in at least one area",
+      "target_date": "6 weeks from start",
+      "xp_reward": 100
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Routine",
+      "description": "Complete your morning routine within 30 minutes of waking",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Learning Time",
+      "description": "Spend 30 minutes learning something new",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Physical Activity",
+      "description": "Move your body for at least 20 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Evening Reflection",
+      "description": "Spend 5 minutes reflecting on your day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Stay Hydrated",
+      "description": "Drink at least 8 glasses of water",
+      "frequency": "daily",
+      "target_count": 8,
+      "xp_reward": 5
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Design Morning Routine",
+      "description": "Create a morning routine that energizes you",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Choose Learning Topic",
+      "description": "Pick a skill or subject you want to learn",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Up Exercise Plan",
+      "description": "Plan your physical activities for the week",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Prepare Evening Routine",
+      "description": "Design a relaxing evening routine",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Track Progress",
+      "description": "Set up a system to track your daily progress",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Start simple and build gradually",
+    "Don't try to change everything at once",
+    "Focus on consistency over intensity",
+    "Adjust your routine as needed"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 350,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["general", "routine", "growth", "wellness", "balance"],
+  "keywords": ["daily", "routine", "growth", "personal development", "self-improvement", "better", "improve myself", "routine"],
+  "fallback_message": "I found a great daily growth template! Let me help you build a balanced routine for overall personal growth."
+}

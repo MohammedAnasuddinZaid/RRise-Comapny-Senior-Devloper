@@ -591,7 +591,378 @@ When continuing development, maintain these patterns:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-06-15  
-**Project Status:** Development (v0.1.0)  
-**Next Major Milestone:** Add authentication and real database
+## 13. Backend Foundation Implementation (June 2026)
+
+### Overview
+A comprehensive backend foundation has been implemented to support RRise's core functionality. This includes Supabase integration, authentication, database schema, template-based AI system, BYOK support, plan logic, Alex AI readiness, safety guardrails, and audio bug fixes.
+
+### Files Created
+
+#### Supabase Configuration
+- **`src/lib/supabase.ts`**: Supabase client configuration for both client-side and server-side usage
+  - `createClientComponentClient()`: For client components
+  - `createServerComponentClient()`: For server components (async)
+  - `supabase`: Simple client for utilities
+
+#### Authentication
+- **`src/contexts/AuthContext.tsx`**: React Context for authentication state management
+  - Google sign-in support
+  - Email/password sign-in and sign-up
+  - Session management
+  - User profile bootstrap on first login
+
+#### Database Types
+- **`src/types/database.ts`**: TypeScript types matching Supabase database schema
+  - Profile, Goal, Habit, Task, Journal, Mood, Spending types
+  - AI key, usage log, streak, XP log types
+  - Mascot state, safety event, prompt memory types
+  - Public types for client-side display (without sensitive data)
+
+#### Database Schema
+- **`supabase/schema.sql`**: Complete database schema with RLS policies
+  - 21 tables with UUID primary keys
+  - Row Level Security on all user-specific tables
+  - Automatic profile creation trigger
+  - Updated_at triggers for all relevant tables
+  - Storage bucket policies (to be created in Supabase UI)
+
+#### Template System
+- **`src/data/templates/fitness/`**: Fitness templates (beginner, intermediate)
+- **`src/data/templates/study/`**: Study templates (beginner, coding)
+- **`src/data/templates/productivity/`**: Productivity templates
+- **`src/data/templates/spending/`**: Spending awareness template
+- **`src/data/templates/discipline/`**: Discipline template
+- **`src/data/templates/general/`**: General templates (daily loop, weekly recap)
+- **`src/data/templates/combined/`**: Combined templates (fitness + coding)
+
+#### Template Engine
+- **`src/lib/templateEngine.ts`**: Decision tree logic for template matching
+  - Keyword detection and classification
+  - Age and difficulty detection
+  - Template merging for combined goals
+  - Fallback behavior for no matches
+
+#### BYOK System
+- **`src/lib/byok.ts`**: Bring Your Own Key system for AI
+  - Support for OpenAI, Gemini, Anthropic
+  - Secure key storage (encryption placeholder)
+  - Key validation and testing
+  - Active key management
+
+#### Plan Logic
+- **`src/lib/planLogic.ts`**: Plan state and usage tracking
+  - Plan limits (free, pro, ultra_max)
+  - Feature availability checks
+  - Usage tracking and limits
+  - Plan display utilities
+
+#### Alex AI Readiness
+- **`src/lib/alexAI.ts`**: Alex AI structure for future integration
+  - Template-based responses for free plan
+  - BYOK integration placeholders
+  - Context gathering from user data
+  - Safety-compliant responses
+
+#### Safety Policy
+- **`src/lib/safetyPolicy.ts`**: Content safety guardrails
+  - Allowed and blocked content categories
+  - Keyword filtering
+  - Safety event logging
+  - System prompt generation
+
+#### Audio Manager Fix
+- **`src/lib/audioManager.ts`**: Fixed audio loading bug
+  - Lazy loading on first play
+  - Absolute paths from /public/sounds/
+  - AudioContext initialization after user interaction
+  - Better error handling and fallback
+
+### Database Tables Created
+
+1. **profiles**: User profiles with plan state, XP, streaks
+2. **goals**: User goals with progress tracking
+3. **habits**: Habit definitions with XP rewards
+4. **habit_logs**: Daily habit completion logs
+5. **tasks**: Task management with priorities
+6. **task_logs**: Task completion history
+7. **journal_entries**: User journal entries
+8. **moods**: Daily mood tracking
+9. **spending_entries**: Financial tracking
+10. **streaks**: Streak tracking for various activities
+11. **xp_logs**: XP earned and spent
+12. **ai_keys**: User's AI API keys (encrypted)
+13. **ai_usage_logs**: AI usage for billing/limits
+14. **weekly_recaps**: Generated weekly recap data
+15. **mascot_state**: Mascot evolution and state
+16. **safety_events**: Safety policy violations
+17. **prompt_memory**: AI prompt context
+18. **app_settings**: Global app settings
+19. **audit_logs**: Change audit trail
+
+### Storage Buckets (To Be Created in Supabase UI)
+
+**Note:** User avatars are not supported to save on cloud storage costs. Users will use default avatars or external avatar URLs.
+
+1. **user-assets** (private)
+   - Future support for uploads, attachments, exports
+2. **reports** (private)
+   - Future weekly PDF or data exports
+
+### Plan Structure
+
+- **free**: Templates, dashboard, tracking, mascot, streaks, weekly recap, no real AI
+- **pro**: BYOK support, higher limits, AI-assisted templates, advanced accountability
+- **ultra_max**: Premium tier with unlimited limits, advanced Alex AI, deep accountability
+
+### AI Safety Policy
+
+Alex AI follows strict safety rules:
+- Productivity only
+- No adult content
+- No illegal advice
+- No harmful instructions
+- No self-harm encouragement
+- No violent/abusive content
+- No hateful content
+- No sexual content
+- No exploitative content
+
+### Next Steps for Backend
+
+1. Run `supabase/schema.sql` in Supabase SQL editor
+2. Create storage buckets in Supabase Storage UI (user-assets, reports)
+3. Add environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+4. Implement key encryption in production
+5. Connect real AI API calls in Alex AI
+6. Add Stripe webhook integration for plan upgrades
+7. Implement server-side API routes for sensitive operations
+
+### Breaking Changes
+
+None - all changes are additive and preserve existing functionality.
+
+---
+
+## 14. Build Fixes (June 2026)
+
+### Overview
+Fixed Next.js build errors related to Supabase client initialization and TypeScript null checks.
+
+### Issues Fixed
+
+#### 1. Next.js Build Error - Cookies Import
+**Error:** Importing `cookies` from `next/headers` in a file used by client components
+**Fix:** 
+- Removed server-side client from shared `src/lib/supabase.ts`
+- Created separate `src/lib/supabase-server.ts` for server-only usage
+- Added null checks to all Supabase client usages
+
+#### 2. TypeScript Null Check Errors
+**Error:** `supabase` is possibly null in multiple files
+**Fix:** Added null checks to:
+- `src/lib/planLogic.ts` - All database functions
+- `src/lib/byok.ts` - All AI key management functions
+- `src/lib/safetyPolicy.ts` - Safety event logging
+- `src/contexts/AuthContext.tsx` - All authentication functions
+
+#### 3. User Avatar Storage
+**User Request:** Remove user-avatars bucket to save on cloud storage costs
+**Fix:** 
+- Removed user-avatars bucket from schema.sql
+- Updated documentation to reflect default avatars only
+
+### Files Modified
+
+- `src/lib/supabase.ts` - Removed server-side client, added null checks
+- `src/lib/supabase-server.ts` - New file for server-only client
+- `src/lib/planLogic.ts` - Added null checks to all functions
+- `src/lib/byok.ts` - Added null checks to all functions
+- `src/lib/safetyPolicy.ts` - Added null check to logSafetyEvent
+- `src/contexts/AuthContext.tsx` - Added null checks to all auth functions
+- `supabase/schema.sql` - Removed user-avatars bucket
+- `docs/PROJECT_AUDIT.md` - Updated documentation
+
+### Build Status
+
+✅ Build successful - All TypeScript errors resolved
+✅ All pages prerendered successfully
+⚠️ Warning: Chart width/height warning (non-blocking, from recharts)
+
+---
+
+## 15. Backend Integration Implementation (June 2026)
+
+### Overview
+Connected the RRise frontend to real Supabase data and implemented the complete authentication and data management system. The app now uses real user data instead of mock data, with proper authentication flow, route protection, and admin capabilities.
+
+### Authentication Flow
+
+#### Auth Modal Component
+- **File:** `src/components/auth/AuthModal.tsx`
+- **Features:**
+  - Email/password signup and login
+  - Google sign-in support
+  - Toggle between signup and login modes
+  - Error handling and loading states
+  - Modal with backdrop and animations
+
+#### AuthProvider Integration
+- **File:** `src/app/layout.tsx`
+- **Changes:** Wrapped entire app with AuthProvider for global authentication state
+- **File:** `src/contexts/AuthContext.tsx`
+- **Enhancements:** Integrated user initialization on signup to create default profile data
+
+### Route Protection
+
+#### Auth Guard Utilities
+- **File:** `src/lib/authGuard.ts`
+- **Features:**
+  - `useRequireAuth()` hook for client-side route protection
+  - Automatic redirect to landing page for unauthenticated users
+  - Loading state handling
+  - Server-side auth check placeholder
+
+#### Protected Pages
+- **Dashboard:** Added auth protection with loading state
+- **Habits:** Added auth protection and real data loading
+- **Tasks:** Added auth protection and real data loading
+- All `/app/*` routes now require authentication
+
+### First-Login Flow
+
+#### User Initialization
+- **File:** `src/lib/userInitialization.ts`
+- **Features:**
+  - Creates default profile with free plan
+  - Creates default mascot state
+  - Creates default app settings
+  - Creates default memory entry
+  - Called automatically on signup
+
+### Real Data Integration
+
+#### Data Loader Utilities
+- **File:** `src/lib/dataLoader.ts`
+- **Features:**
+  - `loadUserProfile()` - Load user profile data
+  - `loadHabits()` - Load habits with completion status and streak calculation
+  - `loadTasks()` - Load tasks with completion status
+  - `loadMascotState()` - Load mascot evolution state
+  - `loadStreakCount()` - Load streak information
+  - `toggleHabitCompletion()` - Toggle habit completion and log to database
+  - `toggleTaskCompletion()` - Toggle task completion and log to database
+
+#### Dashboard Integration
+- **File:** `src/app/app/dashboard/page.tsx`
+- **Changes:**
+  - Added real data loading from Supabase
+  - Transformed database data to match UI structure
+  - Added loading states for auth and data
+  - Uses real user profile, habits, and tasks
+
+#### Habits Page Integration
+- **File:** `src/app/app/app/habits/page.tsx`
+- **Changes:**
+  - Added real data loading from Supabase
+  - Optimistic UI updates with Supabase sync
+  - Error handling with revert on failure
+  - Auth protection with redirect
+
+#### Tasks Page Integration
+- **File:** `src/app/app/tasks/page.tsx`
+- **Changes:**
+  - Added real data loading from Supabase
+  - Optimistic UI updates with Supabase sync
+  - Error handling with revert on failure
+  - Auth protection with redirect
+
+### Admin Dashboard
+
+#### Admin Dashboard Component
+- **File:** `src/app/admin/page.tsx`
+- **Features:**
+  - Total users count
+  - Free, Pro, Ultra Max user breakdown
+  - Active users tracking
+  - Recent signups list
+  - Email allowlist security
+  - Access denied for non-admin users
+- **Security:** Protected by ADMIN_EMAILS array (admin@rrise.com, founder@rrise.com)
+
+### Memory System
+
+#### Memory Utilities
+- **File:** `src/lib/memorySystem.ts`
+- **Features:**
+  - `loadMemory()` - Load memory by type
+  - `saveMemory()` - Save memory with importance level
+  - `loadAllMemories()` - Load all user memories
+  - `updatePreferences()` - Update user preferences
+  - `addGoal()` - Add goal to memory
+  - `addTemplateToHistory()` - Track template usage
+- **Memory Types:** preferences, goals, interests, template_history, spending_habits, accountability_notes, app_settings
+
+### Template System Improvements
+
+#### Template Loader
+- **File:** `src/lib/templateLoader.ts`
+- **Features:**
+  - Structured template loading functions
+  - `loadAllTemplates()` - Load all templates
+  - `getTemplatesByCategory()` - Filter by category
+  - `getTemplateById()` - Get specific template
+  - `searchTemplates()` - Search by keywords
+- **Note:** Due to Next.js build limitations, templates are still imported explicitly but organized in a loader for future optimization
+
+### Files Created
+
+1. **src/components/auth/AuthModal.tsx** - Authentication modal component
+2. **src/lib/authGuard.ts** - Route protection utilities
+3. **src/lib/userInitialization.ts** - First-login data creation
+4. **src/lib/dataLoader.ts** - Supabase data loading functions
+5. **src/lib/memorySystem.ts** - Memory management system
+6. **src/lib/templateLoader.ts** - Template loading utilities
+7. **src/app/admin/page.tsx** - Admin dashboard component
+8. **src/lib/supabase-server.ts** - Server-only Supabase client
+
+### Files Modified
+
+1. **src/app/layout.tsx** - Added AuthProvider wrapper
+2. **src/app/page.tsx** - Added AuthModal integration
+3. **src/contexts/AuthContext.tsx** - Added user initialization on signup
+4. **src/app/app/dashboard/page.tsx** - Added real data loading and auth protection
+5. **src/app/app/habits/page.tsx** - Added real data loading and auth protection
+6. **src/app/app/tasks/page.tsx** - Added real data loading and auth protection
+7. **supabase/schema.sql** - Removed user-avatars bucket (cost optimization)
+
+### Storage Buckets
+
+**Updated Configuration:**
+- **Removed:** user-avatars (to save on cloud storage costs)
+- **Remaining:** user-assets (private), reports (private)
+- Users will use default avatars or external avatar URLs
+
+### Breaking Changes
+
+None - all changes are additive and preserve existing functionality. The app gracefully falls back to demo data when Supabase is not configured.
+
+### Next Steps
+
+1. Add environment variables to `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. Run `supabase/schema.sql` in Supabase SQL editor
+3. Create storage buckets in Supabase Storage UI (user-assets, reports)
+4. Add admin emails to ADMIN_EMAILS array in admin dashboard
+5. Implement habit/task creation functions (currently read-only)
+6. Implement habit/task deletion functions
+7. Add real AI API calls with BYOK integration
+8. Implement Stripe webhook integration for plan upgrades
+9. Add more templates to template folders (system is ready for 40-50+ templates)
+
+---
+
+**Document Version:** 2.2  
+**Last Updated:** 2026-06-17  
+**Project Status:** Backend Integration Complete (v0.3.0)  
+**Next Major Milestone:** Connect real AI with BYOK and implement Stripe
