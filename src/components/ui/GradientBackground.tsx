@@ -124,27 +124,36 @@ export function GradientBackground() {
 
       {/* Subtle floating particles */}
       <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1.5 h-1.5 rounded-full bg-primary/20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -120, 0],
-              opacity: [0, 0.6, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 12 + Math.random() * 8,
-              repeat: Infinity,
-              delay: Math.random() * 6,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+        {[...Array(15)].map((_, i) => {
+          // Use seeded random to prevent hydration mismatch
+          const seed = i * 12345;
+          const random = (seed: number) => {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+          };
+          
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-1.5 h-1.5 rounded-full bg-primary/20"
+              style={{
+                left: `${random(seed) * 100}%`,
+                top: `${random(seed + 1) * 100}%`,
+              }}
+              animate={{
+                y: [0, -120, 0],
+                opacity: [0, 0.6, 0],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 12 + random(seed + 2) * 8,
+                repeat: Infinity,
+                delay: random(seed + 3) * 6,
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );

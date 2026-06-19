@@ -1,63 +1,98 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { ProgressBar } from "../../../components/ui/ProgressBar";
-import { mockSpending as initialSpending } from "../../../data/mock/spending";
 import { Plus, Trash2, DollarSign, Wallet, PieChart, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { loadSpendingData, createSpendingTransaction, deleteSpendingTransaction } from "../../../lib/dataLoader";
 
 export default function SpendingPage() {
-  const [spending, setSpending] = useState(initialSpending);
+  const { user, loading } = useRequireAuth();
+  const [spending, setSpending] = useState<{
+    currency: string;
+    totalSpent: number;
+    budget: number;
+    recentTransactions: Array<{ id: string; title: string; amount: number; date: string }>;
+    categories: Array<{ name: string; amount: number; color: string }>;
+  }>({
+    currency: "$",
+    totalSpent: 0,
+    budget: 100,
+    recentTransactions: [],
+    categories: [
+      { name: "Food", amount: 0, color: "#00ff87" },
+      { name: "Transport", amount: 0, color: "#00e5ff" },
+      { name: "Entertainment", amount: 0, color: "#ff6b6b" },
+      { name: "Shopping", amount: 0, color: "#ffd93d" },
+    ],
+  });
   const [newTxTitle, setNewTxTitle] = useState("");
   const [newTxAmount, setNewTxAmount] = useState("");
   const [newTxCategory, setNewTxCategory] = useState("Food");
+  const [dataLoading, setDataLoading] = useState(true);
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  // Load spending data from Supabase
+  useEffect(() => {
+    async function fetchSpendingData() {
+      if (!user) return;
+
+      setDataLoading(true);
+      try {
+        const data = await loadSpendingData(user.id);
+        setSpending(data);
+      } catch (error) {
+        console.error('Error loading spending data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    fetchSpendingData();
+  }, [user]);
+
+  // Show loading state
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsedAmount = parseFloat(newTxAmount);
-    if (!newTxTitle.trim() || isNaN(parsedAmount) || parsedAmount <= 0) return;
+    if (!newTxTitle.trim() || isNaN(parsedAmount) || parsedAmount <= 0 || !user) return;
 
-    const newTx = {
-      id: Date.now().toString(),
-      title: newTxTitle,
-      amount: parsedAmount,
-      date: "Today",
-    };
-
-    // Update transactions and total spent
-    const updatedTransactions = [newTx, ...spending.recentTransactions];
-    const updatedTotalSpent = spending.totalSpent + parsedAmount;
-
-    // Update category amount
-    const updatedCategories = spending.categories.map((cat) => {
-      if (cat.name === newTxCategory) {
-        return { ...cat, amount: cat.amount + parsedAmount };
-      }
-      return cat;
-    });
-
-    setSpending({
-      ...spending,
-      totalSpent: updatedTotalSpent,
-      recentTransactions: updatedTransactions,
-      categories: updatedCategories,
-    });
-
-    setNewTxTitle("");
-    setNewTxAmount("");
+    const result = await createSpendingTransaction(user.id, newTxTitle, parsedAmount, newTxCategory);
+    if (result.success) {
+      // Refresh spending data
+      const data = await loadSpendingData(user.id);
+      setSpending(data);
+      setNewTxTitle("");
+      setNewTxAmount("");
+    } else {
+      console.error('Failed to create transaction:', result.error);
+    }
   };
 
-  const handleDeleteExpense = (id: string, amount: number) => {
-    const updatedTransactions = spending.recentTransactions.filter((tx) => tx.id !== id);
-    const updatedTotalSpent = Math.max(0, spending.totalSpent - amount);
+  const handleDeleteExpense = async (id: string) => {
+    if (!user) return;
 
-    setSpending({
-      ...spending,
-      totalSpent: updatedTotalSpent,
-      recentTransactions: updatedTransactions,
-    });
+    const result = await deleteSpendingTransaction(id, user.id);
+    if (result.success) {
+      // Refresh spending data
+      const data = await loadSpendingData(user.id);
+      setSpending(data);
+    } else {
+      console.error('Failed to delete transaction:', result.error);
+    }
   };
 
   const remainingBudget = Math.max(0, spending.budget - spending.totalSpent);
@@ -229,7 +264,7 @@ export default function SpendingPage() {
                           -{spending.currency}{tx.amount.toFixed(2)}
                         </span>
                         <button
-                          onClick={() => handleDeleteExpense(tx.id, tx.amount)}
+                          onClick={() => handleDeleteExpense(tx.id)}
                           className="text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2"
                         >
                           <Trash2 className="w-4 h-4" />

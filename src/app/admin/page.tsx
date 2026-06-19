@@ -26,6 +26,17 @@ const ADMIN_EMAILS = [
   // Add more admin emails here
 ];
 
+// Check if Supabase is configured
+const isSupabaseConfigured = () => {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+};
+
+// Security: Validate admin emails to prevent injection
+const validateAdminEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 export default function AdminDashboard() {
   const { user, loading } = useRequireAuth();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -42,14 +53,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if user is admin
-    if (user?.email) {
+    if (user?.email && validateAdminEmail(user.email)) {
       setIsAdmin(ADMIN_EMAILS.includes(user.email));
+    } else {
+      setIsAdmin(false);
     }
   }, [user]);
 
   useEffect(() => {
     async function loadAdminData() {
-      if (!isAdmin || !user) return;
+      if (!isAdmin || !user || !isSupabaseConfigured()) return;
 
       setLoadingData(true);
       const supabase = createClientComponentClient();
@@ -101,6 +114,25 @@ export default function AdminDashboard() {
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Supabase Not Configured</h2>
+            <p className="text-muted-foreground mb-4">
+              The admin dashboard requires Supabase to be configured.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

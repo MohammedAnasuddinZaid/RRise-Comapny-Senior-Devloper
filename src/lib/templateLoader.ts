@@ -97,6 +97,16 @@ export async function loadAllTemplates(): Promise<Template[]> {
 }
 
 /**
+ * Load all plans from the templates folder
+ * This is an alias for loadAllTemplates() to provide consistent plan terminology
+ * 
+ * @returns Array of all loaded plans (templates)
+ */
+export async function loadPlans(): Promise<Template[]> {
+  return loadAllTemplates();
+}
+
+/**
  * Get templates by category
  * 
  * @param category - The category to filter by

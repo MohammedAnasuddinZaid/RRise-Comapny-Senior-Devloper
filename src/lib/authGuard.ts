@@ -24,8 +24,17 @@ export function useRequireAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
+    // Only redirect if we're done loading and there's no user
+    // Also check if Supabase is configured - if not, allow demo mode
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!loading && !user && supabaseUrl && supabaseKey) {
+      // Only redirect if Supabase is configured and user is not authenticated
+      // Prevent redirect loop by checking current path
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        router.push('/');
+      }
     }
   }, [user, loading, router]);
 

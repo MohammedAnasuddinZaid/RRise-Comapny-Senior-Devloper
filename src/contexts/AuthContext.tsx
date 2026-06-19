@@ -109,10 +109,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } as AuthError };
     }
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    if (!error && data.user) {
+      // Redirect to dashboard after successful login
+      window.location.href = '/app/dashboard';
+    }
+    
     return { error };
   };
 
@@ -123,9 +129,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUpWithEmail = async (email: string, password: string, name: string) => {
     const supabase = createClientComponentClient();
     if (!supabase) {
-      return { error: { message: 'Supabase not configured' } as AuthError };
+      return { error: { message: 'Supabase not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.' } as AuthError };
     }
-    const { error } = await supabase.auth.signUp({
+    
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -136,15 +143,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
 
-    if (!error) {
+    if (!error && data.user) {
       // Initialize user data after successful signup
-      // We'll get the user from the session after signup
-      setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await initializeUser(session.user.id, email, name);
-        }
-      }, 500);
+      await initializeUser(data.user.id, email, name);
+      
+      // Redirect to dashboard after successful signup
+      window.location.href = '/app/dashboard';
     }
 
     return { error };

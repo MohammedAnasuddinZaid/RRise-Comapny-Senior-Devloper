@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { AuthModal } from "../auth/AuthModal";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -20,6 +21,7 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -118,17 +120,16 @@ export function Header() {
             </motion.button>
 
             {/* Sign In CTA */}
-            <Link href="/app" className="hidden md:block">
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative px-6 py-2.5 text-sm font-semibold rounded-full overflow-hidden group premium-glow"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
-                <span className="relative z-10 font-bold text-[#020408]">Sign In</span>
-              </motion.button>
-            </Link>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsAuthModalOpen(true)}
+              className="hidden md:block relative px-6 py-2.5 text-sm font-semibold rounded-full overflow-hidden group premium-glow"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
+              <span className="relative z-10 font-bold text-[#020408]">Sign In</span>
+            </motion.button>
 
             {/* Mobile menu toggle */}
             <motion.button
@@ -168,16 +169,21 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/app"
-              onClick={() => setMobileOpen(false)}
+            <motion.button
+              onClick={() => {
+                setMobileOpen(false);
+                setIsAuthModalOpen(true);
+              }}
               className="mt-3 px-5 py-3 rounded-full text-sm font-bold text-center bg-gradient-to-r from-primary to-secondary text-[#020408]"
             >
               Sign In
-            </Link>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 }

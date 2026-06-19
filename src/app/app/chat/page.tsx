@@ -2,30 +2,142 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Play } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
 import { LottieAnimation } from "../../../components/ui/LottieAnimation";
 import greenParrot from "../../../../public/lottie/green_parrot.json";
 import { audioManager } from "../../../lib/audioManager";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { searchTemplates, loadAllTemplates } from "../../../lib/templateLoader";
+import { generateAIResponse, getFollowUpQuestions } from "../../../lib/aiMode";
+import { performSafetyCheck, filterAIResponse, logSafetyViolation } from "../../../lib/aiSafety";
+import type { Template } from "../../../lib/templateLoader";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { createHabit, createTask } from "../../../lib/dataLoader";
+import { saveMemory } from "../../../lib/memorySystem";
 
 export default function ChatPage() {
   const { theme } = useTheme();
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const { user } = useRequireAuth();
+  const router = useRouter();
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; plans?: Template[]; followUpQuestions?: string[] }>>([]);
   const [input, setInput] = useState("");
+  const [suggestedPlans, setSuggestedPlans] = useState<Template[]>([]);
+  const [startingPlan, setStartingPlan] = useState<string | null>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Handle starting a plan from template suggestion
+  const handleStartPlan = async (template: Template) => {
+    if (!user) return;
+
+    setStartingPlan(template.id);
+    try {
+      // Create habits from template
+      if (template.habits && template.habits.length > 0) {
+        for (const habit of template.habits) {
+          await createHabit(user.id, habit.title, habit.icon || 'brain');
+        }
+      }
+
+      // Create tasks from template
+      if (template.tasks && template.tasks.length > 0) {
+        for (const task of template.tasks) {
+          const dueTime = task.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await createTask(user.id, task.title, dueTime);
+        }
+      }
+
+      // Store selected plan in memory
+      await saveMemory(user.id, 'template_history' as any, {
+        planId: template.id,
+        planTitle: template.title,
+        planCategory: template.category,
+        startedAt: new Date().toISOString(),
+      });
+
+      audioManager.play('success');
+      
+      // Redirect to dashboard
+      router.push('/app/dashboard');
+    } catch (error) {
+      console.error('Error starting plan:', error);
+      alert('Failed to start plan. Please try again.');
+    } finally {
+      setStartingPlan(null);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       audioManager.play('click');
-      setMessages([...messages, { role: 'user', content: input }]);
-      setInput("");
       
-      // Simulate AI response
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', content: "I'm here to help you build habits and stay productive! What would you like to work on today?" }]);
-      }, 1000);
+      // Perform safety check
+      if (user) {
+        const safetyCheck = await performSafetyCheck(user.id, input);
+        
+        if (!safetyCheck.isSafe) {
+          // Log safety violation
+          logSafetyViolation(user.id, 'input_safety', safetyCheck.reason || 'Unknown');
+          
+          // Show error message to user
+          setMessages([...messages, { role: 'user', content: input }]);
+          setTimeout(() => {
+            setMessages(prev => [...prev, { 
+              role: 'assistant', 
+              content: safetyCheck.reason || "I couldn't process that message due to safety guidelines.",
+            }]);
+          }, 500);
+          setInput("");
+          return;
+        }
+        
+        // Use sanitized input
+        const sanitizedInput = safetyCheck.sanitizedInput || input;
+        
+        setMessages([...messages, { role: 'user', content: sanitizedInput }]);
+        setInput("");
+        
+        // Use AI mode to generate response
+        const aiResponse = await generateAIResponse(user.id, sanitizedInput);
+        
+        // Filter AI response for safety
+        const filteredResponse = filterAIResponse(aiResponse.response);
+        
+        if (!filteredResponse.isSafe) {
+          logSafetyViolation(user.id, 'output_safety', filteredResponse.reason || 'Unknown');
+          setTimeout(() => {
+            setMessages(prev => [...prev, { 
+              role: 'assistant', 
+              content: "I couldn't generate a response due to safety guidelines. Please try rephrasing your request.",
+            }]);
+          }, 1000);
+          return;
+        }
+        
+        const followUpQuestions = getFollowUpQuestions(aiResponse.category);
+        
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: filteredResponse.filteredResponse || aiResponse.response,
+            plans: aiResponse.templates,
+            followUpQuestions,
+          }]);
+          setSuggestedPlans(aiResponse.templates || []);
+        }, 1000);
+      } else {
+        // Fallback for non-authenticated users
+        setMessages([...messages, { role: 'user', content: input }]);
+        setInput("");
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: "Please sign in to use the AI companion features.",
+          }]);
+        }, 1000);
+      }
     }
   };
 
@@ -111,6 +223,48 @@ export default function ChatPage() {
                   }`}
                 >
                   {message.content}
+                  {message.plans && message.plans.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {message.plans.map((plan: Template, tIndex: number) => (
+                        <div
+                          key={tIndex}
+                          className="p-4 bg-primary/10 border border-primary/20 rounded-xl"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="font-medium text-sm text-primary">{plan.title}</div>
+                            <div className="text-xs text-muted-foreground">{plan.category} • {plan.difficulty}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mb-3">{plan.description}</div>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              audioManager.play('click');
+                              handleStartPlan(plan);
+                            }}
+                            disabled={startingPlan === plan.id}
+                            className="w-full"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {startingPlan === plan.id ? "Starting..." : "Start Plan"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {message.followUpQuestions && message.followUpQuestions.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <div className="text-xs text-muted-foreground mb-2">Suggested questions:</div>
+                      {message.followUpQuestions.map((question, qIndex) => (
+                        <button
+                          key={qIndex}
+                          onClick={() => setInput(question)}
+                          className="block w-full text-left p-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))

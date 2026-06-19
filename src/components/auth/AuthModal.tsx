@@ -59,7 +59,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred. Please ensure Supabase is configured.');
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         onClose();
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred. Please ensure Supabase is configured.');
     } finally {
       setLoading(false);
     }
@@ -144,6 +144,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <Globe className="w-5 h-5" />
                   <span>Continue with Google</span>
                 </button>
+
+                {/* Supabase Configuration Warning */}
+                <div className="mb-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs text-center">
+                  Note: Supabase must be configured in .env.local for authentication to work
+                </div>
 
                 {/* Divider */}
                 <div className="flex items-center gap-4 mb-6">

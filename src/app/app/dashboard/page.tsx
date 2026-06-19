@@ -5,10 +5,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui
 import { ProgressBar } from "../../../components/ui/ProgressBar";
 import { Mascot } from "../../../components/mascot/Mascot";
 import { LottieAnimation } from "../../../components/ui/LottieAnimation";
-import { mockUser } from "../../../data/mock/user";
-import { mockHabits as initialHabits } from "../../../data/mock/habits";
-import { mockTasks as initialTasks } from "../../../data/mock/tasks";
-import { mockSpending } from "../../../data/mock/spending";
 import { Star, TrendingUp, CheckCircle, Brain, Book, Dumbbell, Wallet, Award, Sparkles, Check, Play, Plus, X } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +28,8 @@ const iconMap: Record<string, React.ReactNode> = {
   "dumbbell": <Dumbbell className="w-4 h-4" />
 };
 
+// Weekly chart data - will be loaded from Supabase in the future
+// For now, this is a placeholder showing the structure
 const chartData = [
   { name: 'Mon', score: 40 },
   { name: 'Tue', score: 30 },
@@ -65,11 +63,13 @@ function getCurrentStageIndex(level: number): number {
 export default function DashboardPage() {
   const { theme, toggleTheme } = useTheme();
   const { user, loading } = useRequireAuth();
-  const [habits, setHabits] = useState(initialHabits);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [habits, setHabits] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [xpGain, setXpGain] = useState(false);
   const [streakCelebration, setStreakCelebration] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [mascotState, setMascotState] = useState<any>(null);
+  const [streakCount, setStreakCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
 
   // Load user data from Supabase
@@ -79,13 +79,23 @@ export default function DashboardPage() {
 
       setDataLoading(true);
       try {
-        // Load profile data
+        // Load profile data from profiles table
         const profile = await loadUserProfile(user.id);
         if (profile) {
           setUserData(profile);
         }
 
-        // Load habits (now includes completed, streak, icon from dataLoader)
+        // Load mascot state from mascot_state table
+        const mascot = await loadMascotState(user.id);
+        if (mascot) {
+          setMascotState(mascot);
+        }
+
+        // Load streak count from streaks table
+        const streak = await loadStreakCount(user.id);
+        setStreakCount(streak);
+
+        // Load habits from habits table (includes completed, streak, icon from dataLoader)
         const userHabits = await loadHabits(user.id);
         if (userHabits.length > 0) {
           const transformedHabits = userHabits.map(h => ({
@@ -98,7 +108,7 @@ export default function DashboardPage() {
           setHabits(transformedHabits);
         }
 
-        // Load tasks (now includes completed, dueTime from dataLoader)
+        // Load tasks from tasks table (includes completed, dueTime from dataLoader)
         const userTasks = await loadTasks(user.id);
         if (userTasks.length > 0) {
           const transformedTasks = userTasks.map(t => ({
@@ -119,19 +129,7 @@ export default function DashboardPage() {
     loadUserData();
   }, [user]);
 
-  // Show loading state while checking auth or loading data
-  if (loading || dataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Import audio manager
+  // Import audio manager (must be before early return to satisfy Rules of Hooks)
   useEffect(() => {
     // Add click sound to streak button
     const streakButton = document.querySelector('[data-streak-button]');
@@ -155,104 +153,99 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // Show loading state while checking auth or loading data
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   const recalculateLevelAndXP = (currentHabits: typeof habits, currentTasks: typeof tasks) => {
     const totalItems = currentHabits.length + currentTasks.length;
     const completedItems = currentHabits.filter(h => h.completed).length + currentTasks.filter(t => t.completed).length;
     const completionPercentage = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
     
-    // Update level based on percentage
+    // Calculate level based on completion percentage
+    let newLevel = 1;
     if (completionPercentage >= 100) {
-      mockUser.level = 4;
+      newLevel = 4;
     } else if (completionPercentage >= 50) {
-      mockUser.level = 3;
+      newLevel = 3;
     } else if (completionPercentage >= 25) {
-      mockUser.level = 2;
-    } else {
-      mockUser.level = 1;
+      newLevel = 2;
     }
     
-    mockUser.xp = Math.floor(completionPercentage);
-    mockUser.nextLevelXp = 100;
+    const xp = Math.floor(completionPercentage);
+    const nextLevelXp = 100;
     
-    return { completionPercentage, previousLevel: mockUser.level };
+    return { completionPercentage, level: newLevel, xp, nextLevelXp };
   };
 
-  const handleHabitToggle = (id: string) => {
-    const previousLevel = mockUser.level;
+  const handleHabitToggle = async (id: string) => {
+    if (!user) return;
     
-    setHabits(prevHabits => {
-      const habit = prevHabits.find(h => h.id === id);
-      if (!habit) return prevHabits;
-      
-      const nextState = !habit.completed;
-      const updatedHabits = prevHabits.map(h => {
-        if (h.id === id) {
-          return { ...h, completed: nextState };
-        }
-        return h;
-      });
-      
-      // Only play sounds and show XP gain if checking (not unchecking)
-      if (nextState) {
-        // Recalculate with updated state
-        const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(updatedHabits, tasks);
-        
-        // Check if level changed
-        if (mockUser.level > previousLevel) {
-          audioManager.play('evolve');
-          setStreakCelebration(true);
-        } else {
-          audioManager.play('success');
-        }
-        
-        setXpGain(true);
-        setTimeout(() => setXpGain(false), 1200);
-      } else {
-        // Unchecking - just recalculate without sounds or XP animation
-        recalculateLevelAndXP(updatedHabits, tasks);
-      }
-      
-      return updatedHabits;
-    });
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+    
+    const nextState = !habit.completed;
+    
+    // Optimistic UI update
+    setHabits(prevHabits => prevHabits.map(h => 
+      h.id === id ? { ...h, completed: nextState } : h
+    ));
+    
+    // Only play sounds and show XP gain if checking (not unchecking)
+    if (nextState) {
+      audioManager.play('success');
+      setXpGain(true);
+      setTimeout(() => setXpGain(false), 2000);
+    }
+    
+    // Persist to Supabase
+    const result = await toggleHabitCompletion(id, user.id, nextState);
+    if (!result.success) {
+      // Revert on error
+      setHabits(prevHabits => prevHabits.map(h => 
+        h.id === id ? { ...h, completed: !nextState } : h
+      ));
+      console.error('Failed to toggle habit:', result.error);
+    }
   };
 
-  const handleTaskToggle = (id: string) => {
-    const previousLevel = mockUser.level;
+  const handleTaskToggle = async (id: string) => {
+    if (!user) return;
     
-    setTasks(prevTasks => {
-      const task = prevTasks.find(t => t.id === id);
-      if (!task) return prevTasks;
-      
-      const nextState = !task.completed;
-      const updatedTasks = prevTasks.map(t => {
-        if (t.id === id) {
-          return { ...t, completed: nextState };
-        }
-        return t;
-      });
-      
-      // Only play sounds and show XP gain if checking (not unchecking)
-      if (nextState) {
-        // Recalculate with updated state
-        const { completionPercentage, previousLevel: newPreviousLevel } = recalculateLevelAndXP(habits, updatedTasks);
-        
-        // Check if level changed
-        if (mockUser.level > previousLevel) {
-          audioManager.play('evolve');
-          setStreakCelebration(true);
-        } else {
-          audioManager.play('success');
-        }
-        
-        setXpGain(true);
-        setTimeout(() => setXpGain(false), 1200);
-      } else {
-        // Unchecking - just recalculate without sounds or XP animation
-        recalculateLevelAndXP(habits, updatedTasks);
-      }
-      
-      return updatedTasks;
-    });
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    const nextState = !task.completed;
+    
+    // Optimistic UI update
+    setTasks(prevTasks => prevTasks.map(t => 
+      t.id === id ? { ...t, completed: nextState } : t
+    ));
+    
+    // Only play sounds and show XP gain if checking (not unchecking)
+    if (nextState) {
+      audioManager.play('success');
+      setXpGain(true);
+      setTimeout(() => setXpGain(false), 2000);
+    }
+    
+    // Persist to Supabase
+    const result = await toggleTaskCompletion(id, user.id, nextState);
+    if (!result.success) {
+      // Revert on error
+      setTasks(prevTasks => prevTasks.map(t => 
+        t.id === id ? { ...t, completed: !nextState } : t
+      ));
+      console.error('Failed to toggle task:', result.error);
+    }
   };
 
   return (
@@ -325,7 +318,7 @@ export default function DashboardPage() {
               </button>
             </div>
             <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
-              Good morning, {mockUser.name}.
+              Good morning, {userData?.full_name || 'User'}.
             </h1>
             <p className="text-lg text-muted-foreground font-light max-w-lg leading-relaxed">
               Your focus and habits are building momentum. Continue your loops to maintain the streak.
@@ -347,7 +340,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Streak</p>
-                <p className="font-semibold text-base text-primary">{mockUser.streak} Days</p>
+                <p className="font-semibold text-base text-primary">{streakCount} Days</p>
               </div>
             </button>
             <div 
@@ -362,7 +355,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Companion</p>
-                <p className="font-semibold text-base">Level {mockUser.level}</p>
+                <p className="font-semibold text-base">Level {mascotState?.level || userData?.xp_level || 1}</p>
               </div>
             </div>
           </div>
@@ -376,11 +369,11 @@ export default function DashboardPage() {
           
           <div className="absolute inset-0 bg-primary/5 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <Mascot level={mockUser.level} className="relative z-10 w-44 h-44 mb-4" />
+          <Mascot level={mascotState?.level || userData?.xp_level || 1} className="relative z-10 w-44 h-44 mb-4" />
           
           <div className="space-y-1 z-10">
             <h3 className="font-playfair text-xl font-bold tracking-wide">Evolving Parrot</h3>
-            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {mockUser.level} • Adult</p>
+            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {mascotState?.level || userData?.xp_level || 1} • Adult</p>
           </div>
         </div>
       </div>
@@ -394,18 +387,18 @@ export default function DashboardPage() {
             <div className="flex justify-between items-end">
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">XP Evolution Progress</p>
-                <h3 className="font-playfair text-2xl font-bold">Level {mockUser.level} - {getParrotStage(mockUser.level)}</h3>
+                <h3 className="font-playfair text-2xl font-bold">Level {mascotState?.level || userData?.xp_level || 1} - {getParrotStage(mascotState?.level || userData?.xp_level || 1)}</h3>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-primary">{mockUser.xp} / {mockUser.nextLevelXp} XP</p>
+                <p className="text-sm font-semibold text-primary">{userData?.xp || 0} / {userData?.next_level_xp || 100} XP</p>
               </div>
             </div>
-            <ProgressBar value={mockUser.xp} max={mockUser.nextLevelXp} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
+            <ProgressBar value={userData?.xp || 0} max={userData?.next_level_xp || 100} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               {getParrotStages().map((stage, index) => (
                 <span 
                   key={index} 
-                  className={index <= getCurrentStageIndex(mockUser.level) ? "text-primary font-semibold" : ""}
+                  className={index <= getCurrentStageIndex(mascotState?.level || userData?.xp_level || 1) ? "text-primary font-semibold" : ""}
                 >
                   {stage}
                 </span>
@@ -571,22 +564,20 @@ export default function DashboardPage() {
             <div className="mb-4">
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1.5">Spent Today</p>
               <p className="font-playfair text-3xl font-bold text-foreground">
-                {mockSpending.currency}{mockSpending.totalSpent.toFixed(2)}
+                $0.00
               </p>
               <div className="flex justify-between text-[11px] text-muted-foreground mt-3 font-light">
                 <span>Budget Limit</span>
-                <span>{mockSpending.currency}{mockSpending.budget.toFixed(2)}</span>
+                <span>$100.00</span>
               </div>
-              <ProgressBar value={mockSpending.totalSpent} max={mockSpending.budget} className="mt-2 h-1.5 bg-white/5" />
+              <ProgressBar value={0} max={100} className="mt-2 h-1.5 bg-white/5" />
             </div>
             
             <div className="space-y-2.5 border-t border-white/5 pt-4 mt-auto">
-              {mockSpending.recentTransactions.slice(0, 2).map(tx => (
-                <div key={tx.id} className="flex justify-between items-center text-xs font-light">
-                  <span className="text-muted-foreground">{tx.title}</span>
-                  <span className="font-medium text-foreground">-{mockSpending.currency}{tx.amount.toFixed(2)}</span>
-                </div>
-              ))}
+              <div className="flex justify-between items-center text-xs font-light">
+                <span className="text-muted-foreground">No recent transactions</span>
+                <span className="font-medium text-foreground">-</span>
+              </div>
             </div>
           </CardContent>
         </Card>

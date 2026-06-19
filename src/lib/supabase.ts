@@ -16,6 +16,15 @@ import { createBrowserClient } from '@supabase/ssr';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+// Debug logging (remove in production)
+if (typeof window === 'undefined') {
+  console.log('Server-side Supabase config check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlPrefix: supabaseUrl.substring(0, 20) + '...',
+  });
+}
+
 /**
  * Client-side Supabase client
  * Use this in client components ('use client')
@@ -23,6 +32,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 export const createClientComponentClient = () => {
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase environment variables not set. Returning null client.');
+    console.log('Environment check:', {
+      NEXT_PUBLIC_SUPABASE_URL: supabaseUrl ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey ? 'SET' : 'NOT SET',
+    });
     return null;
   }
   return createBrowserClient(supabaseUrl, supabaseAnonKey);

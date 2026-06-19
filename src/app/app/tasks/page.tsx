@@ -6,7 +6,7 @@ import { Button } from "../../../components/ui/Button";
 import { CheckCircle2, Circle, Plus, Trash2, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRequireAuth } from "../../../lib/authGuard";
-import { loadTasks, toggleTaskCompletion } from "../../../lib/dataLoader";
+import { loadTasks, toggleTaskCompletion, createTask, deleteTask } from "../../../lib/dataLoader";
 
 export default function TasksPage() {
   const { user, loading } = useRequireAuth();
@@ -46,19 +46,22 @@ export default function TasksPage() {
     );
   }
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || !user) return;
 
-    const newTask = {
-      id: Date.now().toString(),
-      title: newTaskTitle,
-      completed: false,
-      dueTime: newTaskTime,
-    };
-
-    setTasks([...tasks, newTask]);
-    setNewTaskTitle("");
+    const result = await createTask(user.id, newTaskTitle, newTaskTime);
+    if (result.success && result.data) {
+      setTasks(prevTasks => [...prevTasks, {
+        id: result.data.id,
+        title: result.data.title,
+        completed: result.data.completed,
+        dueTime: result.data.due_date,
+      }]);
+      setNewTaskTitle("");
+    } else {
+      console.error('Failed to create task:', result.error);
+    }
   };
 
   const toggleTask = async (id: string) => {
@@ -88,8 +91,15 @@ export default function TasksPage() {
     }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const handleDeleteTask = async (id: string) => {
+    if (!user) return;
+    
+    const result = await deleteTask(id, user.id);
+    if (result.success) {
+      setTasks(tasks.filter((task) => task.id !== id));
+    } else {
+      console.error('Failed to delete task:', result.error);
+    }
   };
 
   return (
@@ -172,7 +182,7 @@ export default function TasksPage() {
                   </div>
 
                   <button
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => handleDeleteTask(task.id)}
                     className="text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2"
                   >
                     <Trash2 className="w-5 h-5" />

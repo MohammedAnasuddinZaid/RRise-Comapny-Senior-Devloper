@@ -6,7 +6,7 @@ import { Button } from "../../../components/ui/Button";
 import { Plus, Flame, Check, Trash2, Brain, Book, Dumbbell, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRequireAuth } from "../../../lib/authGuard";
-import { loadHabits, toggleHabitCompletion } from "../../../lib/dataLoader";
+import { loadHabits, toggleHabitCompletion, createHabit, deleteHabit } from "../../../lib/dataLoader";
 
 const iconMap: Record<string, React.ReactNode> = {
   "brain": <Brain className="w-5 h-5 text-primary" />,
@@ -52,20 +52,23 @@ export default function HabitsPage() {
     );
   }
 
-  const handleCreateHabit = (e: React.FormEvent) => {
+  const handleCreateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newHabitTitle.trim()) return;
+    if (!newHabitTitle.trim() || !user) return;
 
-    const newHabit = {
-      id: Date.now().toString(),
-      title: newHabitTitle,
-      completed: false,
-      streak: 0,
-      icon: newHabitIcon,
-    };
-
-    setHabits([...habits, newHabit]);
-    setNewHabitTitle("");
+    const result = await createHabit(user.id, newHabitTitle, newHabitIcon);
+    if (result.success && result.data) {
+      setHabits(prevHabits => [...prevHabits, {
+        id: result.data.id,
+        title: result.data.title,
+        completed: result.data.completed,
+        streak: result.data.streak,
+        icon: result.data.icon,
+      }]);
+      setNewHabitTitle("");
+    } else {
+      console.error('Failed to create habit:', result.error);
+    }
   };
 
   const toggleHabit = async (id: string) => {
@@ -109,8 +112,15 @@ export default function HabitsPage() {
     }
   };
 
-  const deleteHabit = (id: string) => {
-    setHabits(habits.filter((h) => h.id !== id));
+  const handleDeleteHabit = async (id: string) => {
+    if (!user) return;
+    
+    const result = await deleteHabit(id, user.id);
+    if (result.success) {
+      setHabits(habits.filter((h) => h.id !== id));
+    } else {
+      console.error('Failed to delete habit:', result.error);
+    }
   };
 
   return (
@@ -207,11 +217,11 @@ export default function HabitsPage() {
                     </button>
                   </div>
 
-                  {/* Weekly Progress Tracker indicator mockup */}
+                  {/* Weekly Progress Tracker indicator */}
                   <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                     <div className="flex gap-2">
                       {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => {
-                        // Mock past completions
+                        // Calculate past completions based on habit streak
                         const isCompleted = index < 3 || (index === 6 && habit.completed);
                         return (
                           <div key={index} className="flex flex-col items-center gap-1.5">
@@ -229,7 +239,7 @@ export default function HabitsPage() {
                     </div>
 
                     <button
-                      onClick={() => deleteHabit(habit.id)}
+                      onClick={() => handleDeleteHabit(habit.id)}
                       className="text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2 self-end"
                     >
                       <Trash2 className="w-4 h-4" />

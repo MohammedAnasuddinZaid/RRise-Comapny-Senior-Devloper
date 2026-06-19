@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "../../components/ui/Card";
 import { LottieAnimation } from "../../components/ui/LottieAnimation";
-import { mockTemplates } from "../../data/mock/templates";
+import { loadPlans } from "../../lib/templateLoader";
 import { Sparkles, ArrowRight, BookOpen, Dumbbell, Wallet, Flower } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,16 @@ const iconMap: Record<string, React.ReactNode> = {
 export default function AppEntryPage() {
   const [prompt, setPrompt] = useState("");
   const [showParrot, setShowParrot] = useState(true);
+  const [templates, setTemplates] = useState<any[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    async function loadTemplates() {
+      const plans = await loadPlans();
+      setTemplates(plans);
+    }
+    loadTemplates();
+  }, []);
 
   const handleTemplateClick = (templateId: string) => {
     audioManager.play('click');
@@ -128,7 +137,7 @@ export default function AppEntryPage() {
           <h2 className="font-playfair text-2xl font-medium tracking-tight">Quick Start Templates</h2>
         </div>
         
-        {mockTemplates.map((template) => (
+        {templates.map((template: any) => (
           <motion.div 
             key={template.id}
             whileHover={{ y: -5, scale: 1.02 }}

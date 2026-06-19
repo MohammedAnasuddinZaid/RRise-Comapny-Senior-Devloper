@@ -7,7 +7,7 @@ const SOUND_PATHS: Record<SoundType, string> = {
   click: '/sounds/click.mp3',
   success: '/sounds/success.mp3',
   evolve: '/sounds/parrot_evolving.mp3',
-  idle: '/sounds/parrot_when_idel_signing.mp3',
+  idle: '/sounds/parrot_when_idel_signing.mp3', // Note: filename has typo (idel instead of idle)
   level_up: '/sounds/level_up.mp3',
   parrot_one_word: '/sounds/parrot_one_word.mp3'
 };
