@@ -15,6 +15,9 @@
 import { searchTemplates, loadAllTemplates } from './templateLoader';
 import type { Template } from './templateLoader';
 import { loadMemory } from './memorySystem';
+import { getActiveAIKey, hasActiveAIKey } from './byok';
+import type { AIProvider } from '@/types/database';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Response categories for different types of user queries
@@ -49,7 +52,17 @@ export async function generateAIResponse(
   const userPreferences = await loadMemory(userId, 'preferences');
   const userGoals = await loadMemory(userId, 'goals');
   
-  // Extract keywords from user message
+  // Check if user has BYOK configured
+  const hasOpenAIKey = await hasActiveAIKey(userId, 'openai');
+  const hasGeminiKey = await hasActiveAIKey(userId, 'gemini');
+  const hasAnthropicKey = await hasActiveAIKey(userId, 'anthropic');
+  
+  // If user has BYOK, use real AI API
+  if (hasOpenAIKey || hasGeminiKey || hasAnthropicKey) {
+    return await generateRealAIResponse(userId, userMessage, userPreferences, userGoals);
+  }
+  
+  // Otherwise, use template-based system (free plan)
   const keywords = lowerMessage.split(/\s+/).filter(word => word.length > 2);
   
   // Determine response category
@@ -86,7 +99,7 @@ export async function generateAIResponse(
   
   // Add template suggestions if found
   if (matchingTemplates.length > 0 && category !== 'template_suggestion') {
-    response += `\n\nI found ${matchingTemplates.length} template${matchingTemplates.length > 1 ? 's' : ''} that might help:`;
+    response += `\n\nI found ${matchingTemplates.length} plan${matchingTemplates.length > 1 ? 's' : ''} that might help:`;
   }
   
   return {
@@ -94,6 +107,421 @@ export async function generateAIResponse(
     templates: matchingTemplates.length > 0 ? matchingTemplates : undefined,
     category,
   };
+}
+
+/**
+ * Generate real AI response using BYOK
+ * 
+ * @param userId - User ID for personalization
+ * @param userMessage - User's message
+ * @param userPreferences - User preferences from memory
+ * @param userGoals - User goals from memory
+ * @returns AI response with optional template suggestions
+ */
+async function generateRealAIResponse(
+  userId: string,
+  userMessage: string,
+  userPreferences: any,
+  userGoals: any
+): Promise<{
+  response: string;
+  templates?: Template[];
+  category: ResponseCategory;
+}> {
+  try {
+    // Determine which provider to use (priority: OpenAI > Gemini > Anthropic)
+    let apiKey: string | null = null;
+    let provider: AIProvider = 'openai';
+    
+    apiKey = await getActiveAIKey(userId, 'openai');
+    if (!apiKey) {
+      apiKey = await getActiveAIKey(userId, 'gemini');
+      provider = 'gemini';
+    }
+    if (!apiKey) {
+      apiKey = await getActiveAIKey(userId, 'anthropic');
+      provider = 'anthropic';
+    }
+    
+    if (!apiKey) {
+      // Fallback to template-based system if no key found
+      return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
+    }
+    
+    // Call the appropriate AI API based on provider
+    let aiResponse: string;
+    
+    if (provider === 'openai') {
+      aiResponse = await callOpenAI(apiKey, userMessage, userPreferences, userGoals, userId);
+    } else if (provider === 'gemini') {
+      aiResponse = await callGemini(apiKey, userMessage, userPreferences, userGoals, userId);
+    } else if (provider === 'anthropic') {
+      aiResponse = await callAnthropic(apiKey, userMessage, userPreferences, userGoals, userId);
+    } else {
+      aiResponse = await callOpenAI(apiKey, userMessage, userPreferences, userGoals, userId);
+    }
+    
+    // Parse AI response to extract any plan suggestions
+    const templates = await parseAIResponseForPlans(aiResponse);
+    
+    return {
+      response: aiResponse,
+      templates: templates.length > 0 ? templates : undefined,
+      category: 'general_help',
+    };
+  } catch (error) {
+    console.error('Error calling AI API:', error);
+    // Fallback to template-based system on error
+    return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
+  }
+}
+
+/**
+ * Generate template-based response (fallback)
+ */
+async function generateTemplateBasedResponse(
+  userId: string,
+  userMessage: string,
+  userPreferences: any,
+  userGoals: any
+): Promise<{
+  response: string;
+  templates?: Template[];
+  category: ResponseCategory;
+}> {
+  const lowerMessage = userMessage.toLowerCase();
+  const keywords = lowerMessage.split(/\s+/).filter(word => word.length > 2);
+  const category = categorizeMessage(lowerMessage);
+  const matchingTemplates = await searchTemplates(keywords);
+  
+  let response = '';
+  
+  switch (category) {
+    case 'greeting':
+      response = generateGreetingResponse(userPreferences);
+      break;
+    case 'habit_help':
+      response = generateHabitHelpResponse(keywords, userPreferences);
+      break;
+    case 'task_help':
+      response = generateTaskHelpResponse(keywords, userPreferences);
+      break;
+    case 'motivation':
+      response = generateMotivationResponse(userGoals);
+      break;
+    case 'template_suggestion':
+      response = generateTemplateSuggestionResponse(matchingTemplates);
+      break;
+    case 'general_help':
+      response = generateGeneralHelpResponse(keywords);
+      break;
+    default:
+      response = generateFallbackResponse();
+  }
+  
+  if (matchingTemplates.length > 0 && category !== 'template_suggestion') {
+    response += `\n\nI found ${matchingTemplates.length} plan${matchingTemplates.length > 1 ? 's' : ''} that might help:`;
+  }
+  
+  return {
+    response,
+    templates: matchingTemplates.length > 0 ? matchingTemplates : undefined,
+    category,
+  };
+}
+
+/**
+ * Call OpenAI API
+ */
+async function callOpenAI(
+  apiKey: string,
+  userMessage: string,
+  userPreferences: any,
+  userGoals: any,
+  userId: string
+): Promise<string> {
+  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
+Your role is to help users build better habits, stay productive, and achieve their goals.
+
+User preferences: ${JSON.stringify(userPreferences || {})}
+User goals: ${JSON.stringify(userGoals || [])}
+
+When suggesting plans or routines, focus on:
+- Habit building and consistency
+- Productivity and time management
+- Personal development and growth
+- Fitness and wellness
+- Study skills and learning
+
+Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 500,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  
+  // Log usage (estimate tokens from response)
+  const tokensUsed = data.usage?.total_tokens || 0;
+  await logAIUsage(userId, 'openai', tokensUsed, 'chat');
+  
+  return content;
+}
+
+/**
+ * Call Gemini API
+ */
+async function callGemini(
+  apiKey: string,
+  userMessage: string,
+  userPreferences: any,
+  userGoals: any,
+  userId: string
+): Promise<string> {
+  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
+Your role is to help users build better habits, stay productive, and achieve their goals.
+
+User preferences: ${JSON.stringify(userPreferences || {})}
+User goals: ${JSON.stringify(userGoals || [])}
+
+When suggesting plans or routines, focus on:
+- Habit building and consistency
+- Productivity and time management
+- Personal development and growth
+- Fitness and wellness
+- Study skills and learning
+
+Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        { parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }
+      ],
+      generationConfig: {
+        maxOutputTokens: 500,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates[0].content.parts[0].text;
+  
+  // Log usage (estimate tokens from response length)
+  const tokensUsed = Math.ceil(content.length / 4); // Rough estimate
+  await logAIUsage(userId, 'gemini', tokensUsed, 'chat');
+  
+  return content;
+}
+
+/**
+ * Call Anthropic API
+ */
+async function callAnthropic(
+  apiKey: string,
+  userMessage: string,
+  userPreferences: any,
+  userGoals: any,
+  userId: string
+): Promise<string> {
+  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
+Your role is to help users build better habits, stay productive, and achieve their goals.
+
+User preferences: ${JSON.stringify(userPreferences || {})}
+User goals: ${JSON.stringify(userGoals || [])}
+
+When suggesting plans or routines, focus on:
+- Habit building and consistency
+- Productivity and time management
+- Personal development and growth
+- Fitness and wellness
+- Study skills and learning
+
+Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 500,
+      system: systemPrompt,
+      messages: [
+        { role: 'user', content: userMessage },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Anthropic API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.content[0].text;
+  
+  // Log usage (estimate tokens from response)
+  const tokensUsed = data.usage?.output_tokens || Math.ceil(content.length / 4);
+  await logAIUsage(userId, 'anthropic', tokensUsed, 'chat');
+  
+  return content;
+}
+
+/**
+ * Parse AI response to extract plan suggestions
+ * This is a simple implementation - could be enhanced with better parsing
+ */
+async function parseAIResponseForPlans(aiResponse: string): Promise<Template[]> {
+  // For now, return empty array - the AI will describe plans in text
+  // In the future, we could parse the response to extract structured plan data
+  return [];
+}
+
+/**
+ * Log AI API usage for quota tracking
+ * 
+ * @param userId - User ID
+ * @param provider - AI provider used
+ * @param tokensUsed - Number of tokens used
+ * @param requestType - Type of request (chat, completion, template)
+ */
+export async function logAIUsage(
+  userId: string,
+  provider: AIProvider | 'free',
+  tokensUsed: number,
+  requestType: 'chat' | 'completion' | 'template'
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return { success: false, error: 'Supabase not configured' };
+
+  try {
+    const { error } = await supabase.from('ai_usage_logs').insert({
+      user_id: userId,
+      provider,
+      tokens_used: tokensUsed,
+      request_type: requestType,
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to log AI usage' 
+    };
+  }
+}
+
+/**
+ * Get AI usage statistics for a user
+ * 
+ * @param userId - User ID
+ * @param days - Number of days to look back (default: 30)
+ * @returns Usage statistics
+ */
+export async function getAIUsageStats(
+  userId: string,
+  days: number = 30
+): Promise<{
+  totalTokens: number;
+  totalRequests: number;
+  byProvider: Record<string, { tokens: number; requests: number }>;
+  dailyUsage: Array<{ date: string; tokens: number; requests: number }>;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { totalTokens: 0, totalRequests: 0, byProvider: {}, dailyUsage: [] };
+  }
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) {
+    return { totalTokens: 0, totalRequests: 0, byProvider: {}, dailyUsage: [] };
+  }
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString();
+
+    const { data, error } = await supabase
+      .from('ai_usage_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', startDateStr)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) {
+      return { totalTokens: 0, totalRequests: 0, byProvider: {}, dailyUsage: [] };
+    }
+
+    // Calculate totals
+    const totalTokens = data.reduce((sum, log) => sum + (log.tokens_used || 0), 0);
+    const totalRequests = data.length;
+
+    // Group by provider
+    const byProvider: Record<string, { tokens: number; requests: number }> = {};
+    data.forEach(log => {
+      const provider = log.provider || 'free';
+      if (!byProvider[provider]) {
+        byProvider[provider] = { tokens: 0, requests: 0 };
+      }
+      byProvider[provider].tokens += log.tokens_used || 0;
+      byProvider[provider].requests += 1;
+    });
+
+    // Group by day
+    const dailyUsage: Array<{ date: string; tokens: number; requests: number }> = [];
+    const byDay: Record<string, { tokens: number; requests: number }> = {};
+    data.forEach(log => {
+      const date = log.created_at.split('T')[0];
+      if (!byDay[date]) {
+        byDay[date] = { tokens: 0, requests: 0 };
+      }
+      byDay[date].tokens += log.tokens_used || 0;
+      byDay[date].requests += 1;
+    });
+    Object.entries(byDay).forEach(([date, stats]) => {
+      dailyUsage.push({ date, ...stats });
+    });
+
+    return { totalTokens, totalRequests, byProvider, dailyUsage };
+  } catch (error) {
+    console.error('Error fetching AI usage stats:', error);
+    return { totalTokens: 0, totalRequests: 0, byProvider: {}, dailyUsage: [] };
+  }
 }
 
 /**
@@ -274,7 +702,7 @@ export function getFollowUpQuestions(category: ResponseCategory): string[] {
       ];
     case 'template_suggestion':
       return [
-        "Would you like to see more templates?",
+        "Would you like to see more plans?",
         "What's your current level?",
         "What's your main goal?",
       ];
@@ -282,7 +710,7 @@ export function getFollowUpQuestions(category: ResponseCategory): string[] {
       return [
         "What would you like to work on?",
         "Do you need help with habits or tasks?",
-        "Should I suggest some templates?",
+        "Should I suggest some plans?",
       ];
   }
 }

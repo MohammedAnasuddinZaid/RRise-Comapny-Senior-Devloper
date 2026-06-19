@@ -18,7 +18,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 import { initializeUser } from '@/lib/userInitialization';
 
 // Define the shape of our auth context
@@ -58,6 +58,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
+    if (!isSupabaseConfigured()) {
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClientComponentClient();
     if (!supabase) {
       setLoading(false);
@@ -88,6 +93,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Redirects to Google sign-in page
    */
   const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      return { error: { message: 'Supabase not configured' } as AuthError };
+    }
+    
     const supabase = createClientComponentClient();
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } as AuthError };
@@ -105,6 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Sign in with email and password
    */
   const signInWithEmail = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      return { error: { message: 'Supabase not configured' } as AuthError };
+    }
+    
     const supabase = createClientComponentClient();
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } as AuthError };
@@ -127,6 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * The name is stored in user metadata and will be used to create the profile
    */
   const signUpWithEmail = async (email: string, password: string, name: string) => {
+    if (!isSupabaseConfigured()) {
+      return { error: { message: 'Supabase not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.' } as AuthError };
+    }
+    
     const supabase = createClientComponentClient();
     if (!supabase) {
       return { error: { message: 'Supabase not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.' } as AuthError };

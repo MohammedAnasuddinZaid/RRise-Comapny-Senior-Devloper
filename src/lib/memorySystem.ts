@@ -15,7 +15,7 @@
  * Note: Database table is 'prompt_memory' (not 'user_memory')
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Memory types for categorization
@@ -45,6 +45,8 @@ export async function loadMemory(
   userId: string,
   memoryType: MemoryType
 ): Promise<any | null> {
+  if (!isSupabaseConfigured()) return null;
+  
   const supabase = createClientComponentClient();
   if (!supabase) return null;
 
@@ -93,6 +95,10 @@ export async function saveMemory(
   memoryValue: any,
   importance: MemoryImportance = 'medium'
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };
@@ -156,6 +162,8 @@ export async function saveMemory(
  * @returns All memories for the user
  */
 export async function loadAllMemories(userId: string): Promise<Record<MemoryType, any>> {
+  if (!isSupabaseConfigured()) return {} as Record<MemoryType, any>;
+  
   const supabase = createClientComponentClient();
   if (!supabase) return {} as Record<MemoryType, any>;
 
@@ -271,6 +279,10 @@ export async function deleteMemory(
   userId: string,
   memoryType: MemoryType
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };

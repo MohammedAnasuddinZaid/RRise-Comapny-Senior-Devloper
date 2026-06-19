@@ -17,7 +17,7 @@
  */
 
 import { AIProvider, AIKey, AIKeyPublic, AIKeyInsert, AIKeyUpdate } from '@/types/database';
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Save a new AI key for a user
@@ -34,6 +34,10 @@ export async function saveAIKey(
   keyName: string,
   apiKey: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -72,6 +76,8 @@ export async function saveAIKey(
  * @returns Array of AI keys (without the encrypted_key field)
  */
 export async function getUserAIKeys(userId: string): Promise<AIKeyPublic[]> {
+  if (!isSupabaseConfigured()) return [];
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -106,6 +112,8 @@ export async function getActiveAIKey(
   userId: string,
   provider: AIProvider
 ): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -144,6 +152,10 @@ export async function deactivateAIKey(
   keyId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -180,6 +192,10 @@ export async function deleteAIKey(
   keyId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -218,6 +234,10 @@ export async function updateAIKey(
   userId: string,
   updates: AIKeyUpdate
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {
@@ -305,6 +325,8 @@ export async function hasActiveAIKey(
   userId: string,
   provider: AIProvider
 ): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  
   try {
     const supabase = createClientComponentClient();
     if (!supabase) {

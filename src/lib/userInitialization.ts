@@ -11,7 +11,7 @@
  * This is called automatically when a new user signs up via the AuthContext.
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 import { PlanType } from '@/types/database';
 
 /**
@@ -28,6 +28,10 @@ export async function initializeUser(
   email: string,
   name?: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };
@@ -154,6 +158,10 @@ export async function isOnboardingCompleted(userId: string): Promise<boolean> {
  * @returns Success status and error if any
  */
 export async function completeOnboarding(userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };

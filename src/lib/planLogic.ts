@@ -17,7 +17,7 @@
  */
 
 import { PlanType } from '@/types/database';
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Plan limits configuration
@@ -102,6 +102,10 @@ export async function getUserPlan(userId: string): Promise<PlanType> {
  * This would typically be called by Stripe webhooks in production
  */
 export async function updateUserPlan(userId: string, newPlan: PlanType): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
   const supabase = createClientComponentClient();
   
   if (!supabase) {
@@ -135,6 +139,14 @@ export async function getUserUsage(userId: string): Promise<{
   monthly_token_usage: number;
   monthly_limit_reset_at: string | null;
 }> {
+  if (!isSupabaseConfigured()) {
+    return {
+      monthly_ai_requests: 0,
+      monthly_token_usage: 0,
+      monthly_limit_reset_at: null,
+    };
+  }
+  
   const supabase = createClientComponentClient();
   
   if (!supabase) {

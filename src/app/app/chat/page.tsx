@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Sparkles, Play } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Play, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
@@ -17,6 +17,7 @@ import type { Template } from "../../../lib/templateLoader";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { createHabit, createTask } from "../../../lib/dataLoader";
 import { saveMemory } from "../../../lib/memorySystem";
+import { hasActiveAIKey } from "../../../lib/byok";
 
 export default function ChatPage() {
   const { theme } = useTheme();
@@ -26,40 +27,62 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [suggestedPlans, setSuggestedPlans] = useState<Template[]>([]);
   const [startingPlan, setStartingPlan] = useState<string | null>(null);
+  const [selectedAPI, setSelectedAPI] = useState<'free' | 'openai' | 'gemini' | 'anthropic'>('free');
+  const [showAPIDropdown, setShowAPIDropdown] = useState(false);
+  const [hasBYOK, setHasBYOK] = useState(false);
 
-  // Handle starting a plan from template suggestion
-  const handleStartPlan = async (template: Template) => {
+  // Check for BYOK keys on mount
+  useEffect(() => {
+    async function checkBYOK() {
+      if (!user) return;
+      const hasOpenAI = await hasActiveAIKey(user.id, 'openai');
+      const hasGemini = await hasActiveAIKey(user.id, 'gemini');
+      const hasAnthropic = await hasActiveAIKey(user.id, 'anthropic');
+      setHasBYOK(hasOpenAI || hasGemini || hasAnthropic);
+      
+      // Auto-select first available BYOK
+      if (hasOpenAI) setSelectedAPI('openai');
+      else if (hasGemini) setSelectedAPI('gemini');
+      else if (hasAnthropic) setSelectedAPI('anthropic');
+    }
+    checkBYOK();
+  }, [user]);
+
+  // Handle starting a plan from plan suggestion
+  const handleStartPlan = async (plan: Template) => {
     if (!user) return;
 
-    setStartingPlan(template.id);
+    setStartingPlan(plan.id);
     try {
-      // Create habits from template
-      if (template.habits && template.habits.length > 0) {
-        for (const habit of template.habits) {
+      // Create habits from plan
+      if (plan.habits && plan.habits.length > 0) {
+        for (const habit of plan.habits) {
           await createHabit(user.id, habit.title, habit.icon || 'brain');
         }
       }
 
-      // Create tasks from template
-      if (template.tasks && template.tasks.length > 0) {
-        for (const task of template.tasks) {
+      // Create tasks from plan
+      if (plan.tasks && plan.tasks.length > 0) {
+        for (const task of plan.tasks) {
           const dueTime = task.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
           await createTask(user.id, task.title, dueTime);
         }
       }
 
       // Store selected plan in memory
-      await saveMemory(user.id, 'template_history' as any, {
-        planId: template.id,
-        planTitle: template.title,
-        planCategory: template.category,
+      await saveMemory(user.id, 'plan_history' as any, {
+        planId: plan.id,
+        planTitle: plan.title,
+        planCategory: plan.category,
         startedAt: new Date().toISOString(),
       });
 
       audioManager.play('success');
       
-      // Redirect to dashboard
-      router.push('/app/dashboard');
+      // Small delay to ensure data is saved before redirect
+      setTimeout(() => {
+        router.push('/app/dashboard');
+      }, 500);
     } catch (error) {
       console.error('Error starting plan:', error);
       alert('Failed to start plan. Please try again.');
@@ -161,9 +184,76 @@ export default function ChatPage() {
           </Link>
           <h1 className="font-playfair text-2xl font-bold">AI Companion</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm text-muted-foreground">Online</span>
+        <div className="flex items-center gap-4">
+          {/* API Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowAPIDropdown(!showAPIDropdown)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                selectedAPI === 'free' 
+                  ? 'bg-white/5 border border-white/10 text-muted-foreground'
+                  : 'bg-primary/10 border border-primary/20 text-primary'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>
+                {selectedAPI === 'free' ? 'Free Plan' : selectedAPI === 'openai' ? 'OpenAI' : selectedAPI === 'gemini' ? 'Gemini' : 'Anthropic'}
+              </span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {showAPIDropdown && (
+              <div className={`absolute right-0 top-full mt-2 w-48 rounded-xl border shadow-xl z-50 ${
+                theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'
+              }`}>
+                <div className="p-2 space-y-1">
+                  <button
+                    onClick={() => { setSelectedAPI('free'); setShowAPIDropdown(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      selectedAPI === 'free' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Free Plan</span>
+                  </button>
+                  {hasBYOK && (
+                    <>
+                      <button
+                        onClick={() => { setSelectedAPI('openai'); setShowAPIDropdown(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selectedAPI === 'openai' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>OpenAI</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedAPI('gemini'); setShowAPIDropdown(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selectedAPI === 'gemini' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Gemini</span>
+                      </button>
+                      <button
+                        onClick={() => { setSelectedAPI('anthropic'); setShowAPIDropdown(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selectedAPI === 'anthropic' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Anthropic</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${selectedAPI === 'free' ? 'bg-green-500' : 'bg-primary'}`} />
+            <span className="text-sm text-muted-foreground">Online</span>
+          </div>
         </div>
       </header>
 

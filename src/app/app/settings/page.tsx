@@ -10,6 +10,7 @@ import { createClientComponentClient } from "@/lib/supabase";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { audioManager } from "../../../lib/audioManager";
 import { saveAIKey, getUserAIKeys, deleteAIKey, testAIKey, hasActiveAIKey } from "../../../lib/byok";
+import { getAIUsageStats } from "../../../lib/aiMode";
 
 export default function SettingsPage() {
   const { user, loading } = useRequireAuth();
@@ -27,6 +28,10 @@ export default function SettingsPage() {
   const [newKeyValue, setNewKeyValue] = useState("");
   const [testingKey, setTestingKey] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  
+  // Usage stats state
+  const [usageStats, setUsageStats] = useState<any>(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
 
   // Load user data from Supabase
   useEffect(() => {
@@ -45,6 +50,12 @@ export default function SettingsPage() {
         // Load AI keys
         const keys = await getUserAIKeys(user.id);
         setAiKeys(keys);
+        
+        // Load usage stats
+        setLoadingUsage(true);
+        const stats = await getAIUsageStats(user.id, 30);
+        setUsageStats(stats);
+        setLoadingUsage(false);
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -101,6 +112,44 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error deleting AI key:', error);
       alert('Failed to delete AI key');
+    }
+  };
+
+  // Handle profile update
+  const handleProfileUpdate = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      const supabase = createClientComponentClient();
+      if (!supabase) {
+        alert('Failed to update profile');
+        setSaving(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          name: (document.querySelector('input[type="text"]') as HTMLInputElement)?.value || userData?.full_name
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        alert('Failed to update profile');
+      } else {
+        audioManager.play('success');
+        // Reload user data
+        const profile = await loadUserProfile(user.id);
+        if (profile) {
+          setUserData(profile);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -219,11 +268,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <Button 
-                      onClick={async () => {
-                        setSaving(true);
-                        // TODO: Implement profile update in Supabase
-                        setTimeout(() => setSaving(false), 1000);
-                      }}
+                      onClick={handleProfileUpdate}
                       disabled={saving}
                       className="mt-4"
                     >
@@ -382,6 +427,37 @@ export default function SettingsPage() {
                       </div>
                     )}
 
+                    {/* Usage Stats */}
+                    {usageStats && (
+                      <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          AI Usage (Last 30 Days)
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Total Requests</span>
+                            <span className="font-medium">{usageStats.totalRequests}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Total Tokens</span>
+                            <span className="font-medium">{usageStats.totalTokens.toLocaleString()}</span>
+                          </div>
+                          {Object.entries(usageStats.byProvider).length > 0 && (
+                            <div className="pt-3 border-t border-white/10">
+                              <p className="text-xs text-muted-foreground mb-2">By Provider</p>
+                              {Object.entries(usageStats.byProvider).map(([provider, stats]: [string, any]) => (
+                                <div key={provider} className="flex justify-between items-center text-sm mb-1">
+                                  <span className="text-muted-foreground capitalize">{provider}</span>
+                                  <span className="font-medium">{stats.tokens.toLocaleString()} tokens</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {!showAddKeyForm ? (
                       <Button 
                         className="w-full mt-4"
@@ -469,14 +545,9 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-4">
-                    <Button className="w-full mt-4 flex items-center gap-2">
-                      <Download className="w-4 h-4" />
-                      Export Memory Data
-                    </Button>
-                    <Button className="w-full flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20">
-                      <Trash2 className="w-4 h-4" />
-                      Clear All Memory
-                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Memory features are automatically managed by the AI companion. Your preferences and context are stored securely.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -494,15 +565,9 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-4">
-                    <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-                      <p className="text-sm font-medium text-red-400 mb-2">Delete Account</p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Permanently delete your account and all associated data. This action cannot be undone.
-                      </p>
-                      <Button className="w-full bg-red-500/10 text-red-500 hover:bg-red-500/20">
-                        Delete Account
-                      </Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Account deletion is not currently available. If you need to delete your account, please contact support.
+                    </p>
                   </div>
                 </CardContent>
               </Card>

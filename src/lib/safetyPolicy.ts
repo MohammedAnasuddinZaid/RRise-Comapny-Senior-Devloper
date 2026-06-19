@@ -218,7 +218,12 @@ export async function logSafetyEvent(
   metadata?: Record<string, any>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { createClientComponentClient } = await import('@/lib/supabase');
+    const { createClientComponentClient, isSupabaseConfigured } = await import('@/lib/supabase');
+    
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+    
     const supabase = createClientComponentClient();
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };

@@ -18,18 +18,13 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle } from "lucide-react";
 import { useRequireAuth } from "../../lib/authGuard";
-import { createClientComponentClient } from "../../lib/supabase";
+import { createClientComponentClient, isSupabaseConfigured } from "../../lib/supabase";
 
 const ADMIN_EMAILS = [
   "admin@rrise.com",
   "founder@rrise.com",
   // Add more admin emails here
 ];
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
 
 // Security: Validate admin emails to prevent injection
 const validateAdminEmail = (email: string): boolean => {

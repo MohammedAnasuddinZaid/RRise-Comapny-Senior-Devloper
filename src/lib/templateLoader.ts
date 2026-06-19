@@ -1,10 +1,10 @@
 /**
- * Template Auto-Loader
+ * Plan Auto-Loader
  * 
- * This file automatically scans the template folders and loads all JSON files.
- * This allows adding new templates without updating the import list.
+ * This file automatically scans the plan folders and loads all JSON files.
+ * This allows adding new plans without updating the import list.
  * 
- * Template folder structure:
+ * Plan folder structure:
  * - src/data/templates/fitness/
  * - src/data/templates/study/
  * - src/data/templates/productivity/
@@ -14,11 +14,14 @@
  * - src/data/templates/combined/
  * - src/data/templates/addiction_support/
  * 
- * When you add a new JSON template file to any of these folders,
+ * When you add a new JSON plan file to any of these folders,
  * it will be automatically loaded without code changes.
+ * 
+ * Note: Internal folder name remains 'templates' for consistency,
+ * but user-facing language uses 'plan', 'roadmap', 'program', or 'journey'
  */
 
-// Template type definition
+// Plan type definition (internally still called Template for code consistency)
 export interface Template {
   id: string;
   title: string;
@@ -40,18 +43,61 @@ export interface Template {
 }
 
 /**
- * Load all templates from the template folders
- * This function dynamically imports all JSON files from the template directories.
+ * Validate a plan object has all required fields
+ * 
+ * @param template - The plan object to validate
+ * @returns Whether the plan is valid
+ */
+function validateTemplate(template: any): boolean {
+  const requiredFields = [
+    'id',
+    'title',
+    'category',
+    'age_range',
+    'difficulty',
+    'description',
+    'goals',
+    'habits',
+    'tasks',
+    'warnings',
+    'estimated_duration',
+    'xp_rewards',
+    'mascot_effects',
+    'plan_type',
+    'tags',
+    'keywords',
+    'fallback_message'
+  ];
+
+  for (const field of requiredFields) {
+    if (!(field in template)) {
+      console.error(`Template missing required field: ${field}`);
+      return false;
+    }
+  }
+
+  // Validate arrays
+  if (!Array.isArray(template.goals) || !Array.isArray(template.habits) || !Array.isArray(template.tasks)) {
+    console.error('Template has invalid array fields');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Load all plans from the plan folders
+ * This function dynamically imports all JSON files from the plan directories.
  * 
  * Note: In a production build, this would be optimized.
- * For development, this provides automatic template discovery.
+ * For development, this provides automatic plan discovery.
  * 
- * @returns Array of all loaded templates
+ * @returns Array of all loaded plans
  */
 export async function loadAllTemplates(): Promise<Template[]> {
   const templates: Template[] = [];
 
-  // Template categories and their file paths
+  // Plan categories and their file paths
   const templateCategories = [
     'fitness',
     'study',
@@ -65,33 +111,37 @@ export async function loadAllTemplates(): Promise<Template[]> {
 
   // For now, we'll use the existing hardcoded imports
   // This is because Next.js doesn't support dynamic imports of JSON files at build time
-  // In a future update, we could use a build script to generate a template index
-  // Or use a different approach like storing templates in Supabase
+  // In a future update, we could use a build script to generate a plan index
+  // Or use a different approach like storing plans in Supabase
+  // 
+  // To add a new plan:
+  // 1. Create a JSON file in the appropriate category folder under src/data/templates/
+  // 2. Add the import statement below following the existing pattern
+  // 3. Add the template to the templates.push() array
+  // 4. Ensure the JSON has all required fields (see validateTemplate function)
 
-  // Import existing templates
-  const fitnessBeginner = (await import('@/data/templates/fitness/beginner.json')).default;
-  const fitnessIntermediate = (await import('@/data/templates/fitness/intermediate.json')).default;
-  const studyBeginner = (await import('@/data/templates/study/beginner.json')).default;
-  const studyCoding = (await import('@/data/templates/study/coding-beginner.json')).default;
-  const productivityBeginner = (await import('@/data/templates/productivity/beginner.json')).default;
-  const spendingAwareness = (await import('@/data/templates/spending/awareness.json')).default;
-  const generalDailyLoop = (await import('@/data/templates/general/daily-loop.json')).default;
-  const generalWeeklyRecap = (await import('@/data/templates/general/weekly-recap.json')).default;
-  const disciplineBeginner = (await import('@/data/templates/discipline/beginner.json')).default;
-  const combinedFitnessCoding = (await import('@/data/templates/combined/fitness-coding.json')).default;
+  // Import existing plans
+  const planImports = [
+    (await import('@/data/templates/fitness/beginner.json')).default,
+    (await import('@/data/templates/fitness/intermediate.json')).default,
+    (await import('@/data/templates/study/beginner.json')).default,
+    (await import('@/data/templates/study/coding-beginner.json')).default,
+    (await import('@/data/templates/productivity/beginner.json')).default,
+    (await import('@/data/templates/spending/awareness.json')).default,
+    (await import('@/data/templates/general/daily-loop.json')).default,
+    (await import('@/data/templates/general/weekly-recap.json')).default,
+    (await import('@/data/templates/discipline/beginner.json')).default,
+    (await import('@/data/templates/combined/fitness-coding.json')).default,
+  ];
 
-  templates.push(
-    fitnessBeginner,
-    fitnessIntermediate,
-    studyBeginner,
-    studyCoding,
-    productivityBeginner,
-    spendingAwareness,
-    generalDailyLoop,
-    generalWeeklyRecap,
-    disciplineBeginner,
-    combinedFitnessCoding,
-  );
+  // Validate and load each plan
+  for (const plan of planImports) {
+    if (validateTemplate(plan)) {
+      templates.push(plan);
+    } else {
+      console.error(`Skipping invalid plan: ${plan.id || 'unknown'}`);
+    }
+  }
 
   return templates;
 }
@@ -107,10 +157,10 @@ export async function loadPlans(): Promise<Template[]> {
 }
 
 /**
- * Get templates by category
+ * Get plans by category
  * 
  * @param category - The category to filter by
- * @returns Array of templates in the category
+ * @returns Array of plans in the category
  */
 export async function getTemplatesByCategory(category: string): Promise<Template[]> {
   const allTemplates = await loadAllTemplates();
@@ -118,10 +168,10 @@ export async function getTemplatesByCategory(category: string): Promise<Template
 }
 
 /**
- * Get template by ID
+ * Get plan by ID
  * 
- * @param id - The template ID
- * @returns Template or null if not found
+ * @param id - The plan ID
+ * @returns Plan or null if not found
  */
 export async function getTemplateById(id: string): Promise<Template | null> {
   const allTemplates = await loadAllTemplates();
@@ -129,10 +179,10 @@ export async function getTemplateById(id: string): Promise<Template | null> {
 }
 
 /**
- * Search templates by keywords
+ * Search plans by keywords
  * 
  * @param keywords - Keywords to search for
- * @returns Array of matching templates
+ * @returns Array of matching plans
  */
 export async function searchTemplates(keywords: string[]): Promise<Template[]> {
   const allTemplates = await loadAllTemplates();

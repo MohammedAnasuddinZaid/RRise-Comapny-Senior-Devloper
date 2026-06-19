@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
-import { Plus, Flame, Check, Trash2, Brain, Book, Dumbbell, Star } from "lucide-react";
+import { Plus, Flame, Check, Trash2, Brain, Book, Dumbbell, Star, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRequireAuth } from "../../../lib/authGuard";
-import { loadHabits, toggleHabitCompletion, createHabit, deleteHabit } from "../../../lib/dataLoader";
+import { loadHabits, toggleHabitCompletion, createHabit, deleteHabit, updateHabit } from "../../../lib/dataLoader";
 
 const iconMap: Record<string, React.ReactNode> = {
   "brain": <Brain className="w-5 h-5 text-primary" />,
@@ -20,6 +20,9 @@ export default function HabitsPage() {
   const [newHabitTitle, setNewHabitTitle] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("brain");
   const [dataLoading, setDataLoading] = useState(true);
+  const [editingHabit, setEditingHabit] = useState<string | null>(null);
+  const [editHabitTitle, setEditHabitTitle] = useState("");
+  const [editHabitIcon, setEditHabitIcon] = useState("");
 
   // Load habits from Supabase
   useEffect(() => {
@@ -123,6 +126,36 @@ export default function HabitsPage() {
     }
   };
 
+  const handleStartEdit = (habit: any) => {
+    setEditingHabit(habit.id);
+    setEditHabitTitle(habit.title);
+    setEditHabitIcon(habit.icon || 'brain');
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!user || !editHabitTitle.trim()) return;
+
+    const result = await updateHabit(id, user.id, editHabitTitle, editHabitIcon);
+    if (result.success) {
+      setHabits(habits.map(h => 
+        h.id === id 
+          ? { ...h, title: editHabitTitle, icon: editHabitIcon }
+          : h
+      ));
+      setEditingHabit(null);
+      setEditHabitTitle("");
+      setEditHabitIcon("");
+    } else {
+      console.error('Failed to update habit:', result.error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingHabit(null);
+    setEditHabitTitle("");
+    setEditHabitIcon("");
+  };
+
   return (
     <div className="space-y-10 pb-12 max-w-4xl mx-auto">
       <div className="space-y-4">
@@ -187,64 +220,113 @@ export default function HabitsPage() {
                   : "bg-white/5 border-white/10 hover:bg-white/10"
               }`}>
                 <CardContent className="p-8 flex flex-col justify-between h-full space-y-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3.5 rounded-xl border transition-colors ${
-                        habit.completed 
-                          ? "bg-primary/20 border-primary/30" 
-                          : "bg-white/5 border-white/10"
-                      }`}>
-                        {iconMap[habit.icon] || <Star className="w-6 h-6 text-primary" />}
-                      </div>
-                      <div>
-                        <h3 className="font-playfair text-xl font-bold">{habit.title}</h3>
-                        <div className="flex items-center gap-1.5 mt-2.5 text-orange-500 font-sans text-sm font-medium">
-                          <Flame className="w-4 h-4 fill-current" />
-                          <span>{habit.streak} Day Streak</span>
+                  {editingHabit === habit.id ? (
+                    // Edit Mode
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="flex bg-black/20 border border-white/10 rounded-xl p-1">
+                          {["brain", "book", "dumbbell"].map((icon) => (
+                            <button
+                              key={icon}
+                              type="button"
+                              onClick={() => setEditHabitIcon(icon)}
+                              className={`p-3 rounded-lg capitalize transition-colors ${
+                                editHabitIcon === icon ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {iconMap[icon]}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={editHabitTitle}
+                            onChange={(e) => setEditHabitTitle(e.target.value)}
+                            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-base outline-none focus:border-primary/50 transition-colors"
+                          />
                         </div>
                       </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button onClick={handleCancelEdit} variant="outline" className="rounded-xl">
+                          <X className="w-4 h-4 mr-2" /> Cancel
+                        </Button>
+                        <Button onClick={() => handleSaveEdit(habit.id)} className="rounded-xl">
+                          Save
+                        </Button>
+                      </div>
                     </div>
-
-                    <button
-                      onClick={() => toggleHabit(habit.id)}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
-                        habit.completed 
-                          ? "border-primary bg-primary text-primary-foreground" 
-                          : "border-muted-foreground/50 text-transparent hover:border-primary"
-                      }`}
-                    >
-                      <Check className="w-5 h-5 stroke-[3]" />
-                    </button>
-                  </div>
-
-                  {/* Weekly Progress Tracker indicator */}
-                  <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                    <div className="flex gap-2">
-                      {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => {
-                        // Calculate past completions based on habit streak
-                        const isCompleted = index < 3 || (index === 6 && habit.completed);
-                        return (
-                          <div key={index} className="flex flex-col items-center gap-1.5">
-                            <span className="text-[10px] text-muted-foreground font-light">{day}</span>
-                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-sans transition-colors ${
-                              isCompleted 
-                                ? "bg-primary/20 border-primary/30 text-primary font-bold" 
-                                : "border-white/10 text-muted-foreground/40 bg-white/[0.01]"
-                            }`}>
-                              {isCompleted ? <Check className="w-3.5 h-3.5" /> : null}
+                  ) : (
+                    // View Mode
+                    <>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-4">
+                          <div className={`p-3.5 rounded-xl border transition-colors ${
+                            habit.completed 
+                              ? "bg-primary/20 border-primary/30" 
+                              : "bg-white/5 border-white/10"
+                          }`}>
+                            {iconMap[habit.icon] || <Star className="w-6 h-6 text-primary" />}
+                          </div>
+                          <div>
+                            <h3 className="font-playfair text-xl font-bold">{habit.title}</h3>
+                            <div className="flex items-center gap-1.5 mt-2.5 text-orange-500 font-sans text-sm font-medium">
+                              <Flame className="w-4 h-4 fill-current" />
+                              <span>{habit.streak} Day Streak</span>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
 
-                    <button
-                      onClick={() => handleDeleteHabit(habit.id)}
-                      className="text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2 self-end"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                        <button
+                          onClick={() => toggleHabit(habit.id)}
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                            habit.completed 
+                              ? "border-primary bg-primary text-primary-foreground" 
+                              : "border-muted-foreground/50 text-transparent hover:border-primary"
+                          }`}
+                        >
+                          <Check className="w-5 h-5 stroke-[3]" />
+                        </button>
+                      </div>
+
+                      {/* Weekly Progress Tracker indicator */}
+                      <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                        <div className="flex gap-2">
+                          {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => {
+                            // Calculate past completions based on habit streak
+                            const isCompleted = index < 3 || (index === 6 && habit.completed);
+                            return (
+                              <div key={index} className="flex flex-col items-center gap-1.5">
+                                <span className="text-[10px] text-muted-foreground font-light">{day}</span>
+                                <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-sans transition-colors ${
+                                  isCompleted 
+                                    ? "bg-primary/20 border-primary/30 text-primary font-bold" 
+                                    : "border-white/10 text-muted-foreground/40 bg-white/[0.01]"
+                                }`}>
+                                  {isCompleted ? <Check className="w-3.5 h-3.5" /> : null}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleStartEdit(habit)}
+                            className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteHabit(habit.id)}
+                            className="text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

@@ -15,7 +15,7 @@
  * - ensureUserData: Check and create missing user data rows
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 import { Profile, Habit, Task, MascotState } from '@/types/database';
 
 /**
@@ -25,6 +25,8 @@ import { Profile, Habit, Task, MascotState } from '@/types/database';
  * @returns User profile or null if not found
  */
 export async function loadUserProfile(userId: string): Promise<Profile | null> {
+  if (!isSupabaseConfigured()) return null;
+  
   const supabase = createClientComponentClient();
   if (!supabase) return null;
 
@@ -55,6 +57,8 @@ export async function loadUserProfile(userId: string): Promise<Profile | null> {
  * @returns Array of habits with completion status
  */
 export async function loadHabits(userId: string): Promise<any[]> {
+  if (!isSupabaseConfigured()) return [];
+  
   const supabase = createClientComponentClient();
   if (!supabase) return [];
 
@@ -74,13 +78,17 @@ export async function loadHabits(userId: string): Promise<any[]> {
 
     // For each habit, get today's completion status
     const today = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(today).toISOString();
+    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
+    
     const habitsWithStatus = await Promise.all(
       habits.map(async (habit) => {
         const { data: logs } = await supabase
           .from('habit_logs')
           .select('*')
           .eq('habit_id', habit.id)
-          .gte('completed_at', today)
+          .gte('completed_at', todayStart)
+          .lte('completed_at', todayEnd)
           .order('completed_at', { ascending: false });
 
         const completedToday = logs && logs.length > 0;
@@ -115,6 +123,8 @@ export async function loadHabits(userId: string): Promise<any[]> {
  * @returns Array of tasks with completion status
  */
 export async function loadTasks(userId: string): Promise<any[]> {
+  if (!isSupabaseConfigured()) return [];
+  
   const supabase = createClientComponentClient();
   if (!supabase) return [];
 
@@ -134,20 +144,24 @@ export async function loadTasks(userId: string): Promise<any[]> {
 
     // For each task, get today's completion status
     const today = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(today).toISOString();
+    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
+    
     const tasksWithStatus = await Promise.all(
       tasks.map(async (task) => {
         const { data: logs } = await supabase
           .from('task_logs')
           .select('*')
           .eq('task_id', task.id)
-          .gte('completed_at', today)
+          .gte('completed_at', todayStart)
+          .lte('completed_at', todayEnd)
           .order('completed_at', { ascending: false });
 
         const completedToday = logs && logs.length > 0;
 
         return {
           ...task,
-          completed: completedToday || false,
+          completed: completedToday || task.status === 'completed',
           dueTime: task.due_date || new Date().toISOString(),
         };
       })
@@ -161,12 +175,56 @@ export async function loadTasks(userId: string): Promise<any[]> {
 }
 
 /**
+ * Update an existing habit
+ * 
+ * @param habitId - The habit ID
+ * @param userId - The user's ID (for security)
+ * @param title - New habit title
+ * @param icon - New habit icon
+ * @returns Success status and habit data
+ */
+export async function updateHabit(
+  habitId: string,
+  userId: string,
+  title: string,
+  icon: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return { success: false, error: 'Supabase not configured' };
+
+  try {
+    const { data, error } = await supabase
+      .from('habits')
+      .update({ title, icon })
+      .eq('id', habitId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update habit' 
+    };
+  }
+}
+
+/**
  * Load mascot state from Supabase
  * 
  * @param userId - The user's ID
  * @returns Mascot state or null if not found
  */
 export async function loadMascotState(userId: string): Promise<MascotState | null> {
+  if (!isSupabaseConfigured()) return null;
+  
   const supabase = createClientComponentClient();
   if (!supabase) return null;
 
@@ -179,13 +237,33 @@ export async function loadMascotState(userId: string): Promise<MascotState | nul
 
     if (error) {
       console.error('Error loading mascot state:', error);
-      return null;
+      // Return default mascot state if not found
+      return {
+        id: '',
+        user_id: userId,
+        level: 1,
+        evolution_stage: 'egg',
+        total_interactions: 0,
+        last_fed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
     }
 
     return data;
   } catch (error) {
     console.error('Error loading mascot state:', error);
-    return null;
+    // Return default mascot state on error
+    return {
+      id: '',
+      user_id: userId,
+      level: 1,
+      evolution_stage: 'egg',
+      total_interactions: 0,
+      last_fed_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
   }
 }
 
@@ -196,13 +274,15 @@ export async function loadMascotState(userId: string): Promise<MascotState | nul
  * @returns Streak count
  */
 export async function loadStreakCount(userId: string): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+  
   const supabase = createClientComponentClient();
   if (!supabase) return 0;
 
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('streak')
+      .select('streak_count')
       .eq('id', userId)
       .single();
 
@@ -211,7 +291,7 @@ export async function loadStreakCount(userId: string): Promise<number> {
       return 0;
     }
 
-    return data?.streak || 0;
+    return data?.streak_count || 0;
   } catch (error) {
     console.error('Error loading streak count:', error);
     return 0;
@@ -231,6 +311,8 @@ export async function toggleHabitCompletion(
   userId: string,
   completed: boolean
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -240,23 +322,113 @@ export async function toggleHabitCompletion(
       return { success: false, error: 'Invalid input' };
     }
 
-    const { error } = await supabase
-      .from('habits')
-      .update({ completed })
-      .eq('id', habitId)
-      .eq('user_id', userId);
+    const today = new Date().toISOString().split('T')[0];
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    // Log habit completion
     if (completed) {
-      await supabase.from('habit_logs').insert({
-        habit_id: habitId,
-        user_id: userId,
-        completed_at: new Date().toISOString(),
-      });
+      // Check if already completed today
+      const { data: existingLog } = await supabase
+        .from('habit_logs')
+        .select('*')
+        .eq('habit_id', habitId)
+        .eq('user_id', userId)
+        .gte('completed_at', today)
+        .single();
+
+      if (!existingLog) {
+        // Insert habit completion log
+        const { error: insertError } = await supabase.from('habit_logs').insert({
+          habit_id: habitId,
+          user_id: userId,
+          completed_at: new Date().toISOString(),
+          xp_earned: 10, // Default XP reward
+        });
+
+        if (insertError) {
+          return { success: false, error: insertError.message };
+        }
+
+        // Update user XP total in profiles table
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('xp_total')
+          .eq('id', userId)
+          .single();
+
+        if (currentProfile) {
+          const newXP = (currentProfile.xp_total || 0) + 10;
+          const { error: xpError } = await supabase
+            .from('profiles')
+            .update({ xp_total: newXP })
+            .eq('id', userId);
+
+          if (xpError) {
+            console.error('Error updating XP total:', xpError);
+          }
+        }
+
+        // Log XP gain
+        await supabase.from('xp_logs').insert({
+          user_id: userId,
+          amount: 10,
+          reason: 'Habit completion',
+          source: 'habit',
+        });
+
+        // Update streak
+        const { data: currentStreak } = await supabase
+          .from('streaks')
+          .select('current_streak')
+          .eq('user_id', userId)
+          .eq('type', 'habits')
+          .single();
+
+        if (currentStreak) {
+          const newStreak = (currentStreak.current_streak || 0) + 1;
+          const { error: streakError } = await supabase
+            .from('streaks')
+            .update({ 
+              current_streak: newStreak,
+              last_activity_at: new Date().toISOString()
+            })
+            .eq('user_id', userId)
+            .eq('type', 'habits');
+
+          if (streakError) {
+            console.error('Error updating streak:', streakError);
+          }
+        }
+      }
+    } else {
+      // Remove today's completion log (uncheck)
+      const { error: deleteError } = await supabase
+        .from('habit_logs')
+        .delete()
+        .eq('habit_id', habitId)
+        .eq('user_id', userId)
+        .gte('completed_at', today);
+
+      if (deleteError) {
+        return { success: false, error: deleteError.message };
+      }
+
+      // Decrease XP total when unchecking
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('xp_total')
+        .eq('id', userId)
+        .single();
+
+      if (currentProfile) {
+        const newXP = Math.max((currentProfile.xp_total || 0) - 10, 0);
+        const { error: xpError } = await supabase
+          .from('profiles')
+          .update({ xp_total: newXP })
+          .eq('id', userId);
+
+        if (xpError) {
+          console.error('Error updating XP total:', xpError);
+        }
+      }
     }
 
     return { success: true };
@@ -281,6 +453,8 @@ export async function toggleTaskCompletion(
   userId: string,
   completed: boolean
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -290,9 +464,10 @@ export async function toggleTaskCompletion(
       return { success: false, error: 'Invalid input' };
     }
 
+    // Update task status instead of completed field
     const { error } = await supabase
       .from('tasks')
-      .update({ completed })
+      .update({ status: completed ? 'completed' : 'pending' })
       .eq('id', taskId)
       .eq('user_id', userId);
 
@@ -306,7 +481,59 @@ export async function toggleTaskCompletion(
         task_id: taskId,
         user_id: userId,
         completed_at: new Date().toISOString(),
+        xp_earned: 5, // Default XP reward
       });
+
+      // Update user XP total in profiles table
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('xp_total')
+        .eq('id', userId)
+        .single();
+
+      if (currentProfile) {
+        const newXP = (currentProfile.xp_total || 0) + 5;
+        const { error: xpError } = await supabase
+          .from('profiles')
+          .update({ xp_total: newXP })
+          .eq('id', userId);
+
+        if (xpError) {
+          console.error('Error updating XP total:', xpError);
+        }
+      }
+
+      // Log XP gain
+      await supabase.from('xp_logs').insert({
+        user_id: userId,
+        amount: 5,
+        reason: 'Task completion',
+        source: 'task',
+      });
+
+      // Update streak
+      const { data: currentStreak } = await supabase
+        .from('streaks')
+        .select('current_streak')
+        .eq('user_id', userId)
+        .eq('type', 'tasks')
+        .single();
+
+      if (currentStreak) {
+        const newStreak = (currentStreak.current_streak || 0) + 1;
+        const { error: streakError } = await supabase
+          .from('streaks')
+          .update({ 
+            current_streak: newStreak,
+            last_activity_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+          .eq('type', 'tasks');
+
+        if (streakError) {
+          console.error('Error updating streak:', streakError);
+        }
+      }
     }
 
     return { success: true };
@@ -331,6 +558,8 @@ export async function createHabit(
   title: string,
   icon: string = 'brain'
 ): Promise<{ success: boolean; error?: string; data?: any }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -376,6 +605,8 @@ export async function deleteHabit(
   habitId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -424,6 +655,8 @@ export async function createTask(
   title: string,
   dueTime: string
 ): Promise<{ success: boolean; error?: string; data?: any }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -468,6 +701,8 @@ export async function deleteTask(
   taskId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -516,6 +751,21 @@ export async function loadSpendingData(userId: string): Promise<{
   recentTransactions: Array<{ id: string; title: string; amount: number; date: string }>;
   categories: Array<{ name: string; amount: number; color: string }>;
 }> {
+  if (!isSupabaseConfigured()) {
+    return {
+      currency: "$",
+      totalSpent: 0,
+      budget: 100,
+      recentTransactions: [],
+      categories: [
+        { name: "Food", amount: 0, color: "#00ff87" },
+        { name: "Transport", amount: 0, color: "#00e5ff" },
+        { name: "Entertainment", amount: 0, color: "#ff6b6b" },
+        { name: "Shopping", amount: 0, color: "#ffd93d" },
+      ],
+    };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return {
@@ -543,6 +793,18 @@ export async function loadSpendingData(userId: string): Promise<{
 
     if (txError) {
       console.error('Error loading spending transactions:', txError);
+      return {
+        currency: "$",
+        totalSpent: 0,
+        budget: 100,
+        recentTransactions: [],
+        categories: [
+          { name: "Food", amount: 0, color: "#00ff87" },
+          { name: "Transport", amount: 0, color: "#00e5ff" },
+          { name: "Entertainment", amount: 0, color: "#ff6b6b" },
+          { name: "Shopping", amount: 0, color: "#ffd93d" },
+        ],
+      };
     }
 
     // Calculate totals by category
@@ -615,6 +877,8 @@ export async function createSpendingTransaction(
   amount: number,
   category: string
 ): Promise<{ success: boolean; error?: string; data?: any }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -660,6 +924,8 @@ export async function deleteSpendingTransaction(
   transactionId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -700,6 +966,8 @@ export async function deleteSpendingTransaction(
  * @returns Success status
  */
 export async function bootstrapUserData(userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -774,6 +1042,8 @@ export async function bootstrapUserData(userId: string): Promise<{ success: bool
  * @returns Success status
  */
 export async function ensureUserData(userId: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
   const supabase = createClientComponentClient();
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
@@ -883,6 +1153,15 @@ export async function loadActivityHistory(userId: string): Promise<{
   spendingTransactions: Array<{ id: string; category: string; amount: number; spentAt: string }>;
   xpGains: Array<{ id: string; amount: number; reason: string; source: string; createdAt: string }>;
 }> {
+  if (!isSupabaseConfigured()) {
+    return {
+      habitCompletions: [],
+      taskCompletions: [],
+      spendingTransactions: [],
+      xpGains: [],
+    };
+  }
+  
   const supabase = createClientComponentClient();
   if (!supabase) {
     return {
