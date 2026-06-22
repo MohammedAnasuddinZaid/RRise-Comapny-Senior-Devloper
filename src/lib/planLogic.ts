@@ -3,10 +3,13 @@
  * 
  * This file handles plan state management and usage tracking for RRise.
  * 
+ * IMPORTANT: Plan state must always come from Supabase, never from frontend values.
+ * Plan updates should only happen through Stripe webhook handlers on the server.
+ * 
  * Plan Types:
  * - free: Templates, dashboard, tracking, mascot, streaks, weekly recap, no real AI
  * - pro: BYOK support, higher limits, richer AI-assisted templates, advanced accountability
- * - ultra_max: Premium tier with higher/unlimited limits, advanced Alex AI, deep accountability
+ * - ultra: Premium tier with higher/unlimited limits, advanced Alex AI, deep accountability
  * 
  * Usage Tracking:
  * - Monthly AI requests
@@ -36,7 +39,7 @@ export const PLAN_LIMITS = {
     ai_mode_enabled: true,
     features: ['templates', 'dashboard', 'tracking', 'mascot', 'streaks', 'weekly_recap', 'byok', 'ai_assisted_templates', 'advanced_accountability'],
   },
-  ultra_max: {
+  ultra: {
     monthly_ai_requests: 1000,
     monthly_token_usage: 1000000,
     ai_mode_enabled: true,
@@ -275,7 +278,7 @@ export function getPlanDisplayName(plan: PlanType): string {
   const names: Record<PlanType, string> = {
     free: 'Free',
     pro: 'Pro',
-    ultra_max: 'Ultra Max',
+    ultra: 'Ultra',
   };
   return names[plan];
 }
@@ -287,7 +290,7 @@ export function getPlanBadgeColor(plan: PlanType): string {
   const colors: Record<PlanType, string> = {
     free: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
     pro: 'bg-primary/20 text-primary border-primary/30',
-    ultra_max: 'bg-secondary/20 text-secondary border-secondary/30',
+    ultra: 'bg-secondary/20 text-secondary border-secondary/30',
   };
   return colors[plan];
 }
@@ -307,9 +310,9 @@ export async function canUpgradeToPlan(userId: string, targetPlan: PlanType): Pr
  */
 export function getUpgradePath(currentPlan: PlanType): PlanType[] {
   const paths: Record<PlanType, PlanType[]> = {
-    free: ['pro', 'ultra_max'],
-    pro: ['ultra_max'],
-    ultra_max: [],
+    free: ['pro', 'ultra'],
+    pro: ['ultra'],
+    ultra: [],
   };
   return paths[currentPlan];
 }

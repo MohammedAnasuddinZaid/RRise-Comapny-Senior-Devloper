@@ -99,11 +99,22 @@ export async function loadHabits(userId: string): Promise<any[]> {
           .select('*', { count: 'exact', head: false })
           .eq('habit_id', habit.id);
 
+        // Parse icon from description JSON (stored there because 'icon' column doesn't exist)
+        let icon = 'brain'; // default
+        try {
+          if (habit.description) {
+            const parsed = JSON.parse(habit.description);
+            if (parsed.icon) icon = parsed.icon;
+          }
+        } catch {
+          // description is plain text, not JSON — keep default icon
+        }
+
         return {
           ...habit,
           completed: completedToday || false,
           streak: streakCount || 0,
-          icon: 'brain', // Default icon, can be enhanced later
+          icon,
         };
       })
     );
@@ -159,10 +170,22 @@ export async function loadTasks(userId: string): Promise<any[]> {
 
         const completedToday = logs && logs.length > 0;
 
+        // Parse dueTime from description JSON (stored there to preserve time component)
+        // because 'due_date' is a DATE column that only stores the date portion
+        let dueTime = task.due_date || new Date().toISOString();
+        try {
+          if (task.description) {
+            const parsed = JSON.parse(task.description);
+            if (parsed.dueTime) dueTime = parsed.dueTime;
+          }
+        } catch {
+          // description is plain text, not JSON — keep due_date fallback
+        }
+
         return {
           ...task,
           completed: completedToday || task.status === 'completed',
-          dueTime: task.due_date || new Date().toISOString(),
+          dueTime,
         };
       })
     );
@@ -195,9 +218,12 @@ export async function updateHabit(
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
   try {
+    // The habits table has no 'icon' column; we store the icon in description as JSON
+    const descriptionPayload = JSON.stringify({ icon });
+
     const { data, error } = await supabase
       .from('habits')
-      .update({ title, icon })
+      .update({ title, description: descriptionPayload })
       .eq('id', habitId)
       .eq('user_id', userId)
       .select()
@@ -229,15 +255,31 @@ export async function loadMascotState(userId: string): Promise<MascotState | nul
   if (!supabase) return null;
 
   try {
+    // NOTE: maybeSingle() returns null (not an error) when no row is found.
+    // Using single() here caused PGRST116 console errors on new users.
     const { data, error } = await supabase
       .from('mascot_state')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error loading mascot state:', error);
       // Return default mascot state if not found
+      return {
+        id: '',
+        user_id: userId,
+        level: 1,
+        evolution_stage: 'egg',
+        total_interactions: 0,
+        last_fed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    // data will be null if no row exists; return default in that case
+    if (!data) {
       return {
         id: '',
         user_id: userId,
@@ -326,13 +368,14 @@ export async function toggleHabitCompletion(
 
     if (completed) {
       // Check if already completed today
+      // NOTE: Use maybeSingle() not single() — single() throws PGRST116 when no row found
       const { data: existingLog } = await supabase
         .from('habit_logs')
         .select('*')
         .eq('habit_id', habitId)
         .eq('user_id', userId)
         .gte('completed_at', today)
-        .single();
+        .maybeSingle();
 
       if (!existingLog) {
         // Insert habit completion log
@@ -374,13 +417,13 @@ export async function toggleHabitCompletion(
           source: 'habit',
         });
 
-        // Update streak
+        // NOTE: Use maybeSingle() to avoid PGRST116 when streak row doesn't exist yet
         const { data: currentStreak } = await supabase
           .from('streaks')
           .select('current_streak')
           .eq('user_id', userId)
           .eq('type', 'habits')
-          .single();
+          .maybeSingle();
 
         if (currentStreak) {
           const newStreak = (currentStreak.current_streak || 0) + 1;
@@ -511,13 +554,13 @@ export async function toggleTaskCompletion(
         source: 'task',
       });
 
-      // Update streak
+      // NOTE: Use maybeSingle() to avoid PGRST116 when streak row doesn't exist yet
       const { data: currentStreak } = await supabase
         .from('streaks')
         .select('current_streak')
         .eq('user_id', userId)
         .eq('type', 'tasks')
-        .single();
+        .maybeSingle();
 
       if (currentStreak) {
         const newStreak = (currentStreak.current_streak || 0) + 1;
@@ -569,14 +612,15 @@ export async function createHabit(
       return { success: false, error: 'Invalid input' };
     }
 
+    // IMPORTANT: The 'habits' table has NO 'icon', 'completed', or 'streak' columns.
+    // We store the icon as JSON in the 'description' column.
+    // Completion status is derived from 'habit_logs' at query time.
     const { data, error } = await supabase
       .from('habits')
       .insert({
         user_id: userId,
         title,
-        icon,
-        completed: false,
-        streak: 0,
+        description: JSON.stringify({ icon }), // store icon in description JSON
       })
       .select()
       .single();
@@ -585,7 +629,8 @@ export async function createHabit(
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    // Return the data with virtual fields added so callers don't break
+    return { success: true, data: { ...data, icon, completed: false, streak: 0 } };
   } catch (error) {
     return { 
       success: false, 
@@ -666,13 +711,19 @@ export async function createTask(
       return { success: false, error: 'Invalid input' };
     }
 
+    // IMPORTANT: 'tasks' table has NO 'completed' column — it uses 'status' TEXT.
+    // 'due_date' is DATE type (not timestamptz), so we strip the time portion.
+    // Store the original time string in description JSON so we can display it.
+    const dueDateOnly = dueTime ? dueTime.split('T')[0] : null;
+
     const { data, error } = await supabase
       .from('tasks')
       .insert({
         user_id: userId,
         title,
-        due_date: dueTime,
-        completed: false,
+        status: 'pending',          // use status, not completed
+        due_date: dueDateOnly,       // DATE only, no time component
+        description: dueTime ? JSON.stringify({ dueTime }) : null, // store full time for display
       })
       .select()
       .single();
@@ -681,7 +732,8 @@ export async function createTask(
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    // Return with virtual 'completed' and 'dueTime' fields so callers don't break
+    return { success: true, data: { ...data, completed: false, dueTime } };
   } catch (error) {
     return { 
       success: false, 
@@ -1011,12 +1063,14 @@ export async function bootstrapUserData(userId: string): Promise<{ success: bool
       timezone: 'UTC',
     };
 
+    // NOTE: prompt_memory only allows types: 'preference', 'context', 'history'
+    // We store app_settings as a 'preference' memory type
     const { error: memoryError } = await supabase
       .from('prompt_memory')
       .insert({
         user_id: userId,
-        memory_type: 'app_settings',
-        memory_data: defaultMemory,
+        memory_type: 'preference',
+        memory_data: { key: 'app_settings', ...defaultMemory },
       });
 
     if (memoryError && !memoryError.message.includes('duplicate key')) {
@@ -1048,12 +1102,12 @@ export async function ensureUserData(userId: string): Promise<{ success: boolean
   if (!supabase) return { success: false, error: 'Supabase not configured' };
 
   try {
-    // Check if mascot state exists
+    // NOTE: maybeSingle() returns null when no row found; single() would throw PGRST116
     const { data: mascotState } = await supabase
       .from('mascot_state')
       .select('id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (!mascotState) {
       const mascotResult = await supabase
@@ -1073,12 +1127,13 @@ export async function ensureUserData(userId: string): Promise<{ success: boolean
     // Check if streaks exist
     const streakTypes = ['habits', 'tasks', 'overall'];
     for (const type of streakTypes) {
+      // NOTE: maybeSingle() returns null when no row found; single() would throw PGRST116
       const { data: streak } = await supabase
         .from('streaks')
         .select('id')
         .eq('user_id', userId)
         .eq('type', type)
-        .single();
+        .maybeSingle();
 
       if (!streak) {
         const streakResult = await supabase
@@ -1096,13 +1151,15 @@ export async function ensureUserData(userId: string): Promise<{ success: boolean
       }
     }
 
-    // Check if default memory exists
+    // Check if default preference memory exists
+    // NOTE: Use maybeSingle() to avoid PGRST116 error when no row is found
+    // NOTE: 'app_settings' is not a valid memory_type — use 'preference' instead
     const { data: memory } = await supabase
       .from('prompt_memory')
       .select('id')
       .eq('user_id', userId)
-      .eq('memory_type', 'app_settings')
-      .single();
+      .eq('memory_type', 'preference')
+      .maybeSingle();
 
     if (!memory) {
       const defaultMemory = {
@@ -1116,8 +1173,8 @@ export async function ensureUserData(userId: string): Promise<{ success: boolean
         .from('prompt_memory')
         .insert({
           user_id: userId,
-          memory_type: 'app_settings',
-          memory_data: defaultMemory,
+          memory_type: 'preference', // valid: 'preference' | 'context' | 'history'
+          memory_data: { key: 'app_settings', ...defaultMemory },
         });
 
       if (memoryResult.error) {
@@ -1130,6 +1187,84 @@ export async function ensureUserData(userId: string): Promise<{ success: boolean
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to ensure user data' 
+    };
+  }
+}
+
+/**
+ * Save daily reflection to Supabase
+ * 
+ * @param userId - The user's ID
+ * @param mood - Mood rating (1-5)
+ * @param journalText - Journal entry text
+ * @returns Success status and error if any
+ */
+export async function saveDailyReflection(
+  userId: string,
+  mood: number,
+  journalText: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    // Save to prompt_memory with type 'daily_reflection'
+    const reflectionData = {
+      mood,
+      journal: journalText,
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    // NOTE: prompt_memory only allows types: 'preference', 'context', 'history'
+    // Daily reflections are stored as 'history' type
+    const { error } = await supabase.from('prompt_memory').insert({
+      user_id: userId,
+      memory_type: 'history', // valid type; was 'daily_reflection' which breaks CHECK constraint
+      memory_data: { key: 'daily_reflection', ...reflectionData },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Award XP for reflection
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('xp_total')
+      .eq('id', userId)
+      .single();
+
+    if (currentProfile) {
+      const newXP = (currentProfile.xp_total || 0) + 50;
+      const { error: xpError } = await supabase
+        .from('profiles')
+        .update({ xp_total: newXP })
+        .eq('id', userId);
+
+      if (xpError) {
+        console.error('Error updating XP total:', xpError);
+      }
+
+      // Log XP gain
+      await supabase.from('xp_logs').insert({
+        user_id: userId,
+        amount: 50,
+        reason: 'Daily reflection',
+        source: 'bonus', // xp_logs.source allows: 'habit','task','goal','bonus','penalty'; 'reflection' is invalid
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to save reflection' 
     };
   }
 }

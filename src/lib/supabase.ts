@@ -52,9 +52,14 @@ if (typeof window === 'undefined') {
 }
 
 /**
- * Client-side Supabase client
- * Use this in client components ('use client')
+ * Module-level singleton for the browser Supabase client.
+ * 
+ * IMPORTANT: We cache this here to avoid the "Multiple GoTrueClient instances" warning.
+ * Every new createBrowserClient() call spawns a new auth session, which causes
+ * race conditions and undefined behaviour. One client per browser context is correct.
  */
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null;
+
 export const createClientComponentClient = () => {
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase environment variables not set. Returning null client.');
@@ -65,7 +70,11 @@ export const createClientComponentClient = () => {
     });
     return null;
   }
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  // Return the cached client if it already exists (prevents multiple GoTrueClient instances)
+  if (!_browserClient) {
+    _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }
+  return _browserClient;
 };
 
 /**

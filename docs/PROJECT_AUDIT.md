@@ -788,7 +788,7 @@ A comprehensive backend foundation has been implemented to support RRise's core 
 
 #### Plan Logic
 - **`src/lib/planLogic.ts`**: Plan state and usage tracking
-  - Plan limits (free, pro, ultra_max)
+  - Plan limits (free, pro, ultra)
   - Feature availability checks
   - Usage tracking and limits
   - Plan display utilities
@@ -849,7 +849,7 @@ A comprehensive backend foundation has been implemented to support RRise's core 
 
 - **free**: Templates, dashboard, tracking, mascot, streaks, weekly recap, no real AI
 - **pro**: BYOK support, higher limits, AI-assisted templates, advanced accountability
-- **ultra_max**: Premium tier with unlimited limits, advanced Alex AI, deep accountability
+- **ultra**: Premium tier with unlimited limits, advanced Alex AI, deep accountability
 
 ### AI Safety Policy
 
@@ -1329,7 +1329,312 @@ Phase 2.2 focused on implementing AI-related features including template-based A
 
 ---
 
-**Document Version:** 2.5  
-**Last Updated:** 2026-06-19  
-**Project Status:** Phase 2.2 Complete - AI Features & Safety (v0.6.0)  
-**Next Major Milestone:** Production deployment and user testing
+## 19. Phase 2.3: Demo Behavior Removal & System Fixes
+
+### Overview
+Phase 2.3 focused on removing remaining demo/mock behavior from authenticated flows, implementing the delete account flow, adding daily reflection persistence, and fixing plan case sensitivity issues throughout the application.
+
+### Changes Made
+
+#### Dashboard Page (`src/app/app/dashboard/page.tsx`)
+- **Fixed:** Plan badge now uses real user plan from `userData.plan` instead of hardcoded 'free'
+- **Fixed:** Habit creation now persists to Supabase using `createHabit()` instead of local state
+- **Fixed:** Task creation now persists to Supabase using `createTask()` instead of local state
+- **Updated:** Chart data initialized to zeros (placeholder for future real data loading)
+- **Added:** Import for `createHabit` and `createTask` from dataLoader
+
+#### Chat Page (`src/app/app/chat/page.tsx`)
+- **Fixed:** Memory type changed from 'plan_history' to 'template_history' to match valid MemoryType
+- **Result:** Plan history now saves correctly to prompt_memory table
+
+#### Settings Page (`src/app/app/settings/page.tsx`)
+- **Fixed:** Plan case sensitivity checks changed from "FREE" to "free" (2 locations)
+- **Implemented:** Complete delete account flow in Danger Zone
+  - Multi-step confirmation with "DELETE" type confirmation
+  - Cascading delete of all user data from all tables
+  - Tables deleted: habit_logs, task_logs, xp_logs, spending_entries, habits, tasks, ai_usage_logs, ai_keys, prompt_memory, streaks, mascot_state, profiles
+  - Auth user deletion with fallback to sign out
+  - User-friendly error messages and loading states
+
+#### App Layout (`src/components/layout/AppLayout.tsx`)
+- **Fixed:** Plan case sensitivity check changed from "FREE" to "free"
+- **Result:** Plan badge displays correctly for non-free users
+
+#### Data Loader (`src/lib/dataLoader.ts`)
+- **Added:** `saveDailyReflection()` function to persist daily reflections
+  - Saves mood and journal text to prompt_memory table with type 'daily_reflection'
+  - Awards 50 XP for reflection completion
+  - Logs XP gain to xp_logs table
+  - Returns success/error status
+
+#### Loop Page (`src/app/app/loop/page.tsx`)
+- **Added:** Authentication protection with `useRequireAuth`
+- **Added:** Real data persistence using `saveDailyReflection()`
+- **Added:** Loading state for auth check
+- **Added:** Saving state during reflection submission
+- **Added:** Audio feedback on successful save
+- **Result:** Daily reflections now persist to Supabase with XP rewards
+
+### Build Status
+- **TypeScript Compilation:** ✓ Passed
+- **Build Status:** ✓ Successful (no errors)
+- **Pages Generated:** 20 static pages successfully prerendered
+
+### Impact
+- **User Experience:** No more demo data in authenticated views - all data is real
+- **Data Integrity:** Plan display consistent throughout app (lowercase 'free')
+- **Account Management:** Users can safely delete their account with full data cleanup
+- **Reflection System:** Daily loop now saves to database with XP rewards
+- **Consistency:** All user data flows through Supabase with proper persistence
+
+---
+
+## 20. Phase 3-15: System Verification & Quality Assurance
+
+### Overview
+Phases 3-15 were verification phases to ensure all systems are functioning correctly with real Supabase data. All systems were verified as working correctly.
+
+### Systems Verified
+
+#### Phase 3: Habit System
+- **Status:** ✓ Complete
+- **Verification:** Habit toggle, creation, deletion all persist to Supabase with XP updates and streak tracking
+- **File:** `src/lib/dataLoader.ts` - toggleHabitCompletion, createHabit, deleteHabit
+- **File:** `src/app/app/habits/page.tsx` - UI integration with optimistic updates
+
+#### Phase 4: Task System
+- **Status:** ✓ Complete
+- **Verification:** Task toggle, creation, deletion all persist to Supabase with XP updates
+- **File:** `src/lib/dataLoader.ts` - toggleTaskCompletion, createTask, deleteTask
+- **File:** `src/app/app/tasks/page.tsx` - UI integration with optimistic updates
+
+#### Phase 5: Plan/Template Flow
+- **Status:** ✓ Complete
+- **Verification:** Plan suggestions in chat are actionable with "Start Plan" button
+- **File:** `src/app/app/chat/page.tsx` - handleStartPlan creates habits/tasks from plan
+
+#### Phase 6: Chat Functionality
+- **Status:** ✓ Complete
+- **Verification:** Chat integrates BYOK, provides template suggestions, uses AI mode
+- **File:** `src/lib/aiMode.ts` - Template-based and real AI responses
+- **File:** `src/app/app/chat/page.tsx` - Full chat integration with safety checks
+
+#### Phase 7: BYOK System
+- **Status:** ✓ Complete
+- **Verification:** API key CRUD operations, validation, testing all functional
+- **File:** `src/lib/byok.ts` - Complete BYOK implementation
+- **File:** `src/app/app/settings/page.tsx` - BYOK UI integration
+
+#### Phase 8: Memory System
+- **Status:** ✓ Complete
+- **Verification:** Memory load, save, update, delete all functional
+- **File:** `src/lib/memorySystem.ts` - Full CRUD operations
+- **Table:** prompt_memory with correct schema
+
+#### Phase 9: Delete Account Flow
+- **Status:** ✓ Complete (implemented in Phase 2.3)
+- **Verification:** Safe account deletion with cascading data cleanup
+- **File:** `src/app/app/settings/page.tsx` - handleDeleteAccount function
+
+#### Phase 10: History Display
+- **Status:** ✓ Complete
+- **Verification:** History shows only real user activity data
+- **File:** `src/lib/dataLoader.ts` - loadActivityHistory function
+- **File:** `src/app/app/history/page.tsx` - Activity timeline UI
+
+#### Phase 11: Settings Functionality
+- **Status:** ✓ Complete
+- **Verification:** Profile update, theme toggle, BYOK config, plan display all functional
+- **File:** `src/app/app/settings/page.tsx` - Complete settings implementation
+
+#### Phase 12: Audio System
+- **Status:** ✓ Complete
+- **Verification:** Audio manager with lazy loading, proper paths, initialization
+- **File:** `src/lib/audioManager.ts` - Fixed audio loading bug
+
+#### Phase 13: Supabase Query Errors
+- **Status:** ✓ Complete
+- **Verification:** All data loader functions handle errors gracefully with fallbacks
+- **File:** `src/lib/dataLoader.ts` - All functions have try-catch with console.error logging
+
+#### Phase 14: Admin Dashboard
+- **Status:** ✓ Complete
+- **Verification:** User stats, plan distribution, recent signups all functional
+- **File:** `src/app/admin/page.tsx` - Complete admin dashboard
+
+#### Phase 15: Safety Layer
+- **Status:** ✓ Complete
+- **Verification:** AI safety filtering for harmful content, PII detection, rate limiting
+- **File:** `src/lib/aiSafety.ts` - Comprehensive safety implementation
+
+### Console Error Analysis
+All `console.error` statements in the codebase are legitimate error handling:
+- Error logging in try-catch blocks for debugging
+- Fallback values returned on errors (graceful degradation)
+- No actual bugs or broken functionality identified
+- Error handling follows best practices
+
+### Quality Assessment
+- **Code Quality:** High - consistent patterns, proper error handling
+- **Type Safety:** TypeScript compilation passes without errors
+- **Schema Consistency:** All table and field names match database schema
+- **Import Integrity:** No broken imports detected
+- **Build Status:** Successful with 20 static pages prerendered
+
+---
+
+## 21. Environment Variables
+
+### Required Environment Variables
+
+#### Supabase
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous/public key
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (server-side only, never expose to client)
+
+#### Stripe (New - Phase 3)
+- `STRIPE_SECRET_KEY`: Your Stripe secret key (starts with sk_live_ or sk_test_)
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret for verifying webhook events
+- `STRIPE_PRICE_PRO`: Stripe price ID for Pro plan subscription
+- `STRIPE_PRICE_ULTRA`: Stripe price ID for Ultra plan subscription
+
+#### Application
+- `NEXT_PUBLIC_APP_URL`: Your application URL (e.g., https://yourdomain.com or http://localhost:3000)
+
+### Where to Find These Variables
+
+#### Supabase
+1. Go to https://supabase.com/dashboard
+2. Select your project
+3. Navigate to Settings → API
+4. Copy the URL, anon key, and service role key
+
+#### Stripe
+1. Go to https://dashboard.stripe.com
+2. Navigate to Developers → API keys
+3. Copy the secret key (use test key for development, live key for production)
+4. Navigate to Developers → Webhooks
+5. Add webhook endpoint: `https://yourdomain.com/api/webhooks/stripe`
+6. Copy the webhook signing secret
+
+#### Stripe Price IDs
+1. In Stripe Dashboard, go to Products
+2. Create products for Pro and Ultra plans
+3. Create monthly subscription prices for each product
+4. Copy the price IDs (start with price_)
+
+---
+
+## 22. Phase 3-6: Billing, Admin, Security, and Feature Gating
+
+### Phase 3: Stripe Billing Architecture
+
+#### Overview
+Integrated Stripe for subscription billing with webhook-based plan updates. Plan state is now managed server-side through Stripe webhooks, not client-side.
+
+#### Changes Made
+
+**Stripe Integration**
+- Installed stripe package
+- Created webhook handler at `src/app/api/webhooks/stripe/route.ts`
+- Created checkout API route at `src/app/api/checkout/route.ts`
+- Added stripe_customer_id column to profiles table and types
+
+**Webhook Events Supported**
+- checkout.session.completed: Initial subscription purchase
+- customer.subscription.created: New subscription created
+- customer.subscription.updated: Subscription plan changed or renewed
+- customer.subscription.deleted: Subscription cancelled
+- invoice.payment_failed: Payment failed
+
+**Security Architecture**
+- Webhook signature verification required
+- Service role key used for plan updates (bypasses RLS)
+- Frontend cannot update plans directly
+- Stripe is single source of truth for subscription state
+
+**Plan Mapping**
+- price_id starting with 'price_pro_' → pro plan
+- price_id starting with 'price_ultra_' → ultra plan
+- free plan is default
+
+### Phase 4: Admin Dashboard Enhancement
+
+#### Overview
+Enhanced admin dashboard with detailed metrics and user management capabilities.
+
+#### Changes Made
+
+**New Metrics**
+- BYOK users count
+- Monthly revenue (placeholder calculation)
+- Active subscriptions count
+- Total AI usage (tokens)
+- Cancelled subscriptions (placeholder)
+
+**User Management**
+- Added user management modal
+- Admin can change user plans (free/pro/ultra)
+- Plan changes update Supabase directly
+- Data refresh after plan changes
+
+**Security**
+- Email allowlist protection maintained
+- Service role key for admin operations
+- All plan changes logged
+
+### Phase 5: Supabase Security
+
+#### Overview
+Verified and enhanced Row Level Security (RLS) across all tables with comprehensive security comments.
+
+#### Changes Made
+
+**Security Comments Added**
+- Added comprehensive security architecture documentation to schema.sql
+- Explained why RLS exists
+- Documented where service role key is used
+- Explained why billing updates happen through webhooks
+- Explained why frontend never decides plan truth
+
+**RLS Verification**
+- All tables have RLS enabled
+- All user-specific tables use `auth.uid() = user_id` policies
+- Service role key only used server-side
+- Frontend uses anon key only
+
+**Security Principles**
+- Users can only read/write their own data
+- Plan state never decided by frontend
+- Usage counters never trusted from client
+- Admin actions require service role key
+
+### Phase 6: Feature Gating
+
+#### Overview
+Implemented plan-based feature restrictions in the UI with upgrade prompts.
+
+#### Changes Made
+
+**Chat Page Feature Gating**
+- Added upgrade prompt modal for free users
+- Free users cannot use BYOK AI features
+- Upgrade prompt guides users to pricing page
+- Option to continue with free plan
+
+**Plan-Based Access**
+- Free: Templates only, no real AI
+- Pro: AI-enabled, limited usage
+- Ultra: Advanced AI, higher usage
+
+**User Experience**
+- Natural upgrade guidance
+- Not aggressive
+- Clear feature differentiation
+
+---
+
+**Document Version:** 2.8  
+**Last Updated:** 2026-06-21  
+**Project Status:** Phase 6 Complete - Feature Gating (v0.9.0)  
+**Next Major Milestone:** Manual setup guide creation

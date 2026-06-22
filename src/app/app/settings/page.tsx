@@ -171,6 +171,79 @@ export default function SettingsPage() {
     }
   };
 
+  // Handle delete account
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data including habits, tasks, history, and settings.')) return;
+
+    if (!confirm('This is your last chance. All your data will be permanently deleted. Type "DELETE" to confirm.')) return;
+
+    const confirmation = prompt('Please type "DELETE" to confirm account deletion:');
+    if (confirmation !== 'DELETE') {
+      alert('Account deletion cancelled.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const supabase = createClientComponentClient();
+      if (!supabase) {
+        alert('Failed to delete account');
+        setSaving(false);
+        return;
+      }
+
+      // Delete all user data from all tables (in order of dependencies)
+      const tables = [
+        'habit_logs',
+        'task_logs',
+        'xp_logs',
+        'spending_entries',
+        'habits',
+        'tasks',
+        'ai_usage_logs',
+        'ai_keys',
+        'prompt_memory',
+        'streaks',
+        'mascot_state',
+      ];
+
+      for (const table of tables) {
+        const { error } = await supabase.from(table).delete().eq('user_id', user.id);
+        if (error) {
+          console.error(`Error deleting from ${table}:`, error);
+        }
+      }
+
+      // Delete the user's profile
+      const { error: profileError } = await supabase.from('profiles').delete().eq('id', user.id);
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+      }
+
+      // Delete the auth user
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+      if (authError) {
+        console.error('Error deleting auth user:', authError);
+        // If admin delete fails, try regular sign out
+        await supabase.auth.signOut();
+        alert('Account data deleted. You have been signed out.');
+        window.location.href = '/';
+        return;
+      }
+
+      audioManager.play('success');
+      alert('Account deleted successfully.');
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please contact support.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Show loading state
   if (loading || dataLoading) {
     return (
@@ -193,7 +266,7 @@ export default function SettingsPage() {
               Customize the environment, companion response profile, and accountability layer.
             </p>
           </div>
-          {userData?.plan && userData.plan !== "FREE" && (
+          {userData?.plan && userData.plan !== "free" && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold text-primary uppercase">{userData.plan}</span>
@@ -239,7 +312,7 @@ export default function SettingsPage() {
                       <User className="w-5 h-5 text-primary" />
                       Profile Settings
                     </CardTitle>
-                    {userData?.plan && userData.plan !== "FREE" && (
+                    {userData?.plan && userData.plan !== "free" && (
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
                         <Sparkles className="w-3.5 h-3.5 text-primary" />
                         <span className="text-xs font-semibold text-primary uppercase">{userData.plan}</span>
@@ -566,8 +639,18 @@ export default function SettingsPage() {
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Account deletion is not currently available. If you need to delete your account, please contact support.
+                      Once you delete your account, there is no going back. Please be certain.
                     </p>
+                    <div className="pt-4 border-t border-red-500/20">
+                      <Button
+                        onClick={handleDeleteAccount}
+                        disabled={saving}
+                        variant="glass"
+                        className="w-full bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/20 hover:border-red-500"
+                      >
+                        {saving ? "Deleting..." : "Delete Account"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

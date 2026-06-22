@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Sparkles, Play, ChevronDown } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Play, ChevronDown, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
+import { Card, CardContent } from "../../../components/ui/Card";
 import { LottieAnimation } from "../../../components/ui/LottieAnimation";
 import greenParrot from "../../../../public/lottie/green_parrot.json";
 import { audioManager } from "../../../lib/audioManager";
@@ -18,6 +19,8 @@ import { useRequireAuth } from "../../../lib/authGuard";
 import { createHabit, createTask } from "../../../lib/dataLoader";
 import { saveMemory } from "../../../lib/memorySystem";
 import { hasActiveAIKey } from "../../../lib/byok";
+import { loadUserProfile } from "../../../lib/dataLoader";
+import { getPlanBadgeColor, getPlanDisplayName, isAIEnabled, isFeatureAvailable } from "../../../lib/planLogic";
 
 export default function ChatPage() {
   const { theme } = useTheme();
@@ -30,6 +33,18 @@ export default function ChatPage() {
   const [selectedAPI, setSelectedAPI] = useState<'free' | 'openai' | 'gemini' | 'anthropic'>('free');
   const [showAPIDropdown, setShowAPIDropdown] = useState(false);
   const [hasBYOK, setHasBYOK] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  // Load user profile on mount
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+      const profile = await loadUserProfile(user.id);
+      setUserProfile(profile);
+    }
+    loadProfile();
+  }, [user]);
 
   // Check for BYOK keys on mount
   useEffect(() => {
@@ -70,7 +85,7 @@ export default function ChatPage() {
       }
 
       // Store selected plan in memory
-      await saveMemory(user.id, 'plan_history' as any, {
+      await saveMemory(user.id, 'template_history', {
         planId: plan.id,
         planTitle: plan.title,
         planCategory: plan.category,
@@ -95,6 +110,12 @@ export default function ChatPage() {
     e.preventDefault();
     if (input.trim()) {
       audioManager.play('click');
+      
+      // Check if user can use AI (not on free plan with BYOK selected)
+      if (selectedAPI !== 'free' && userProfile?.plan === 'free') {
+        setShowUpgradePrompt(true);
+        return;
+      }
       
       // Perform safety check
       if (user) {
@@ -183,6 +204,12 @@ export default function ChatPage() {
             </Button>
           </Link>
           <h1 className="font-playfair text-2xl font-bold">AI Companion</h1>
+          {userProfile?.plan && userProfile.plan !== 'free' && (
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${getPlanBadgeColor(userProfile.plan)}`}>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold uppercase">{getPlanDisplayName(userProfile.plan)}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           {/* API Selector */}
@@ -387,6 +414,39 @@ export default function ChatPage() {
           </form>
         </motion.div>
       </main>
+
+      {/* Upgrade Prompt Modal */}
+      {showUpgradePrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className={`max-w-md w-full mx-4 ${theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'} backdrop-blur-xl`}>
+            <CardContent className="p-8 text-center">
+              <Lock className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
+              <p className="text-muted-foreground mb-6">
+                AI-powered chat is available on Pro and Ultra plans. Upgrade to unlock advanced AI features and BYOK support.
+              </p>
+              <div className="space-y-3">
+                <Link href="/pricing">
+                  <Button className="w-full">
+                    View Plans
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="glass"
+                  className="w-full"
+                  onClick={() => {
+                    setShowUpgradePrompt(false);
+                    setSelectedAPI('free');
+                  }}
+                >
+                  Use Free Plan
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

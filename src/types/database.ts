@@ -5,15 +5,15 @@
  * These types ensure type safety when working with Supabase data.
  * 
  * Plan Types:
- * - free: Basic plan with templates and tracking
+ * - free: Basic plan with templates and tracking, no real AI
  * - pro: BYOK support, higher limits, advanced features
- * - ultra_max: Premium tier with unlimited limits and advanced AI
+ * - ultra: Premium tier with unlimited limits and advanced AI
  */
 
 // ============================================
 // PLAN TYPES
 // ============================================
-export type PlanType = 'free' | 'pro' | 'ultra_max';
+export type PlanType = 'free' | 'pro' | 'ultra';
 
 // ============================================
 // PROFILE TYPES
@@ -24,6 +24,7 @@ export interface Profile {
   email: string | null;
   avatar_url: string | null;
   plan: PlanType;
+  stripe_customer_id: string | null;
   onboarding_completed: boolean;
   mascot_level: number;
   xp_total: number;
@@ -38,6 +39,7 @@ export interface ProfileInsert {
   email?: string;
   avatar_url?: string;
   plan?: PlanType;
+  stripe_customer_id?: string;
   onboarding_completed?: boolean;
   mascot_level?: number;
   xp_total?: number;
@@ -48,6 +50,7 @@ export interface ProfileUpdate {
   name?: string;
   avatar_url?: string;
   plan?: PlanType;
+  stripe_customer_id?: string;
   onboarding_completed?: boolean;
   mascot_level?: number;
   xp_total?: number;

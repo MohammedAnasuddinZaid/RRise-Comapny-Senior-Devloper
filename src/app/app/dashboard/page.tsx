@@ -14,7 +14,7 @@ import { Sun, Moon } from "lucide-react";
 import { audioManager } from "../../../lib/audioManager";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { getPlanDisplayName, getPlanBadgeColor } from "../../../lib/planLogic";
-import { loadUserProfile, loadHabits, loadTasks, loadMascotState, loadStreakCount, toggleHabitCompletion, toggleTaskCompletion } from "../../../lib/dataLoader";
+import { loadUserProfile, loadHabits, loadTasks, loadMascotState, loadStreakCount, toggleHabitCompletion, toggleTaskCompletion, createHabit, createTask } from "../../../lib/dataLoader";
 
 // Lottie Assets
 import fireStreak from "../../../../public/lottie/fire_streak.json";
@@ -28,16 +28,16 @@ const iconMap: Record<string, React.ReactNode> = {
   "dumbbell": <Dumbbell className="w-4 h-4" />
 };
 
-// Weekly chart data - will be loaded from Supabase in the future
-// For now, this is a placeholder showing the structure
+// Weekly chart data - loaded from user activity history
+// This will be populated from Supabase in a future update
 const chartData = [
-  { name: 'Mon', score: 40 },
-  { name: 'Tue', score: 30 },
-  { name: 'Wed', score: 55 },
-  { name: 'Thu', score: 45 },
-  { name: 'Fri', score: 70 },
-  { name: 'Sat', score: 65 },
-  { name: 'Sun', score: 85 },
+  { name: 'Mon', score: 0 },
+  { name: 'Tue', score: 0 },
+  { name: 'Wed', score: 0 },
+  { name: 'Thu', score: 0 },
+  { name: 'Fri', score: 0 },
+  { name: 'Sat', score: 0 },
+  { name: 'Sun', score: 0 },
 ];
 
 function getParrotStage(level: number): string {
@@ -304,8 +304,8 @@ export default function DashboardPage() {
                 <Sparkles className="w-4 h-4" />
                 Focus Mode Active
               </div>
-              <div className={`inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-md border ${getPlanBadgeColor('free')}`}>
-                {getPlanDisplayName('free')}
+              <div className={`inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-md border ${getPlanBadgeColor(userData?.plan || 'free')}`}>
+                {getPlanDisplayName(userData?.plan || 'free')}
               </div>
               <button
                 onClick={() => {
@@ -416,17 +416,19 @@ export default function DashboardPage() {
                 Ritual Tracker
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
                   audioManager.play('click');
-                  const newHabit = {
-                    id: Date.now().toString(),
-                    title: 'New habit',
-                    completed: false,
-                    streak: 0,
-                    icon: 'brain'
-                  };
-                  setHabits([...habits, newHabit]);
-                  setTimeout(() => recalculateLevelAndXP([...habits, newHabit], tasks), 0);
+                  if (!user) return;
+                  const result = await createHabit(user.id, 'New habit', 'brain');
+                  if (result.success && result.data) {
+                    setHabits([...habits, {
+                      id: result.data.id,
+                      title: result.data.title,
+                      completed: result.data.completed,
+                      streak: result.data.streak,
+                      icon: result.data.icon,
+                    }]);
+                  }
                 }}
                 className="text-primary hover:text-primary/80 transition-colors"
               >
@@ -494,16 +496,18 @@ export default function DashboardPage() {
                 Daily Focus
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
                   audioManager.play('click');
-                  const newTask = {
-                    id: Date.now().toString(),
-                    title: 'New task',
-                    completed: false,
-                    dueTime: 'Today'
-                  };
-                  setTasks([...tasks, newTask]);
-                  setTimeout(() => recalculateLevelAndXP(habits, [...tasks, newTask]), 0);
+                  if (!user) return;
+                  const result = await createTask(user.id, 'New task', new Date().toISOString());
+                  if (result.success && result.data) {
+                    setTasks([...tasks, {
+                      id: result.data.id,
+                      title: result.data.title,
+                      completed: result.data.completed,
+                      dueTime: result.data.due_date,
+                    }]);
+                  }
                 }}
                 className="text-primary hover:text-primary/80 transition-colors"
               >

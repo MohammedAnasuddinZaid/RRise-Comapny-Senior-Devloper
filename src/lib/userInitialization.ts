@@ -54,10 +54,10 @@ export async function initializeUser(
     const { error: profileError } = await supabase.from('profiles').insert({
       id: userId,
       email,
-      full_name: name || email.split('@')[0],
+      name: name || email.split('@')[0],
       plan: 'free' as PlanType,
-      xp: 0,
-      streak: 0,
+      xp_total: 0,
+      streak_count: 0,
       mascot_level: 1,
       onboarding_completed: false,
     });
@@ -67,14 +67,12 @@ export async function initializeUser(
       return { success: false, error: profileError.message };
     }
 
-    // Create default mascot state
+    // Create default mascot state matching the database columns
     const { error: mascotError } = await supabase.from('mascot_state').insert({
       user_id: userId,
-      current_stage: 'Baby Parrot',
-      xp: 0,
       level: 1,
-      evolution_progress: 0,
-      last_interaction_at: new Date().toISOString(),
+      evolution_stage: 'egg',
+      total_interactions: 0,
     });
 
     if (mascotError) {
@@ -82,36 +80,31 @@ export async function initializeUser(
       // Continue even if mascot creation fails
     }
 
-    // Create default app settings
-    const { error: settingsError } = await supabase.from('app_settings').insert({
-      user_id: userId,
-      theme: 'dark',
-      notifications_enabled: true,
-      reminder_enabled: true,
-      reminder_time: '09:00',
-    });
-
-    if (settingsError) {
-      console.error('Error creating app settings:', settingsError);
-      // Continue even if settings creation fails
-    }
-
-    // Create default memory entry
-    const { error: memoryError } = await supabase.from('prompt_memory').insert({
-      user_id: userId,
-      memory_type: 'preferences',
-      memory_value: JSON.stringify({
+    // Create default memory consolidated under Allowed Check Constraint type 'preference'
+    const defaultPreferences = {
+      preferences: {
         age_range: null,
         study_level: null,
         fitness_level: null,
         goals: [],
         interests: [],
-      }),
-      importance: 'medium',
+      },
+      app_settings: {
+        theme: 'dark',
+        notifications_enabled: true,
+        reminder_enabled: true,
+        reminder_time: '09:00',
+      }
+    };
+
+    const { error: memoryError } = await supabase.from('prompt_memory').insert({
+      user_id: userId,
+      memory_type: 'preference',
+      memory_data: defaultPreferences,
     });
 
     if (memoryError) {
-      console.error('Error creating memory entry:', memoryError);
+      console.error('Error creating default preference memory:', memoryError);
       // Continue even if memory creation fails
     }
 

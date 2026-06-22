@@ -35,10 +35,31 @@ export type MemoryType =
 export type MemoryImportance = 'low' | 'medium' | 'high';
 
 /**
- * Load user memory by type
+ * Helper function to map code-level memory types onto the 3 allowed database memory types:
+ * - 'preference'
+ * - 'context'
+ * - 'history'
+ * 
+ * This satisfies the CHECK constraint in the Supabase schema while letting
+ * the application code use specific keys for setting preferences, goals, loop history, etc.
+ */
+function getDBMemoryType(type: MemoryType | string): 'preference' | 'context' | 'history' {
+  if (type === 'preferences' || type === 'goals' || type === 'interests' || type === 'app_settings') {
+    return 'preference';
+  }
+  if (type === 'template_history' || type === 'spending_habits') {
+    return 'history';
+  }
+  return 'context'; // Fallback for daily reflections, accountability notes, etc.
+}
+
+/**
+ * Load user memory by type.
+ * Since multiple code memory types are grouped under the same database column value,
+ * this function loads the row, parses the JSON, and retrieves the specific nested key.
  * 
  * @param userId - The user's ID
- * @param memoryType - The type of memory to load
+ * @param memoryType - The type of memory to load (e.g. 'app_settings')
  * @returns Memory value or null if not found
  */
 export async function loadMemory(
@@ -51,12 +72,15 @@ export async function loadMemory(
   if (!supabase) return null;
 
   try {
+    const dbType = getDBMemoryType(memoryType);
+    
+    // We use maybeSingle() instead of single() to avoid PGRST116 errors when no row exists yet
     const { data, error } = await supabase
-      .from('prompt_memory') // Fixed: Database table is 'prompt_memory' (not 'user_memory')
+      .from('prompt_memory')
       .select('memory_data')
       .eq('user_id', userId)
-      .eq('memory_type', memoryType)
-      .single();
+      .eq('memory_type', dbType)
+      .maybeSingle();
 
     if (error) {
       console.error('Error loading memory:', error);
@@ -64,13 +88,12 @@ export async function loadMemory(
     }
 
     if (data?.memory_data) {
-      try {
-        return typeof data.memory_data === 'string' 
-          ? JSON.parse(data.memory_data) 
-          : data.memory_data;
-      } catch {
-        return data.memory_data;
-      }
+      const parsedData = typeof data.memory_data === 'string'
+        ? JSON.parse(data.memory_data)
+        : data.memory_data;
+      
+      // Return only the specific nested property requested by the code
+      return parsedData[memoryType] ?? null;
     }
 
     return null;
@@ -81,12 +104,14 @@ export async function loadMemory(
 }
 
 /**
- * Save user memory
+ * Save user memory.
+ * Fetches the existing row, merges the new value at the specified key,
+ * and updates or inserts the consolidated row.
  * 
  * @param userId - The user's ID
- * @param memoryType - The type of memory
- * @param memoryValue - The memory value (will be JSON stringified if object)
- * @param importance - Importance level for memory
+ * @param memoryType - The type of memory (e.g. 'goals')
+ * @param memoryValue - The value to store
+ * @param importance - Importance level (unused in DB, left for compatibility)
  * @returns Success status and error if any
  */
 export async function saveMemory(
@@ -105,39 +130,55 @@ export async function saveMemory(
   }
 
   try {
-    const valueToStore = typeof memoryValue === 'object' 
-      ? JSON.stringify(memoryValue) 
-      : memoryValue;
+    const dbType = getDBMemoryType(memoryType);
 
-    // Check if memory already exists
-    const { data: existing } = await supabase
+    // Get the existing row for this database group first
+    const { data: existing, error: fetchError } = await supabase
       .from('prompt_memory')
-      .select('id')
+      .select('id, memory_data')
       .eq('user_id', userId)
-      .eq('memory_type', memoryType)
-      .single();
+      .eq('memory_type', dbType)
+      .maybeSingle();
+
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+
+    let currentMemoryData: Record<string, any> = {};
+
+    if (existing) {
+      try {
+        currentMemoryData = typeof existing.memory_data === 'string'
+          ? JSON.parse(existing.memory_data)
+          : existing.memory_data || {};
+      } catch {
+        currentMemoryData = {};
+      }
+    }
+
+    // Set or overwrite the specific sub-field
+    currentMemoryData[memoryType] = memoryValue;
 
     let error;
 
     if (existing) {
-      // Update existing memory
+      // Update the existing consolidated row
       const result = await supabase
         .from('prompt_memory')
         .update({ 
-          memory_data: valueToStore, // Fixed: Schema uses 'memory_data' not 'memory_value'
+          memory_data: currentMemoryData,
           updated_at: new Date().toISOString()
         })
         .eq('id', existing.id);
       error = result.error;
     } else {
-      // Create new memory
+      // Insert a new row for this database group
       const result = await supabase
         .from('prompt_memory')
         .insert({
           user_id: userId,
-          memory_type: memoryType,
-          memory_data: valueToStore, // Fixed: Schema uses 'memory_data' not 'memory_value'
-          // Note: 'importance' field doesn't exist in schema
+          memory_type: dbType,
+          memory_data: currentMemoryData,
         });
       error = result.error;
     }
@@ -156,10 +197,10 @@ export async function saveMemory(
 }
 
 /**
- * Load all user memories
+ * Load all user memories consolidated into a single key-value map.
  * 
  * @param userId - The user's ID
- * @returns All memories for the user
+ * @returns All memories flattened into a single object
  */
 export async function loadAllMemories(userId: string): Promise<Record<MemoryType, any>> {
   if (!isSupabaseConfigured()) return {} as Record<MemoryType, any>;
@@ -181,11 +222,16 @@ export async function loadAllMemories(userId: string): Promise<Record<MemoryType
     const memories: Record<MemoryType, any> = {} as Record<MemoryType, any>;
 
     if (data) {
-      for (const memory of data) {
+      // Merge all consolidated key-value pairs into a single map
+      for (const row of data) {
         try {
-          memories[memory.memory_type as MemoryType] = JSON.parse(memory.memory_data);
-        } catch {
-          memories[memory.memory_type as MemoryType] = memory.memory_data;
+          const parsed = typeof row.memory_data === 'string'
+            ? JSON.parse(row.memory_data)
+            : row.memory_data || {};
+          
+          Object.assign(memories, parsed);
+        } catch (e) {
+          console.error('Error parsing memory_data:', e);
         }
       }
     }
@@ -198,11 +244,11 @@ export async function loadAllMemories(userId: string): Promise<Record<MemoryType
 }
 
 /**
- * Update user preferences
+ * Update user preferences memory.
  * 
  * @param userId - The user's ID
  * @param preferences - User preferences object
- * @returns Success status and error if any
+ * @returns Success status
  */
 export async function updatePreferences(
   userId: string,
@@ -218,11 +264,7 @@ export async function updatePreferences(
 }
 
 /**
- * Add goal to user memory
- * 
- * @param userId - The user's ID
- * @param goal - The goal to add
- * @returns Success status and error if any
+ * Add a single goal to the user's goals array memory.
  */
 export async function addGoal(userId: string, goal: string): Promise<{ success: boolean; error?: string }> {
   const existingGoals = await loadMemory(userId, 'goals') || [];
@@ -237,12 +279,7 @@ export async function addGoal(userId: string, goal: string): Promise<{ success: 
 }
 
 /**
- * Add template to history
- * 
- * @param userId - The user's ID
- * @param templateId - The template ID
- * @param templateTitle - The template title
- * @returns Success status and error if any
+ * Add starting plan to history in memory.
  */
 export async function addTemplateToHistory(
   userId: string,
@@ -260,7 +297,6 @@ export async function addTemplateToHistory(
   
   templateHistory.push(entry);
   
-  // Keep only last 50 entries
   if (templateHistory.length > 50) {
     templateHistory.shift();
   }
@@ -269,10 +305,11 @@ export async function addTemplateToHistory(
 }
 
 /**
- * Delete user memory by type
+ * Delete a specific sub-type of user memory.
+ * Removes the key from the consolidated JSON and deletes the row if it becomes empty.
  * 
  * @param userId - The user's ID
- * @param memoryType - The type of memory to delete
+ * @param memoryType - The type of memory to delete (e.g. 'interests')
  * @returns Success status and error if any
  */
 export async function deleteMemory(
@@ -284,16 +321,57 @@ export async function deleteMemory(
   }
   
   const supabase = createClientComponentClient();
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
+  if (!supabase) return { success: false, error: 'Supabase not configured' };
 
   try {
-    const { error } = await supabase
+    const dbType = getDBMemoryType(memoryType);
+
+    const { data: existing, error: fetchError } = await supabase
       .from('prompt_memory')
-      .delete()
+      .select('id, memory_data')
       .eq('user_id', userId)
-      .eq('memory_type', memoryType);
+      .eq('memory_type', dbType)
+      .maybeSingle();
+
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+
+    if (!existing) {
+      return { success: true };
+    }
+
+    let currentMemoryData: Record<string, any> = {};
+    try {
+      currentMemoryData = typeof existing.memory_data === 'string'
+        ? JSON.parse(existing.memory_data)
+        : existing.memory_data || {};
+    } catch {
+      currentMemoryData = {};
+    }
+
+    // Delete the specific sub-field
+    delete currentMemoryData[memoryType];
+
+    let error;
+    if (Object.keys(currentMemoryData).length === 0) {
+      // Clean up and delete the database row if no keys remain
+      const result = await supabase
+        .from('prompt_memory')
+        .delete()
+        .eq('id', existing.id);
+      error = result.error;
+    } else {
+      // Update with the nested key removed
+      const result = await supabase
+        .from('prompt_memory')
+        .update({ 
+          memory_data: currentMemoryData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+      error = result.error;
+    }
 
     if (error) {
       return { success: false, error: error.message };
@@ -309,13 +387,7 @@ export async function deleteMemory(
 }
 
 /**
- * Update user memory (explicit update function)
- * This is a wrapper around saveMemory for clarity
- * 
- * @param userId - The user's ID
- * @param memoryType - The type of memory to update
- * @param memoryValue - The new memory value
- * @returns Success status and error if any
+ * Update user memory (explicit update wrapper)
  */
 export async function updateMemory(
   userId: string,

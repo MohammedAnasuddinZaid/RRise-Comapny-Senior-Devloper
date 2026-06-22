@@ -1,6 +1,46 @@
 -- RRise Database Schema
 -- This file defines all tables, indexes, and Row Level Security (RLS) policies
 -- Run this in your Supabase SQL editor to set up the database
+--
+-- SECURITY ARCHITECTURE:
+-- =====================
+-- 1. Row Level Security (RLS) is enabled on ALL tables
+-- 2. Users can only read/write their own data (auth.uid() = user_id)
+-- 3. Service role key is ONLY used server-side for:
+--    - Stripe webhook handlers (plan updates)
+--    - Admin operations (user management)
+-- 4. Frontend uses anon key only (bypasses RLS for authenticated users)
+-- 5. Plan state is NEVER decided by frontend - only Stripe webhooks
+-- 6. Usage counters are NEVER trusted from client - server-side only
+-- 7. Admin actions require service role key bypass RLS
+--
+-- WHY RLS EXISTS:
+-- ===============
+-- - Prevents users from accessing other users' data
+-- - Ensures data isolation even if frontend is compromised
+-- - Provides defense-in-depth security layer
+-- - Required for multi-tenant SaaS architecture
+--
+-- WHERE SERVICE ROLE KEY IS USED:
+-- =================================
+-- - src/app/api/webhooks/stripe/route.ts (Stripe webhook handler)
+-- - Future: Server-side admin operations
+-- - NEVER in client-side code
+-- - NEVER exposed to browser
+--
+-- WHY BILLING UPDATES HAPPEN THROUGH WEBHOOKS:
+-- =================================================
+-- - Stripe is the single source of truth for subscription state
+-- - Frontend cannot be trusted to update plans (security risk)
+-- - Webhooks provide verified, server-side plan updates
+-- - Prevents plan bypass attacks
+--
+-- WHY FRONTEND NEVER DECIDES PLAN TRUTH:
+-- =========================================
+-- - Plan state must always come from Supabase database
+-- - Frontend can only READ plan state, never WRITE
+-- - Plan updates only happen through Stripe webhooks
+-- - Prevents privilege escalation attacks
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -9,12 +49,15 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- PROFILES TABLE
 -- ============================================
 -- Stores user profile information and plan state
+-- IMPORTANT: Plan state must always come from Supabase, never from frontend values.
+-- Plan updates should only happen through Stripe webhook handlers on the server.
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   email TEXT,
   avatar_url TEXT,
-  plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'ultra_max')),
+  plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'ultra')),
+  stripe_customer_id TEXT,
   onboarding_completed BOOLEAN DEFAULT false,
   mascot_level INTEGER DEFAULT 1,
   xp_total INTEGER DEFAULT 0,
@@ -133,6 +176,9 @@ CREATE POLICY "Users can view own habit logs" ON habit_logs
 CREATE POLICY "Users can insert own habit logs" ON habit_logs
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Users can delete own habit logs" ON habit_logs
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS habit_logs_user_id_idx ON habit_logs(user_id);
 CREATE INDEX IF NOT EXISTS habit_logs_habit_id_idx ON habit_logs(habit_id);
@@ -197,6 +243,9 @@ CREATE POLICY "Users can view own task logs" ON task_logs
 
 CREATE POLICY "Users can insert own task logs" ON task_logs
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own task logs" ON task_logs
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS task_logs_user_id_idx ON task_logs(user_id);

@@ -7,6 +7,9 @@ import { LottieAnimation } from "../../../components/ui/LottieAnimation";
 import successConfetti from "../../../../public/lottie/confettie.json";
 import { Smile, Frown, Meh, Laugh, Heart, CheckCircle2, ChevronRight, PenTool } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRequireAuth } from "../../../lib/authGuard";
+import { saveDailyReflection } from "../../../lib/dataLoader";
+import { audioManager } from "../../../lib/audioManager";
 
 const MOODS = [
   { val: 1, label: "Quiet", icon: <Frown className="w-6 h-6" />, color: "text-red-400 border-red-500/20 bg-red-500/5" },
@@ -17,15 +20,46 @@ const MOODS = [
 ];
 
 export default function DailyLoopPage() {
+  const { user, loading } = useRequireAuth();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [journalText, setJournalText] = useState("");
   const [isLogged, setIsLogged] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedMood === null || !journalText.trim()) return;
-    setIsLogged(true);
+    if (selectedMood === null || !journalText.trim() || !user) return;
+    
+    setIsSaving(true);
+    try {
+      const result = await saveDailyReflection(user.id, selectedMood, journalText);
+      if (result.success) {
+        audioManager.play('success');
+        setIsLogged(true);
+        setJournalText("");
+        setSelectedMood(null);
+      } else {
+        alert(result.error || 'Failed to save reflection');
+      }
+    } catch (error) {
+      console.error('Error saving reflection:', error);
+      alert('Failed to save reflection');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pb-12 max-w-2xl mx-auto relative">
@@ -99,10 +133,10 @@ export default function DailyLoopPage() {
                   />
                   <Button
                     type="submit"
-                    disabled={selectedMood === null || !journalText.trim()}
+                    disabled={selectedMood === null || !journalText.trim() || isSaving}
                     className="w-full rounded-2xl py-4 flex items-center justify-center gap-2"
                   >
-                    Log Reflection <ChevronRight className="w-5 h-5" />
+                    {isSaving ? "Saving..." : "Log Reflection"} <ChevronRight className="w-5 h-5" />
                   </Button>
                 </CardContent>
               </Card>

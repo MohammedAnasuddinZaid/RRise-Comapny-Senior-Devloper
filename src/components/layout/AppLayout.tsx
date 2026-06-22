@@ -46,7 +46,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             alt="RRise Logo" 
             className="h-9 w-auto object-contain"
           />
-          {plan !== "FREE" && (
+          {plan !== "free" && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
               <Crown className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-semibold text-primary uppercase">{plan}</span>
