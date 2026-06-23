@@ -1,0 +1,144 @@
+{
+  "id": "islamic-growth-15-17",
+  "title": "Islamic Growth Plan",
+  "category": "general",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A plan to strengthen Islamic faith through consistent prayer, Quran reading, and good deeds",
+  "goals": [
+    {
+      "title": "Complete Daily Prayers",
+      "description": "Perform all 5 daily prayers on time",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Read Quran Daily",
+      "description": "Read at least 1 page of Quran every day",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Perform Good Deeds",
+      "description": "Do at least one good deed every day",
+      "target_date": "Ongoing",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Fajr Prayer",
+      "description": "Perform Fajr prayer on time",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Dhuhr Prayer",
+      "description": "Perform Dhuhr prayer on time",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Asr Prayer",
+      "description": "Perform Asr prayer on time",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Maghrib Prayer",
+      "description": "Perform Maghrib prayer on time",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Isha Prayer",
+      "description": "Perform Isha prayer on time",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Quran Reading",
+      "description": "Read at least 1 page of Quran daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Dhikr",
+      "description": "Remember Allah through dhikr or dua",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Good Deed",
+      "description": "Perform at least one good deed daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Prayer Times",
+      "description": "Get prayer times for your location",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Get Prayer Mat",
+      "description": "Set up a clean space for prayer",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Choose Quran",
+      "description": "Get a Quran with translation if needed",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Prayer Reminders",
+      "description": "Set alarms for prayer times",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Learn Quran Recitation",
+      "description": "Practice proper Quran recitation",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Find Islamic Community",
+      "description": "Connect with local mosque or Islamic center",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Start gradually and build consistency",
+    "Focus on sincerity in your prayers",
+    "Don't be discouraged by missed prayers - keep trying",
+    "Seek knowledge about Islam continuously"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 325,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["islamic", "faith", "prayer", "quran", "spiritual"],
+  "keywords": ["islamic", "prayer", "quran", "faith", "muslim", "deeds", "spiritual", "growth"],
+  "icon": "flower",
+  "fallback_message": "I found a great Islamic growth template! Let me set you up with a plan to strengthen your faith through consistent prayer and good deeds."
+}

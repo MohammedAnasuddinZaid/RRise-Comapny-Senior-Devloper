@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, CheckCircle, Wallet, Trophy, Calendar, Filter } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, Wallet, Calendar, Filter } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/Button";
 import { audioManager } from "../../../lib/audioManager";
@@ -10,22 +10,20 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { loadActivityHistory } from "../../../lib/dataLoader";
 
-type ActivityType = 'all' | 'habits' | 'tasks' | 'spending' | 'xp';
+type ActivityType = 'all' | 'habits' | 'tasks' | 'spending';
 
 export default function HistoryPage() {
   const { theme } = useTheme();
   const { user, loading } = useRequireAuth();
   const [filter, setFilter] = useState<ActivityType>('all');
   const [activityData, setActivityData] = useState<{
-    habitCompletions: Array<{ id: string; habitTitle: string; completedAt: string; xpEarned: number }>;
-    taskCompletions: Array<{ id: string; taskTitle: string; completedAt: string; xpEarned: number }>;
+    habitCompletions: Array<{ id: string; habitTitle: string; completedAt: string }>;
+    taskCompletions: Array<{ id: string; taskTitle: string; completedAt: string }>;
     spendingTransactions: Array<{ id: string; category: string; amount: number; spentAt: string }>;
-    xpGains: Array<{ id: string; amount: number; reason: string; source: string; createdAt: string }>;
   }>({
     habitCompletions: [],
     taskCompletions: [],
     spendingTransactions: [],
-    xpGains: [],
   });
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -60,21 +58,21 @@ export default function HistoryPage() {
     );
   }
 
-  // Combine all activities into a single timeline
+  // Combine all activities into a single timeline (XP gain events removed)
   const allActivities = [
     ...activityData.habitCompletions.map(item => ({
       id: item.id,
       type: 'habit' as const,
-      title: `Completed: ${item.habitTitle}`,
-      description: `Earned ${item.xpEarned} XP`,
+      title: `Habit Completed: ${item.habitTitle}`,
+      description: 'Daily habit tracked',
       date: item.completedAt,
       icon: <CheckCircle className="w-5 h-5 text-green-500" />,
     })),
     ...activityData.taskCompletions.map(item => ({
       id: item.id,
       type: 'task' as const,
-      title: `Completed: ${item.taskTitle}`,
-      description: `Earned ${item.xpEarned} XP`,
+      title: `Task Completed: ${item.taskTitle}`,
+      description: 'Task finished',
       date: item.completedAt,
       icon: <CheckCircle className="w-5 h-5 text-blue-500" />,
     })),
@@ -85,14 +83,6 @@ export default function HistoryPage() {
       description: `Category: ${item.category}`,
       date: item.spentAt,
       icon: <Wallet className="w-5 h-5 text-yellow-500" />,
-    })),
-    ...activityData.xpGains.map(item => ({
-      id: item.id,
-      type: 'xp' as const,
-      title: `+${item.amount} XP`,
-      description: `${item.reason} (${item.source})`,
-      date: item.createdAt,
-      icon: <Trophy className="w-5 h-5 text-purple-500" />,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -142,7 +132,7 @@ export default function HistoryPage() {
       <main className="flex-1 pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {(['all', 'habits', 'tasks', 'spending', 'xp'] as ActivityType[]).map((type) => (
+          {(['all', 'habits', 'tasks', 'spending'] as ActivityType[]).map((type) => (
             <Button
               key={type}
               variant={filter === type ? 'default' : 'glass'}

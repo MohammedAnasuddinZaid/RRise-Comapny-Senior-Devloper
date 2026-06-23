@@ -10,6 +10,12 @@
  * - Spending habits
  * - Accountability notes
  * 
+ * MEMORY SCOPING & SECURITY:
+ * - All memory operations are scoped to user_id
+ * - Users can only access their own memory data
+ * - Memory is stored in prompt_memory table with user_id foreign key
+ * - Code-level memory types are grouped into 3 database types for schema constraints
+ * 
  * Memory is used by Alex AI and the template engine to personalize responses.
  * 
  * Note: Database table is 'prompt_memory' (not 'user_memory')

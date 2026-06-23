@@ -1,0 +1,116 @@
+{
+  "id": "student-success-15-17",
+  "title": "Student Success Plan",
+  "category": "student",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A comprehensive plan to improve study habits, time management, and academic performance",
+  "goals": [
+    {
+      "title": "Improve Study Consistency",
+      "description": "Study for at least 2 hours every weekday",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Complete Assignments Early",
+      "description": "Submit all assignments at least 1 day before deadline",
+      "target_date": "Ongoing",
+      "xp_reward": 75
+    },
+    {
+      "title": "Master Note-Taking",
+      "description": "Develop effective note-taking system for all subjects",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Study Session",
+      "description": "Study for at least 2 hours every weekday",
+      "frequency": "daily",
+      "target_count": 5,
+      "xp_reward": 10
+    },
+    {
+      "title": "Review Notes",
+      "description": "Review and organize notes from the day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Prepare Next Day",
+      "description": "Pack bag and prepare materials for next day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Weekly Review",
+      "description": "Review all subjects and plan for upcoming week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 15
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Create Study Schedule",
+      "description": "Plan study times for each subject",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Organize Study Space",
+      "description": "Set up a dedicated study area",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Gather Study Materials",
+      "description": "Get notebooks, pens, highlighters, etc.",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Up Digital Tools",
+      "description": "Install note-taking apps and calendar",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Identify Weak Subjects",
+      "description": "List subjects that need extra attention",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Find Study Resources",
+      "description": "Collect textbooks, online resources, and videos",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Take regular breaks to avoid burnout",
+    "Get enough sleep for better memory retention",
+    "Don't procrastinate - start early",
+    "Ask teachers for help when needed"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["student", "study", "academic", "education", "school"],
+  "keywords": ["student", "study", "school", "academic", "education", "grades", "homework", "exam"],
+  "icon": "book-open",
+  "fallback_message": "I found a great student success template! Let me set you up with a plan to improve your study habits and academic performance."
+}

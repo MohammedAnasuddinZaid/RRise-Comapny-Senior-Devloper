@@ -1,0 +1,123 @@
+{
+  "id": "weight-loss-journey-15-17",
+  "title": "Weight Loss Journey",
+  "category": "fitness",
+  "age_range": "15-17",
+  "difficulty": "intermediate",
+  "description": "A balanced weight loss plan focusing on healthy eating and consistent exercise",
+  "goals": [
+    {
+      "title": "Lose Weight Gradually",
+      "description": "Aim for 1-2 lbs weight loss per week",
+      "target_date": "12 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build Healthy Eating Habits",
+      "description": "Eat balanced meals with proper portion control",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Increase Physical Activity",
+      "description": "Exercise for at least 150 minutes per week",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Exercise",
+      "description": "30 minutes of physical activity every day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Drink Water",
+      "description": "Drink 8 glasses of water throughout the day",
+      "frequency": "daily",
+      "target_count": 8,
+      "xp_reward": 5
+    },
+    {
+      "title": "Eat Vegetables",
+      "description": "Include vegetables in every meal",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 5
+    },
+    {
+      "title": "No Late Night Snacking",
+      "description": "Avoid eating 2 hours before bedtime",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Weekly Weigh-In",
+      "description": "Track weight once per week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Calculate Calorie Needs",
+      "description": "Determine daily calorie target for weight loss",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Meal Plan",
+      "description": "Plan healthy meals for the week",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Grocery Shopping",
+      "description": "Buy healthy foods and snacks",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Remove Junk Food",
+      "description": "Clear unhealthy snacks from home",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Find Exercise Routine",
+      "description": "Choose exercises you enjoy and can sustain",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Up Tracking System",
+      "description": "Use app or journal to track food and exercise",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Consult a doctor before starting any weight loss program",
+    "Aim for gradual weight loss (1-2 lbs per week)",
+    "Don't skip meals - eat regular balanced meals",
+    "Focus on health, not just the scale"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["fitness", "weight-loss", "health", "diet", "exercise"],
+  "keywords": ["weight loss", "lose weight", "diet", "fitness", "healthy eating", "exercise", "health"],
+  "icon": "dumbbell",
+  "fallback_message": "I found a great weight loss template! Let me set you up with a balanced plan to achieve your health goals safely."
+}

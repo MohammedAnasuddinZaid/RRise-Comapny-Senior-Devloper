@@ -1,0 +1,116 @@
+{
+  "id": "deep-work-focus-15-17",
+  "title": "Deep Work Focus Plan",
+  "category": "productivity",
+  "age_range": "15-17",
+  "difficulty": "intermediate",
+  "description": "A plan to develop deep work habits for maximum focus and productivity",
+  "goals": [
+    {
+      "title": "Build Deep Work Sessions",
+      "description": "Complete 90-minute deep work sessions daily",
+      "target_date": "6 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Eliminate Distractions",
+      "description": "Reduce phone usage to under 1 hour per day",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Increase Output Quality",
+      "description": "Complete high-quality work in less time",
+      "target_date": "Ongoing",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Deep Work Session",
+      "description": "90-minute focused work session without distractions",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Morning Routine",
+      "description": "Start day with 30 minutes of planning and focus",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "No Social Media During Work",
+      "description": "Avoid social media during work hours",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Weekly Review",
+      "description": "Review productivity and plan next week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 15
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Up Distraction-Free Environment",
+      "description": "Create a workspace free from interruptions",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Install Website Blockers",
+      "description": "Set up tools to block distracting websites",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Focus Playlist",
+      "description": "Build a playlist of focus-enhancing music",
+      "priority": "medium",
+      "xp_reward": 5
+    },
+    {
+      "title": "Set Work Hours",
+      "description": "Define specific hours for deep work",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Communicate Boundaries",
+      "description": "Tell others about your focus hours",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Track Progress",
+      "description": "Set up system to track deep work hours",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Start with shorter sessions and build up",
+    "Take breaks between sessions",
+    "Protect your focus time aggressively",
+    "Quality over quantity - focus on deep work, not just work"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 275,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["productivity", "focus", "deep-work", "concentration", "work"],
+  "keywords": ["deep work", "focus", "productivity", "concentrate", "distraction-free", "flow state", "work"],
+  "icon": "brain",
+  "fallback_message": "I found a great deep work template! Let me set you up with a plan to develop intense focus and productivity habits."
+}

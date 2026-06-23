@@ -40,24 +40,36 @@ const chartData = [
   { name: 'Sun', score: 0 },
 ];
 
+/**
+ * Get parrot evolution stage based on XP level
+ * 
+ * IMPORTANT: Evolution stages are based on XP thresholds:
+ * - Level 1 (0-99 XP): Baby Parrot
+ * - Level 2 (100-249 XP): Young Parrot
+ * - Level 3 (250-499 XP): Adult Parrot
+ * - Level 4 (500+ XP): Phoenix
+ * 
+ * @param level - Evolution level (1-4)
+ * @returns Stage name
+ */
 function getParrotStage(level: number): string {
-  if (level <= 3) return "Baby Parrot";
-  if (level <= 7) return "Young Parrot";
-  if (level <= 12) return "Adult Parrot";
-  if (level <= 18) return "Mature Parrot";
-  return "Elder Parrot";
+  if (level === 1) return "Baby Parrot";
+  if (level === 2) return "Young Parrot";
+  if (level === 3) return "Adult Parrot";
+  if (level === 4) return "Phoenix";
+  return "Baby Parrot"; // Default
 }
 
 function getParrotStages(): string[] {
-  return ["Baby Parrot", "Young Parrot", "Adult Parrot", "Mature Parrot", "Elder Parrot"];
+  return ["Baby Parrot", "Young Parrot", "Adult Parrot", "Phoenix"];
 }
 
 function getCurrentStageIndex(level: number): number {
-  if (level <= 3) return 0;
-  if (level <= 7) return 1;
-  if (level <= 12) return 2;
-  if (level <= 18) return 3;
-  return 4;
+  if (level === 1) return 0;
+  if (level === 2) return 1;
+  if (level === 3) return 2;
+  if (level === 4) return 3;
+  return 0; // Default
 }
 
 export default function DashboardPage() {
@@ -72,6 +84,49 @@ export default function DashboardPage() {
   const [streakCount, setStreakCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
 
+  /**
+   * Calculate evolution level based on total XP from database
+   * 
+   * IMPORTANT: Evolution is based on TOTAL XP, not completion percentage
+   * XP thresholds:
+   * - 0-99 XP: Level 1 Baby
+   * - 100-249 XP: Level 2 Young
+   * - 250-499 XP: Level 3 Adult
+   * - 500+ XP: Level 4 Phoenix
+   * 
+   * @param totalXP - Total XP from profiles table
+   * @returns Level, current XP, and XP needed for next level
+   */
+  const calculateEvolutionLevel = (totalXP: number) => {
+    let level = 1;
+    let nextLevelXp = 100;
+    let currentLevelXp = 0;
+    
+    if (totalXP >= 500) {
+      level = 4; // Phoenix
+      currentLevelXp = 500;
+      nextLevelXp = totalXP; // Max level
+    } else if (totalXP >= 250) {
+      level = 3; // Adult
+      currentLevelXp = 250;
+      nextLevelXp = 500;
+    } else if (totalXP >= 100) {
+      level = 2; // Young
+      currentLevelXp = 100;
+      nextLevelXp = 250;
+    } else {
+      level = 1; // Baby
+      currentLevelXp = 0;
+      nextLevelXp = 100;
+    }
+    
+    const xpInCurrentLevel = totalXP - currentLevelXp;
+    const xpToNextLevel = nextLevelXp - currentLevelXp;
+    const progressPercent = xpToNextLevel > 0 ? (xpInCurrentLevel / xpToNextLevel) * 100 : 100;
+    
+    return { level, totalXP, nextLevelXp, progressPercent };
+  };
+
   // Load user data from Supabase
   useEffect(() => {
     async function loadUserData() {
@@ -79,7 +134,7 @@ export default function DashboardPage() {
 
       setDataLoading(true);
       try {
-        // Load profile data from profiles table
+        // Load profile data from profiles table (contains xp_total)
         const profile = await loadUserProfile(user.id);
         if (profile) {
           setUserData(profile);
@@ -129,6 +184,9 @@ export default function DashboardPage() {
     loadUserData();
   }, [user]);
 
+  // Calculate evolution level from actual XP in database
+  const evolutionData = calculateEvolutionLevel(userData?.xp_total || 0);
+
   // Import audio manager (must be before early return to satisfy Rules of Hooks)
   useEffect(() => {
     // Add click sound to streak button
@@ -170,20 +228,7 @@ export default function DashboardPage() {
     const completedItems = currentHabits.filter(h => h.completed).length + currentTasks.filter(t => t.completed).length;
     const completionPercentage = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
     
-    // Calculate level based on completion percentage
-    let newLevel = 1;
-    if (completionPercentage >= 100) {
-      newLevel = 4;
-    } else if (completionPercentage >= 50) {
-      newLevel = 3;
-    } else if (completionPercentage >= 25) {
-      newLevel = 2;
-    }
-    
-    const xp = Math.floor(completionPercentage);
-    const nextLevelXp = 100;
-    
-    return { completionPercentage, level: newLevel, xp, nextLevelXp };
+    return { completionPercentage };
   };
 
   const handleHabitToggle = async (id: string) => {
@@ -355,7 +400,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Companion</p>
-                <p className="font-semibold text-base">Level {mascotState?.level || userData?.xp_level || 1}</p>
+                <p className="font-semibold text-base">Level {evolutionData.level}</p>
               </div>
             </div>
           </div>
@@ -369,11 +414,11 @@ export default function DashboardPage() {
           
           <div className="absolute inset-0 bg-primary/5 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <Mascot level={mascotState?.level || userData?.xp_level || 1} className="relative z-10 w-44 h-44 mb-4" />
+          <Mascot level={evolutionData.level} className="relative z-10 w-44 h-44 mb-4" />
           
           <div className="space-y-1 z-10">
             <h3 className="font-playfair text-xl font-bold tracking-wide">Evolving Parrot</h3>
-            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {mascotState?.level || userData?.xp_level || 1} • Adult</p>
+            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {evolutionData.level} • {getParrotStage(evolutionData.level)}</p>
           </div>
         </div>
       </div>
@@ -387,18 +432,18 @@ export default function DashboardPage() {
             <div className="flex justify-between items-end">
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">XP Evolution Progress</p>
-                <h3 className="font-playfair text-2xl font-bold">Level {mascotState?.level || userData?.xp_level || 1} - {getParrotStage(mascotState?.level || userData?.xp_level || 1)}</h3>
+                <h3 className="font-playfair text-2xl font-bold">Level {evolutionData.level} - {getParrotStage(evolutionData.level)}</h3>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-primary">{userData?.xp || 0} / {userData?.next_level_xp || 100} XP</p>
+                <p className="text-sm font-semibold text-primary">{evolutionData.totalXP} / {evolutionData.nextLevelXp} XP</p>
               </div>
             </div>
-            <ProgressBar value={userData?.xp || 0} max={userData?.next_level_xp || 100} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
+            <ProgressBar value={evolutionData.totalXP} max={evolutionData.nextLevelXp} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               {getParrotStages().map((stage, index) => (
                 <span 
                   key={index} 
-                  className={index <= getCurrentStageIndex(mascotState?.level || userData?.xp_level || 1) ? "text-primary font-semibold" : ""}
+                  className={index <= getCurrentStageIndex(evolutionData.level) ? "text-primary font-semibold" : ""}
                 >
                   {stage}
                 </span>

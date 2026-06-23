@@ -30,7 +30,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [suggestedPlans, setSuggestedPlans] = useState<Template[]>([]);
   const [startingPlan, setStartingPlan] = useState<string | null>(null);
-  const [selectedAPI, setSelectedAPI] = useState<'free' | 'openai' | 'gemini' | 'anthropic'>('free');
+  const [selectedAPI, setSelectedAPI] = useState<'free' | 'byok' | 'pro'>('free');
   const [showAPIDropdown, setShowAPIDropdown] = useState(false);
   const [hasBYOK, setHasBYOK] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -53,12 +53,11 @@ export default function ChatPage() {
       const hasOpenAI = await hasActiveAIKey(user.id, 'openai');
       const hasGemini = await hasActiveAIKey(user.id, 'gemini');
       const hasAnthropic = await hasActiveAIKey(user.id, 'anthropic');
-      setHasBYOK(hasOpenAI || hasGemini || hasAnthropic);
+      const hasOpenRouter = await hasActiveAIKey(user.id, 'openrouter');
+      setHasBYOK(hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter);
       
-      // Auto-select first available BYOK
-      if (hasOpenAI) setSelectedAPI('openai');
-      else if (hasGemini) setSelectedAPI('gemini');
-      else if (hasAnthropic) setSelectedAPI('anthropic');
+      // Auto-select BYOK mode if keys available
+      if (hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter) setSelectedAPI('byok');
     }
     checkBYOK();
   }, [user]);
@@ -111,9 +110,30 @@ export default function ChatPage() {
     if (input.trim()) {
       audioManager.play('click');
       
-      // Check if user can use AI (not on free plan with BYOK selected)
-      if (selectedAPI !== 'free' && userProfile?.plan === 'free') {
-        setShowUpgradePrompt(true);
+      // Check if user can use AI mode
+      if (selectedAPI === 'pro') {
+        // PRO mode is coming soon
+        setMessages([...messages, { role: 'user', content: input }]);
+        setInput("");
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: "PRO mode is coming soon! For now, please use FREE mode for plans or BYOK mode with your own API keys.",
+          }]);
+        }, 500);
+        return;
+      }
+      
+      if (selectedAPI === 'byok' && !hasBYOK) {
+        // BYOK mode requires API keys
+        setMessages([...messages, { role: 'user', content: input }]);
+        setInput("");
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: "To use BYOK mode, please add your API keys in Settings. For now, you can use FREE mode for plans.",
+          }]);
+        }, 500);
         return;
       }
       
@@ -224,7 +244,7 @@ export default function ChatPage() {
             >
               <Sparkles className="w-4 h-4" />
               <span>
-                {selectedAPI === 'free' ? 'Free Plan' : selectedAPI === 'openai' ? 'OpenAI' : selectedAPI === 'gemini' ? 'Gemini' : 'Anthropic'}
+                {selectedAPI === 'free' ? 'FREE MODE' : selectedAPI === 'byok' ? 'BYOK MODE' : 'PRO MODE'}
               </span>
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -240,39 +260,28 @@ export default function ChatPage() {
                     }`}
                   >
                     <Sparkles className="w-4 h-4" />
-                    <span>Free Plan</span>
+                    <span>FREE MODE</span>
                   </button>
                   {hasBYOK && (
-                    <>
-                      <button
-                        onClick={() => { setSelectedAPI('openai'); setShowAPIDropdown(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          selectedAPI === 'openai' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>OpenAI</span>
-                      </button>
-                      <button
-                        onClick={() => { setSelectedAPI('gemini'); setShowAPIDropdown(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          selectedAPI === 'gemini' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>Gemini</span>
-                      </button>
-                      <button
-                        onClick={() => { setSelectedAPI('anthropic'); setShowAPIDropdown(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          selectedAPI === 'anthropic' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>Anthropic</span>
-                      </button>
-                    </>
+                    <button
+                      onClick={() => { setSelectedAPI('byok'); setShowAPIDropdown(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedAPI === 'byok' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>BYOK MODE</span>
+                    </button>
                   )}
+                  <button
+                    onClick={() => { setSelectedAPI('pro'); setShowAPIDropdown(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      selectedAPI === 'pro' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>PRO MODE</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -404,6 +413,60 @@ export default function ChatPage() {
                 placeholder="Type your message..."
                 className="flex-1 bg-transparent border-none outline-none text-foreground px-6 py-4 text-lg placeholder:text-muted-foreground/60"
               />
+              {/* AI Mode Switcher */}
+              <div className="flex items-center gap-1 mr-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAPIDropdown(!showAPIDropdown)}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                    selectedAPI === 'free' 
+                      ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                      : selectedAPI === 'byok'
+                      ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30'
+                      : 'bg-purple-500/20 text-purple-500 border border-purple-500/30'
+                  }`}
+                >
+                  {selectedAPI === 'free' ? 'FREE' : selectedAPI === 'byok' ? 'BYOK' : 'PRO'}
+                </button>
+                {showAPIDropdown && (
+                  <div className={`absolute bottom-full right-0 mb-2 w-40 rounded-xl border shadow-xl z-50 ${
+                    theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'
+                  }`}>
+                    <div className="p-2 space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedAPI('free'); setShowAPIDropdown(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                          selectedAPI === 'free' ? 'bg-green-500/20 text-green-500' : 'text-muted-foreground hover:bg-white/5'
+                        }`}
+                      >
+                        <span>FREE</span>
+                      </button>
+                      {hasBYOK && (
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedAPI('byok'); setShowAPIDropdown(false); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                            selectedAPI === 'byok' ? 'bg-blue-500/20 text-blue-500' : 'text-muted-foreground hover:bg-white/5'
+                          }`}
+                        >
+                          <span>BYOK</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedAPI('pro'); setShowAPIDropdown(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                          selectedAPI === 'pro' ? 'bg-purple-500/20 text-purple-500' : 'text-muted-foreground hover:bg-white/5'
+                        }`}
+                      >
+                        <span>PRO</span>
+                        <span className="text-[10px] bg-purple-500/30 px-1.5 py-0.5 rounded">Soon</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 className="bg-primary text-primary-foreground p-3 rounded-xl hover:bg-primary/90 transition-colors mr-1"

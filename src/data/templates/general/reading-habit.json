@@ -1,0 +1,116 @@
+{
+  "id": "reading-habit-15-17",
+  "title": "Reading Habit Builder",
+  "category": "general",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A plan to build a consistent reading habit for personal growth and knowledge",
+  "goals": [
+    {
+      "title": "Read Daily",
+      "description": "Read for at least 30 minutes every day",
+      "target_date": "6 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Complete Books",
+      "description": "Finish at least 1 book per month",
+      "target_date": "Ongoing",
+      "xp_reward": 75
+    },
+    {
+      "title": "Diversify Reading",
+      "description": "Read books from different genres and topics",
+      "target_date": "12 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Reading",
+      "description": "Read for at least 30 minutes every day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Book Notes",
+      "description": "Take notes on key insights from reading",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "No Screens Before Bed",
+      "description": "Read instead of using screens 30 minutes before sleep",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Visit Library",
+      "description": "Visit library or bookstore weekly",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Choose First Book",
+      "description": "Select a book that interests you",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Reading Time",
+      "description": "Schedule specific time for daily reading",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Reading Space",
+      "description": "Set up comfortable reading area",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Get Library Card",
+      "description": "Sign up for library membership",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Reading List",
+      "description": "List books you want to read",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Track Reading Progress",
+      "description": "Set up system to track pages/books read",
+      "priority": "low",
+      "xp_reward": 5
+    }
+  ],
+  "warnings": [
+    "Start with books that genuinely interest you",
+    "Don't force yourself to finish books you don't enjoy",
+    "Quality over quantity - focus on understanding",
+    "Mix fiction and non-fiction for balance"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["reading", "books", "literature", "growth", "learning"],
+  "keywords": ["reading", "books", "literature", "read", "book", "habit", "growth", "knowledge"],
+  "icon": "book-open",
+  "fallback_message": "I found a great reading habit template! Let me set you up with a plan to build a consistent reading habit for personal growth."
+}

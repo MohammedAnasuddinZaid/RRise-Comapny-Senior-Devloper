@@ -51,14 +51,16 @@ export async function generateAIResponse(
   // Load user memory for personalization
   const userPreferences = await loadMemory(userId, 'preferences');
   const userGoals = await loadMemory(userId, 'goals');
+  const templateHistory = await loadMemory(userId, 'template_history');
   
   // Check if user has BYOK configured
   const hasOpenAIKey = await hasActiveAIKey(userId, 'openai');
   const hasGeminiKey = await hasActiveAIKey(userId, 'gemini');
   const hasAnthropicKey = await hasActiveAIKey(userId, 'anthropic');
+  const hasOpenRouterKey = await hasActiveAIKey(userId, 'openrouter');
   
   // If user has BYOK, use real AI API
-  if (hasOpenAIKey || hasGeminiKey || hasAnthropicKey) {
+  if (hasOpenAIKey || hasGeminiKey || hasAnthropicKey || hasOpenRouterKey) {
     return await generateRealAIResponse(userId, userMessage, userPreferences, userGoals);
   }
   
@@ -76,7 +78,7 @@ export async function generateAIResponse(
   
   switch (category) {
     case 'greeting':
-      response = generateGreetingResponse(userPreferences);
+      response = generateGreetingResponse(userPreferences, userGoals, templateHistory);
       break;
     case 'habit_help':
       response = generateHabitHelpResponse(keywords, userPreferences);
@@ -91,10 +93,10 @@ export async function generateAIResponse(
       response = generateTemplateSuggestionResponse(matchingTemplates);
       break;
     case 'general_help':
-      response = generateGeneralHelpResponse(keywords);
+      response = generateGeneralHelpResponse(keywords, userPreferences, userGoals);
       break;
     default:
-      response = generateFallbackResponse();
+      response = generateFallbackResponse(userPreferences);
   }
   
   // Add template suggestions if found
@@ -198,7 +200,7 @@ async function generateTemplateBasedResponse(
   
   switch (category) {
     case 'greeting':
-      response = generateGreetingResponse(userPreferences);
+      response = generateGreetingResponse(userPreferences, userGoals, null);
       break;
     case 'habit_help':
       response = generateHabitHelpResponse(keywords, userPreferences);
@@ -213,10 +215,10 @@ async function generateTemplateBasedResponse(
       response = generateTemplateSuggestionResponse(matchingTemplates);
       break;
     case 'general_help':
-      response = generateGeneralHelpResponse(keywords);
+      response = generateGeneralHelpResponse(keywords, userPreferences, userGoals);
       break;
     default:
-      response = generateFallbackResponse();
+      response = generateFallbackResponse(userPreferences);
   }
   
   if (matchingTemplates.length > 0 && category !== 'template_suggestion') {
@@ -488,12 +490,12 @@ export async function getAIUsageStats(
     }
 
     // Calculate totals
-    const totalTokens = data.reduce((sum, log) => sum + (log.tokens_used || 0), 0);
+    const totalTokens = data.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0);
     const totalRequests = data.length;
 
     // Group by provider
     const byProvider: Record<string, { tokens: number; requests: number }> = {};
-    data.forEach(log => {
+    data.forEach((log: any) => {
       const provider = log.provider || 'free';
       if (!byProvider[provider]) {
         byProvider[provider] = { tokens: 0, requests: 0 };
@@ -505,7 +507,7 @@ export async function getAIUsageStats(
     // Group by day
     const dailyUsage: Array<{ date: string; tokens: number; requests: number }> = [];
     const byDay: Record<string, { tokens: number; requests: number }> = {};
-    data.forEach(log => {
+    data.forEach((log: any) => {
       const date = log.created_at.split('T')[0];
       if (!byDay[date]) {
         byDay[date] = { tokens: 0, requests: 0 };
@@ -562,20 +564,34 @@ function categorizeMessage(message: string): ResponseCategory {
 }
 
 /**
- * Generate greeting response
+ * Generate greeting response with coaching approach
  */
-function generateGreetingResponse(preferences: any): string {
+function generateGreetingResponse(preferences: any, goals: any, templateHistory: any): string {
   const greetings = [
     "Hello! I'm here to help you build better habits and stay productive. What would you like to work on today?",
     "Hi there! Ready to make some progress? Let me know what you're focusing on.",
     "Hey! Great to see you. What can I help you with today?",
   ];
   
+  let response = greetings[Math.floor(Math.random() * greetings.length)];
+  
   if (preferences?.name) {
-    return `Hello ${preferences.name}! I'm here to help you build better habits and stay productive. What would you like to work on today?`;
+    response = `Hello ${preferences.name}! I'm here to help you build better habits and stay productive. What would you like to work on today?`;
   }
   
-  return greetings[Math.floor(Math.random() * greetings.length)];
+  // Add coaching question based on user data
+  if (goals && Array.isArray(goals) && goals.length > 0) {
+    response += ` I see you're working on: ${goals.slice(0, 2).join(', ')}. How's your progress on those?`;
+  } else {
+    response += " What's your main focus right now - building habits, completing tasks, or something else?";
+  }
+  
+  if (templateHistory && Array.isArray(templateHistory) && templateHistory.length > 0) {
+    const lastPlan = templateHistory[templateHistory.length - 1];
+    response += ` You previously started the "${lastPlan.planTitle || 'a plan'}" - would you like to continue with that or try something new?`;
+  }
+  
+  return response;
 }
 
 /**
@@ -654,20 +670,27 @@ function generateTemplateSuggestionResponse(templates: Template[]): string {
 /**
  * Generate general help response
  */
-function generateGeneralHelpResponse(keywords: string[]): string {
+function generateGeneralHelpResponse(keywords: string[], preferences: any, goals: any): string {
   const responses = [
     "I can help you with habits, tasks, motivation, and finding the right templates. What specific area would you like help with?",
     "Think of me as your personal growth assistant. I can suggest templates, provide motivation, or help you plan your day.",
     "Whether you need help building habits, managing tasks, or just some motivation, I'm here for you. What do you need?",
   ];
   
-  return responses[Math.floor(Math.random() * responses.length)];
+  let response = responses[Math.floor(Math.random() * responses.length)];
+  
+  // Add personalized coaching question
+  if (goals && Array.isArray(goals) && goals.length > 0) {
+    response += ` Since you're working on ${goals[0]}, would you like some specific tips for that?`;
+  }
+  
+  return response;
 }
 
 /**
  * Generate fallback response
  */
-function generateFallbackResponse(): string {
+function generateFallbackResponse(preferences: any): string {
   const responses = [
     "I'm here to help you build better habits and stay productive. Try asking me about habits, tasks, or templates!",
     "I can help you find the right templates and provide motivation. What would you like to work on?",

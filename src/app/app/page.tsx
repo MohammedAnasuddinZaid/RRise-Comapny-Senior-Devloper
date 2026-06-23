@@ -10,6 +10,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { audioManager } from "../../lib/audioManager";
 import greenParrot from "../../../public/lottie/green_parrot.json";
+import { useRequireAuth } from "../../lib/authGuard";
+import { createHabit, createTask } from "../../lib/dataLoader";
+import { saveMemory } from "../../lib/memorySystem";
 
 const iconMap: Record<string, React.ReactNode> = {
   "dumbbell": <Dumbbell className="w-6 h-6 text-primary" />,
@@ -19,22 +22,64 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export default function AppEntryPage() {
+  const { user } = useRequireAuth();
   const [prompt, setPrompt] = useState("");
   const [showParrot, setShowParrot] = useState(true);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [startingPlan, setStartingPlan] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    async function loadTemplates() {
-      const plans = await loadPlans();
-      setTemplates(plans);
+    async function loadPlansData() {
+      const plansData = await loadPlans();
+      setPlans(plansData);
     }
-    loadTemplates();
+    loadPlansData();
   }, []);
 
-  const handleTemplateClick = (templateId: string) => {
+  const handlePlanClick = async (planId: string) => {
+    if (!user) return;
+    
     audioManager.play('click');
-    router.push("/app/dashboard");
+    setStartingPlan(planId);
+    
+    try {
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) return;
+
+      // Create habits from plan
+      if (plan.habits && plan.habits.length > 0) {
+        for (const habit of plan.habits) {
+          await createHabit(user.id, habit.title, habit.icon || 'brain');
+        }
+      }
+
+      // Create tasks from plan
+      if (plan.tasks && plan.tasks.length > 0) {
+        for (const task of plan.tasks) {
+          const dueTime = task.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await createTask(user.id, task.title, dueTime);
+        }
+      }
+
+      // Store selected plan in memory
+      await saveMemory(user.id, 'template_history', {
+        planId: plan.id,
+        planTitle: plan.title,
+        planCategory: plan.category,
+        startedAt: new Date().toISOString(),
+      });
+
+      audioManager.play('success');
+      
+      // Small delay to ensure data is saved before redirect
+      setTimeout(() => {
+        router.push('/app/dashboard');
+      }, 500);
+    } catch (error) {
+      console.error('Error starting plan:', error);
+      setStartingPlan(null);
+    }
   };
 
   const handlePromptSubmit = (e: React.FormEvent) => {
@@ -134,25 +179,28 @@ export default function AppEntryPage() {
         transition={{ duration: 0.5, delay: 0.4 }}
       >
         <div className="col-span-full mb-4">
-          <h2 className="font-playfair text-2xl font-medium tracking-tight">Quick Start Templates</h2>
+          <h2 className="font-playfair text-2xl font-medium tracking-tight">Quick Start Plans</h2>
         </div>
         
-        {templates.map((template: any) => (
+        {plans.map((plan: any) => (
           <motion.div 
-            key={template.id}
+            key={plan.id}
             whileHover={{ y: -5, scale: 1.02 }}
             transition={{ type: "spring", stiffness: 300 }}
-            onClick={() => handleTemplateClick(template.id)}
-            className="cursor-pointer"
+            onClick={() => handlePlanClick(plan.id)}
+            className={`cursor-pointer ${startingPlan === plan.id ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Card className="h-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10 group">
               <CardContent className="p-8 flex items-start gap-5">
                 <div className="p-4 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
-                  {iconMap[template.icon]}
+                  {iconMap[plan.icon]}
                 </div>
-                <div>
-                  <h3 className="font-playfair font-semibold text-xl mb-2 text-foreground/90">{template.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{template.description}</p>
+                <div className="flex-1">
+                  <h3 className="font-playfair font-semibold text-xl mb-2 text-foreground/90">{plan.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{plan.description}</p>
+                  {startingPlan === plan.id && (
+                    <p className="text-primary text-xs mt-2 font-medium">Starting...</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

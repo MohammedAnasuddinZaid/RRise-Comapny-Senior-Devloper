@@ -367,7 +367,7 @@ export async function toggleHabitCompletion(
     const today = new Date().toISOString().split('T')[0];
 
     if (completed) {
-      // Check if already completed today
+      // Check if already completed today to prevent duplicate XP farming
       // NOTE: Use maybeSingle() not single() — single() throws PGRST116 when no row found
       const { data: existingLog } = await supabase
         .from('habit_logs')
@@ -454,24 +454,9 @@ export async function toggleHabitCompletion(
         return { success: false, error: deleteError.message };
       }
 
-      // Decrease XP total when unchecking
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('xp_total')
-        .eq('id', userId)
-        .single();
-
-      if (currentProfile) {
-        const newXP = Math.max((currentProfile.xp_total || 0) - 10, 0);
-        const { error: xpError } = await supabase
-          .from('profiles')
-          .update({ xp_total: newXP })
-          .eq('id', userId);
-
-        if (xpError) {
-          console.error('Error updating XP total:', xpError);
-        }
-      }
+      // IMPORTANT: XP is NOT decreased when unchecking
+      // This prevents XP farming by uncheck/recheck
+      // XP is permanent once awarded for the day
     }
 
     return { success: true };
@@ -485,6 +470,12 @@ export async function toggleHabitCompletion(
 
 /**
  * Toggle task completion status
+ * 
+ * IMPORTANT SECURITY & XP FARMING PREVENTION:
+ * - XP is awarded only ONCE per task to prevent farming
+ * - Uses task status to check if XP was already awarded
+ * - When unchecking, XP is NOT returned (no farming by uncheck/recheck)
+ * - XP is permanent once awarded for the task
  * 
  * @param taskId - The task ID
  * @param userId - The user's ID (for security)
@@ -507,76 +498,149 @@ export async function toggleTaskCompletion(
       return { success: false, error: 'Invalid input' };
     }
 
-    // Update task status instead of completed field
-    const { error } = await supabase
-      .from('tasks')
-      .update({ status: completed ? 'completed' : 'pending' })
-      .eq('id', taskId)
-      .eq('user_id', userId);
+    const today = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(today).toISOString();
+    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    // Log task completion
     if (completed) {
-      await supabase.from('task_logs').insert({
-        task_id: taskId,
-        user_id: userId,
-        completed_at: new Date().toISOString(),
-        xp_earned: 5, // Default XP reward
-      });
-
-      // Update user XP total in profiles table
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('xp_total')
-        .eq('id', userId)
-        .single();
-
-      if (currentProfile) {
-        const newXP = (currentProfile.xp_total || 0) + 5;
-        const { error: xpError } = await supabase
-          .from('profiles')
-          .update({ xp_total: newXP })
-          .eq('id', userId);
-
-        if (xpError) {
-          console.error('Error updating XP total:', xpError);
-        }
-      }
-
-      // Log XP gain
-      await supabase.from('xp_logs').insert({
-        user_id: userId,
-        amount: 5,
-        reason: 'Task completion',
-        source: 'task',
-      });
-
-      // NOTE: Use maybeSingle() to avoid PGRST116 when streak row doesn't exist yet
-      const { data: currentStreak } = await supabase
-        .from('streaks')
-        .select('current_streak')
+      // Check if already completed today to prevent duplicate XP farming
+      const { data: existingLog } = await supabase
+        .from('task_logs')
+        .select('*')
+        .eq('task_id', taskId)
         .eq('user_id', userId)
-        .eq('type', 'tasks')
+        .gte('completed_at', todayStart)
+        .lte('completed_at', todayEnd)
         .maybeSingle();
 
-      if (currentStreak) {
-        const newStreak = (currentStreak.current_streak || 0) + 1;
-        const { error: streakError } = await supabase
-          .from('streaks')
-          .update({ 
-            current_streak: newStreak,
-            last_activity_at: new Date().toISOString()
-          })
-          .eq('user_id', userId)
-          .eq('type', 'tasks');
+      if (!existingLog) {
+        // Update task status
+        const { error } = await supabase
+          .from('tasks')
+          .update({ status: 'completed' })
+          .eq('id', taskId)
+          .eq('user_id', userId);
 
-        if (streakError) {
-          console.error('Error updating streak:', streakError);
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        // Log task completion with XP
+        await supabase.from('task_logs').insert({
+          task_id: taskId,
+          user_id: userId,
+          completed_at: new Date().toISOString(),
+          xp_earned: 15, // XP reward for task completion (as per requirements)
+        });
+
+        // Update user XP total in profiles table (permanent, no farming)
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('xp_total')
+          .eq('id', userId)
+          .single();
+
+        if (currentProfile) {
+          const newXP = (currentProfile.xp_total || 0) + 15;
+          const { error: xpError } = await supabase
+            .from('profiles')
+            .update({ xp_total: newXP })
+            .eq('id', userId);
+
+          if (xpError) {
+            console.error('Error updating XP total:', xpError);
+          }
+        }
+
+        // Log XP gain in xp_logs table for audit trail
+        await supabase.from('xp_logs').insert({
+          user_id: userId,
+          amount: 15,
+          reason: 'Task completion',
+          source: 'task',
+        });
+
+        // Update overall streak
+        const { data: currentStreak } = await supabase
+          .from('streaks')
+          .select('current_streak, best_streak, last_activity_at')
+          .eq('user_id', userId)
+          .eq('type', 'overall')
+          .maybeSingle();
+
+        const now = new Date();
+        const todayDate = now.toISOString().split('T')[0];
+        
+        if (currentStreak) {
+          // Check if last activity was yesterday
+          const lastActivityDate = currentStreak.last_activity_at 
+            ? new Date(currentStreak.last_activity_at).toISOString().split('T')[0]
+            : null;
+          
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayDate = yesterday.toISOString().split('T')[0];
+          
+          let newStreak = currentStreak.current_streak || 0;
+          let newBestStreak = currentStreak.best_streak || 0;
+          
+          if (lastActivityDate === yesterdayDate) {
+            // Consecutive day - increment streak
+            newStreak += 1;
+          } else if (lastActivityDate !== todayDate) {
+            // Streak broken - reset to 1
+            newStreak = 1;
+          }
+          
+          if (newStreak > newBestStreak) {
+            newBestStreak = newStreak;
+          }
+          
+          const { error: streakError } = await supabase
+            .from('streaks')
+            .update({ 
+              current_streak: newStreak,
+              best_streak: newBestStreak,
+              last_activity_at: now.toISOString()
+            })
+            .eq('user_id', userId)
+            .eq('type', 'overall');
+
+          if (streakError) {
+            console.error('Error updating streak:', streakError);
+          }
+        } else {
+          // Create new streak record
+          const { error: streakError } = await supabase
+            .from('streaks')
+            .insert({
+              user_id: userId,
+              type: 'overall',
+              current_streak: 1,
+              best_streak: 1,
+              last_activity_at: now.toISOString()
+            });
+
+          if (streakError) {
+            console.error('Error creating streak:', streakError);
+          }
         }
       }
+    } else {
+      // Update task status to pending
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: 'pending' })
+        .eq('id', taskId)
+        .eq('user_id', userId);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      // IMPORTANT: XP is NOT decreased when unchecking
+      // This prevents XP farming by uncheck/recheck
+      // XP is permanent once awarded for the task
     }
 
     return { success: true };
@@ -1283,17 +1347,15 @@ export async function saveDailyReflection(
  * @returns Activity history data
  */
 export async function loadActivityHistory(userId: string): Promise<{
-  habitCompletions: Array<{ id: string; habitTitle: string; completedAt: string; xpEarned: number }>;
-  taskCompletions: Array<{ id: string; taskTitle: string; completedAt: string; xpEarned: number }>;
+  habitCompletions: Array<{ id: string; habitTitle: string; completedAt: string }>;
+  taskCompletions: Array<{ id: string; taskTitle: string; completedAt: string }>;
   spendingTransactions: Array<{ id: string; category: string; amount: number; spentAt: string }>;
-  xpGains: Array<{ id: string; amount: number; reason: string; source: string; createdAt: string }>;
 }> {
   if (!isSupabaseConfigured()) {
     return {
       habitCompletions: [],
       taskCompletions: [],
       spendingTransactions: [],
-      xpGains: [],
     };
   }
   
@@ -1303,7 +1365,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       habitCompletions: [],
       taskCompletions: [],
       spendingTransactions: [],
-      xpGains: [],
     };
   }
 
@@ -1314,7 +1375,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       .select(`
         id,
         completed_at,
-        xp_earned,
         habit:habits(title)
       `)
       .eq('user_id', userId)
@@ -1325,7 +1385,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       id: log.id,
       habitTitle: log.habit?.title || 'Unknown Habit',
       completedAt: log.completed_at,
-      xpEarned: log.xp_earned || 0,
     }));
 
     // Load task completions with task titles
@@ -1334,7 +1393,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       .select(`
         id,
         completed_at,
-        xp_earned,
         task:tasks(title)
       `)
       .eq('user_id', userId)
@@ -1345,7 +1403,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       id: log.id,
       taskTitle: log.task?.title || 'Unknown Task',
       completedAt: log.completed_at,
-      xpEarned: log.xp_earned || 0,
     }));
 
     // Load spending transactions
@@ -1356,34 +1413,17 @@ export async function loadActivityHistory(userId: string): Promise<{
       .order('spent_at', { ascending: false })
       .limit(50);
 
-    const spendingTransactions = (spending || []).map(tx => ({
+    const spendingTransactions = (spending || []).map((tx: any) => ({
       id: tx.id,
       category: tx.category,
       amount: tx.amount,
       spentAt: tx.spent_at,
     }));
 
-    // Load XP gains
-    const { data: xpLogs } = await supabase
-      .from('xp_logs')
-      .select('id, amount, reason, source, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    const xpGains = (xpLogs || []).map(log => ({
-      id: log.id,
-      amount: log.amount,
-      reason: log.reason,
-      source: log.source,
-      createdAt: log.created_at,
-    }));
-
     return {
       habitCompletions,
       taskCompletions,
       spendingTransactions,
-      xpGains,
     };
   } catch (error) {
     console.error('Error loading activity history:', error);
@@ -1391,7 +1431,6 @@ export async function loadActivityHistory(userId: string): Promise<{
       habitCompletions: [],
       taskCompletions: [],
       spendingTransactions: [],
-      xpGains: [],
     };
   }
 }

@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [aiKeys, setAiKeys] = useState<any[]>([]);
   const [showAddKeyForm, setShowAddKeyForm] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
-  const [newKeyProvider, setNewKeyProvider] = useState<"openai" | "gemini" | "anthropic">("openai");
+  const [newKeyProvider, setNewKeyProvider] = useState<"openai" | "gemini" | "anthropic" | "openrouter">("openai");
   const [newKeyValue, setNewKeyValue] = useState("");
   const [testingKey, setTestingKey] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
@@ -154,7 +154,7 @@ export default function SettingsPage() {
   };
 
   // Handle testing AI key
-  const handleTestAIKey = async (provider: "openai" | "gemini" | "anthropic", apiKey: string) => {
+  const handleTestAIKey = async (provider: "openai" | "gemini" | "anthropic" | "openrouter", apiKey: string) => {
     setTestingKey(apiKey);
     setTestResult(null);
     
@@ -555,6 +555,7 @@ export default function SettingsPage() {
                               <option value="openai">OpenAI</option>
                               <option value="gemini">Gemini</option>
                               <option value="anthropic">Anthropic</option>
+                              <option value="openrouter">OpenRouter</option>
                             </select>
                           </div>
                           <div>
@@ -569,13 +570,29 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">API Key</label>
-                            <input
-                              type="password"
-                              value={newKeyValue}
-                              onChange={(e) => setNewKeyValue(e.target.value)}
-                              className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
-                              placeholder="sk-..."
-                            />
+                            <div className="flex gap-2 mt-2">
+                              <input
+                                type="password"
+                                value={newKeyValue}
+                                onChange={(e) => setNewKeyValue(e.target.value)}
+                                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
+                                placeholder="sk-..."
+                              />
+                              <Button
+                                type="button"
+                                variant="glass"
+                                onClick={() => handleTestAIKey(newKeyProvider, newKeyValue)}
+                                disabled={!newKeyValue || testingKey === newKeyValue}
+                                className="px-4"
+                              >
+                                {testingKey === newKeyValue ? "Testing..." : "Test"}
+                              </Button>
+                            </div>
+                            {testResult && (
+                              <div className={`mt-2 text-xs ${testResult.success ? 'text-green-500' : 'text-red-500'}`}>
+                                {testResult.success ? '✓ Key is valid' : `✗ ${testResult.error}`}
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <Button

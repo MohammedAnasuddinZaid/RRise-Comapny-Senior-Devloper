@@ -4,16 +4,19 @@
  * This system allows users to provide their own AI API keys for use with Alex AI.
  * Keys are stored securely in the database and never exposed to the client.
  * 
+ * SECURITY & KEY HANDLING:
+ * - Keys are stored in ai_keys table with user_id scoping
+ * - Keys are encrypted before storage (in production - TODO)
+ * - Keys are never returned to the client after storage (only metadata)
+ * - Only provider and key_name are exposed, never the actual key
+ * - Keys can be deactivated (is_active flag) or deleted
+ * - Key validation checks format before storage
+ * 
  * Supported providers:
  * - OpenAI (GPT models)
  * - Gemini (Google AI)
- * - Anthropic (Claude models) - future support
- * 
- * Security notes:
- * - Keys are encrypted before storage (in production)
- * - Keys are never returned to the client after storage
- * - Only the provider and key name are exposed to the user
- * - Keys can be deactivated or deleted at any time
+ * - Anthropic (Claude models)
+ * - OpenRouter (multi-provider gateway)
  */
 
 import { AIProvider, AIKey, AIKeyPublic, AIKeyInsert, AIKeyUpdate } from '@/types/database';
@@ -301,6 +304,11 @@ export async function testAIKey(
       // Anthropic keys start with 'sk-ant-'
       if (!apiKey.startsWith('sk-ant-')) {
         return { success: false, error: 'Invalid Anthropic key format' };
+      }
+    } else if (provider === 'openrouter') {
+      // OpenRouter keys are typically longer strings
+      if (apiKey.length < 20) {
+        return { success: false, error: 'Invalid OpenRouter key format' };
       }
     }
 

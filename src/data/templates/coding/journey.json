@@ -1,0 +1,116 @@
+{
+  "id": "coding-journey-15-17",
+  "title": "Coding Journey for Beginners",
+  "category": "coding",
+  "age_range": "15-17",
+  "difficulty": "beginner",
+  "description": "A structured plan to start your coding journey with consistent practice and project building",
+  "goals": [
+    {
+      "title": "Learn Programming Fundamentals",
+      "description": "Complete a beginner programming course (Python or JavaScript)",
+      "target_date": "12 weeks from start",
+      "xp_reward": 150
+    },
+    {
+      "title": "Build First Project",
+      "description": "Complete your first functional project (calculator, to-do list, etc.)",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Practice Daily",
+      "description": "Code for at least 30 minutes every day",
+      "target_date": "Ongoing",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Coding Practice",
+      "description": "Code for at least 30 minutes every day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Learn New Concept",
+      "description": "Learn one new programming concept each week",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Review Code",
+      "description": "Review and refactor previous code for better practices",
+      "frequency": "weekly",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Read Documentation",
+      "description": "Read official documentation for 15 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Choose Programming Language",
+      "description": "Decide between Python, JavaScript, or another language",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Up Development Environment",
+      "description": "Install code editor and necessary tools",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Complete First Tutorial",
+      "description": "Follow a beginner tutorial to write your first program",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Join Coding Community",
+      "description": "Join Discord, Reddit, or Stack Overflow for help",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create GitHub Account",
+      "description": "Set up GitHub for version control and portfolio",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Plan First Project",
+      "description": "Outline your first project idea and features",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Don't rush through tutorials - focus on understanding",
+    "Take breaks to avoid burnout",
+    "Ask for help when stuck - coding is collaborative",
+    "Build projects, don't just watch tutorials"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 325,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["coding", "programming", "beginner", "developer", "tech"],
+  "keywords": ["coding", "programming", "code", "developer", "software", "learn to code", "python", "javascript"],
+  "icon": "brain",
+  "fallback_message": "I found a great coding template for beginners! Let me set you up with a structured plan to start your programming journey."
+}
