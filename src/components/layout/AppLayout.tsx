@@ -41,11 +41,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-64 border-r border-white/5 bg-black/20 backdrop-blur-md flex flex-col p-6 z-10 relative">
         <div className="mb-12 flex items-center justify-between px-2">
-          <img 
-            src="/images/RRISE NEW LOGO.png" 
-            alt="RRise Logo" 
-            className="h-9 w-auto object-contain"
-          />
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
+            <img 
+              src="/images/RRISE NEW LOGO.png" 
+              alt="RRise Logo" 
+              className="h-9 w-auto object-contain"
+            />
+          </Link>
           {plan !== "free" && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
               <Crown className="w-3.5 h-3.5 text-primary" />

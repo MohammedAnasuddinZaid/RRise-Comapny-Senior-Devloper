@@ -442,21 +442,37 @@ export async function toggleHabitCompletion(
         }
       }
     } else {
-      // Remove today's completion log (uncheck)
-      const { error: deleteError } = await supabase
+      // UNCHECK: Remove today's completion log
+      const today = new Date().toISOString().split('T')[0];
+      await supabase
         .from('habit_logs')
         .delete()
         .eq('habit_id', habitId)
         .eq('user_id', userId)
         .gte('completed_at', today);
 
-      if (deleteError) {
-        return { success: false, error: deleteError.message };
+      // Revert XP when unchecking
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('xp_total')
+        .eq('id', userId)
+        .single();
+
+      if (currentProfile) {
+        const newXP = Math.max(0, (currentProfile.xp_total || 0) - 10);
+        await supabase
+          .from('profiles')
+          .update({ xp_total: newXP })
+          .eq('id', userId);
       }
 
-      // IMPORTANT: XP is NOT decreased when unchecking
-      // This prevents XP farming by uncheck/recheck
-      // XP is permanent once awarded for the day
+      // Log negative XP for unchecking
+      await supabase.from('xp_logs').insert({
+        user_id: userId,
+        amount: -10,
+        reason: 'Habit uncompleted',
+        source: 'penalty',
+      });
     }
 
     return { success: true };
@@ -627,20 +643,42 @@ export async function toggleTaskCompletion(
         }
       }
     } else {
-      // Update task status to pending
-      const { error } = await supabase
+      // UNCHECK: Delete task log for today and revert XP
+      await supabase
+        .from('task_logs')
+        .delete()
+        .eq('task_id', taskId)
+        .eq('user_id', userId);
+
+      // Update task status back to pending
+      await supabase
         .from('tasks')
         .update({ status: 'pending' })
         .eq('id', taskId)
         .eq('user_id', userId);
 
-      if (error) {
-        return { success: false, error: error.message };
+      // Revert XP when unchecking
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('xp_total')
+        .eq('id', userId)
+        .single();
+
+      if (currentProfile) {
+        const newXP = Math.max(0, (currentProfile.xp_total || 0) - 15);
+        await supabase
+          .from('profiles')
+          .update({ xp_total: newXP })
+          .eq('id', userId);
       }
 
-      // IMPORTANT: XP is NOT decreased when unchecking
-      // This prevents XP farming by uncheck/recheck
-      // XP is permanent once awarded for the task
+      // Log negative XP for unchecking
+      await supabase.from('xp_logs').insert({
+        user_id: userId,
+        amount: -15,
+        reason: 'Task uncompleted',
+        source: 'penalty',
+      });
     }
 
     return { success: true };
@@ -1330,6 +1368,97 @@ export async function saveDailyReflection(
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to save reflection' 
     };
+  }
+}
+
+/**
+ * Load weekly performance data for the dashboard chart.
+ * Returns Mon–Sun scores (0-100) based on habit + task completions per day.
+ * 
+ * @param userId - The user's ID
+ * @returns Array of { name: 'Mon'|..., score: number } for each day of the current week
+ */
+export async function loadWeeklyPerformanceData(userId: string): Promise<Array<{ name: string; score: number }>> {
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const defaultData = dayNames.map(name => ({ name, score: 0 }));
+
+  if (!isSupabaseConfigured()) return defaultData;
+
+  const supabase = createClientComponentClient();
+  if (!supabase) return defaultData;
+
+  try {
+    // Build ISO date strings for Mon–Sun of the current week
+    const now = new Date();
+    // getDay(): 0=Sun, 1=Mon … 6=Sat; we want Mon=0 offset
+    const dayOfWeek = (now.getDay() + 6) % 7; // Mon=0, Sun=6
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - dayOfWeek);
+    monday.setHours(0, 0, 0, 0);
+
+    const weekDates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      weekDates.push(d.toISOString().split('T')[0]);
+    }
+
+    const startISO = monday.toISOString();
+    const endDate = new Date(monday);
+    endDate.setDate(monday.getDate() + 7);
+    const endISO = endDate.toISOString();
+
+    // Count habit completions per day this week
+    const { data: habitLogs } = await supabase
+      .from('habit_logs')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .gte('completed_at', startISO)
+      .lt('completed_at', endISO);
+
+    // Count task completions per day this week
+    const { data: taskLogs } = await supabase
+      .from('task_logs')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .gte('completed_at', startISO)
+      .lt('completed_at', endISO);
+
+    // Count total habits and tasks so we can compute a completion percentage
+    const { count: totalHabits } = await supabase
+      .from('habits')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const { count: totalTasks } = await supabase
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const total = (totalHabits || 0) + (totalTasks || 0);
+
+    // Build a counts map: dateStr -> count
+    const dayCounts: Record<string, number> = {};
+    weekDates.forEach(d => { dayCounts[d] = 0; });
+
+    (habitLogs || []).forEach((log: any) => {
+      const dateStr = new Date(log.completed_at).toISOString().split('T')[0];
+      if (dayCounts[dateStr] !== undefined) dayCounts[dateStr]++;
+    });
+
+    (taskLogs || []).forEach((log: any) => {
+      const dateStr = new Date(log.completed_at).toISOString().split('T')[0];
+      if (dayCounts[dateStr] !== undefined) dayCounts[dateStr]++;
+    });
+
+    // Convert to percentage scores
+    return weekDates.map((date, idx) => ({
+      name: dayNames[idx],
+      score: total > 0 ? Math.round((dayCounts[date] / total) * 100) : 0,
+    }));
+  } catch (error) {
+    console.error('Error loading weekly performance data:', error);
+    return defaultData;
   }
 }
 

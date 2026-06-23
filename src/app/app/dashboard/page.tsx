@@ -14,7 +14,7 @@ import { Sun, Moon } from "lucide-react";
 import { audioManager } from "../../../lib/audioManager";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { getPlanDisplayName, getPlanBadgeColor } from "../../../lib/planLogic";
-import { loadUserProfile, loadHabits, loadTasks, loadMascotState, loadStreakCount, toggleHabitCompletion, toggleTaskCompletion, createHabit, createTask } from "../../../lib/dataLoader";
+import { loadUserProfile, loadHabits, loadTasks, loadMascotState, loadStreakCount, toggleHabitCompletion, toggleTaskCompletion, createHabit, createTask, loadWeeklyPerformanceData } from "../../../lib/dataLoader";
 
 // Lottie Assets
 import fireStreak from "../../../../public/lottie/fire_streak.json";
@@ -28,9 +28,8 @@ const iconMap: Record<string, React.ReactNode> = {
   "dumbbell": <Dumbbell className="w-4 h-4" />
 };
 
-// Weekly chart data - loaded from user activity history
-// This will be populated from Supabase in a future update
-const chartData = [
+// Weekly chart data - loaded dynamically in useEffect
+const initialChartData = [
   { name: 'Mon', score: 0 },
   { name: 'Tue', score: 0 },
   { name: 'Wed', score: 0 },
@@ -78,10 +77,29 @@ export default function DashboardPage() {
   const [habits, setHabits] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [xpGain, setXpGain] = useState(false);
+  // Track the last XP amount gained to display in the overlay
+  const [lastXpAmount, setLastXpAmount] = useState(10);
   const [streakCelebration, setStreakCelebration] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [mascotState, setMascotState] = useState<any>(null);
   const [streakCount, setStreakCount] = useState(0);
+  const [chartData, setChartData] = useState(initialChartData);
+
+  // Update today's chart score whenever habits or tasks change
+  // (Other days are loaded from the DB via loadWeeklyPerformanceData)
+  useEffect(() => {
+    const totalItems = habits.length + tasks.length;
+    const completedItems = habits.filter(h => h.completed).length + tasks.filter(t => t.completed).length;
+    const score = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+    // Map current day of the week (0-6, starting Sunday) to chart index (Mon-Sun: Mon is 0, Sun is 6)
+    const dayIndex = (new Date().getDay() + 6) % 7; 
+
+    setChartData(prev => prev.map((day, idx) => 
+      idx === dayIndex ? { ...day, score } : day
+    ));
+  }, [habits, tasks]);
+
   const [dataLoading, setDataLoading] = useState(true);
 
   /**
@@ -174,6 +192,10 @@ export default function DashboardPage() {
           }));
           setTasks(transformedTasks);
         }
+
+        // Load real weekly performance data from DB for the chart (Mon-Sun of this week)
+        const weeklyData = await loadWeeklyPerformanceData(user.id);
+        setChartData(weeklyData);
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -238,15 +260,18 @@ export default function DashboardPage() {
     if (!habit) return;
     
     const nextState = !habit.completed;
+    const xpChange = nextState ? 10 : -10; // XP rule: if unchecked, decrease XP by 10 to sync correctly
     
     // Optimistic UI update
-    setHabits(prevHabits => prevHabits.map(h => 
+    setHabits((prevHabits: any[]) => prevHabits.map(h => 
       h.id === id ? { ...h, completed: nextState } : h
     ));
+    setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) + xpChange) } : null);
     
     // Only play sounds and show XP gain if checking (not unchecking)
     if (nextState) {
       audioManager.play('success');
+      setLastXpAmount(10); // habits give 10 XP
       setXpGain(true);
       setTimeout(() => setXpGain(false), 2000);
     }
@@ -255,9 +280,10 @@ export default function DashboardPage() {
     const result = await toggleHabitCompletion(id, user.id, nextState);
     if (!result.success) {
       // Revert on error
-      setHabits(prevHabits => prevHabits.map(h => 
+      setHabits((prevHabits: any[]) => prevHabits.map(h => 
         h.id === id ? { ...h, completed: !nextState } : h
       ));
+      setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) - xpChange) } : null);
       console.error('Failed to toggle habit:', result.error);
     }
   };
@@ -269,15 +295,18 @@ export default function DashboardPage() {
     if (!task) return;
     
     const nextState = !task.completed;
+    const xpChange = nextState ? 15 : -15; // XP reward for task completion is 15
     
     // Optimistic UI update
-    setTasks(prevTasks => prevTasks.map(t => 
+    setTasks((prevTasks: any[]) => prevTasks.map(t => 
       t.id === id ? { ...t, completed: nextState } : t
     ));
+    setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) + xpChange) } : null);
     
     // Only play sounds and show XP gain if checking (not unchecking)
     if (nextState) {
       audioManager.play('success');
+      setLastXpAmount(15); // tasks give 15 XP
       setXpGain(true);
       setTimeout(() => setXpGain(false), 2000);
     }
@@ -286,9 +315,10 @@ export default function DashboardPage() {
     const result = await toggleTaskCompletion(id, user.id, nextState);
     if (!result.success) {
       // Revert on error
-      setTasks(prevTasks => prevTasks.map(t => 
+      setTasks((prevTasks: any[]) => prevTasks.map(t => 
         t.id === id ? { ...t, completed: !nextState } : t
       ));
+      setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) - xpChange) } : null);
       console.error('Failed to toggle task:', result.error);
     }
   };
@@ -311,7 +341,7 @@ export default function DashboardPage() {
             className={`fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 ${theme === 'dark' ? 'bg-black/40 border-primary/20' : 'bg-white/80 border-green-500/30'} backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]`}
           >
             <LottieAnimation animationData={xpAnimation} loop={false} className="w-16 h-16" />
-            <span className="text-primary font-bold text-sm -mt-2">+50 XP</span>
+            <span className="text-primary font-bold text-sm -mt-2">+{lastXpAmount} XP</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -435,10 +465,13 @@ export default function DashboardPage() {
                 <h3 className="font-playfair text-2xl font-bold">Level {evolutionData.level} - {getParrotStage(evolutionData.level)}</h3>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-primary">{evolutionData.totalXP} / {evolutionData.nextLevelXp} XP</p>
+                {/* Show XP progress within current level, not total XP vs absolute threshold */}
+                <p className="text-sm font-semibold text-primary">{evolutionData.totalXP} XP total</p>
+                <p className="text-xs text-muted-foreground">{Math.round(evolutionData.progressPercent)}% to next level</p>
               </div>
             </div>
-            <ProgressBar value={evolutionData.totalXP} max={evolutionData.nextLevelXp} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
+            {/* progressPercent is already 0-100, so pass as value and 100 as max */}
+            <ProgressBar value={evolutionData.progressPercent} max={100} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               {getParrotStages().map((stage, index) => (
                 <span 
@@ -636,8 +669,8 @@ export default function DashboardPage() {
           <CardHeader className={`border-b ${theme === 'dark' ? 'border-white/5' : 'border-green-500/20'} pb-4`}>
             <CardTitle className="text-lg font-medium">Weekly Performance Curve</CardTitle>
           </CardHeader>
-          <CardContent className="h-72 w-full pt-6 pb-6">
-            <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="h-72 w-full pt-6 pb-6 min-h-[288px]">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">

@@ -80,23 +80,24 @@ export async function loadMemory(
   try {
     const dbType = getDBMemoryType(memoryType);
     
-    // We use maybeSingle() instead of single() to avoid PGRST116 errors when no row exists yet
     const { data, error } = await supabase
       .from('prompt_memory')
       .select('memory_data')
       .eq('user_id', userId)
       .eq('memory_type', dbType)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
     if (error) {
       console.error('Error loading memory:', error);
       return null;
     }
 
-    if (data?.memory_data) {
-      const parsedData = typeof data.memory_data === 'string'
-        ? JSON.parse(data.memory_data)
-        : data.memory_data;
+    if (data && data.length > 0 && data[0]?.memory_data) {
+      const memoryRow = data[0];
+      const parsedData = typeof memoryRow.memory_data === 'string'
+        ? JSON.parse(memoryRow.memory_data)
+        : memoryRow.memory_data;
       
       // Return only the specific nested property requested by the code
       return parsedData[memoryType] ?? null;
@@ -139,16 +140,19 @@ export async function saveMemory(
     const dbType = getDBMemoryType(memoryType);
 
     // Get the existing row for this database group first
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existingRows, error: fetchError } = await supabase
       .from('prompt_memory')
       .select('id, memory_data')
       .eq('user_id', userId)
       .eq('memory_type', dbType)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
     if (fetchError) {
       return { success: false, error: fetchError.message };
     }
+
+    const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
     let currentMemoryData: Record<string, any> = {};
 
@@ -332,16 +336,19 @@ export async function deleteMemory(
   try {
     const dbType = getDBMemoryType(memoryType);
 
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existingRows, error: fetchError } = await supabase
       .from('prompt_memory')
       .select('id, memory_data')
       .eq('user_id', userId)
       .eq('memory_type', dbType)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
     if (fetchError) {
       return { success: false, error: fetchError.message };
     }
+
+    const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
     if (!existing) {
       return { success: true };

@@ -40,7 +40,8 @@ type ResponseCategory =
  */
 export async function generateAIResponse(
   userId: string,
-  userMessage: string
+  userMessage: string,
+  selectedMode: 'free' | 'byok' | 'pro' = 'free'
 ): Promise<{
   response: string;
   templates?: Template[];
@@ -53,15 +54,29 @@ export async function generateAIResponse(
   const userGoals = await loadMemory(userId, 'goals');
   const templateHistory = await loadMemory(userId, 'template_history');
   
-  // Check if user has BYOK configured
-  const hasOpenAIKey = await hasActiveAIKey(userId, 'openai');
-  const hasGeminiKey = await hasActiveAIKey(userId, 'gemini');
-  const hasAnthropicKey = await hasActiveAIKey(userId, 'anthropic');
-  const hasOpenRouterKey = await hasActiveAIKey(userId, 'openrouter');
-  
-  // If user has BYOK, use real AI API
-  if (hasOpenAIKey || hasGeminiKey || hasAnthropicKey || hasOpenRouterKey) {
+  // Explicitly check selectedMode
+  if (selectedMode === 'byok') {
+    // Determine which provider is active or check keys
+    const hasOpenAIKey = await hasActiveAIKey(userId, 'openai');
+    const hasGeminiKey = await hasActiveAIKey(userId, 'gemini');
+    const hasAnthropicKey = await hasActiveAIKey(userId, 'anthropic');
+    const hasOpenRouterKey = await hasActiveAIKey(userId, 'openrouter');
+
+    if (!hasOpenAIKey && !hasGeminiKey && !hasAnthropicKey && !hasOpenRouterKey) {
+      return {
+        response: "BYOK Mode selected, but no API keys are connected. Please go to Settings > AI Settings to add your key.",
+        category: 'general_help',
+      };
+    }
+
     return await generateRealAIResponse(userId, userMessage, userPreferences, userGoals);
+  }
+
+  if (selectedMode === 'pro') {
+    return {
+      response: "PRO Mode is selected, but hosted Pro AI capabilities are currently locked/coming soon. For now, please use FREE Mode or connect your own key in BYOK Mode.",
+      category: 'general_help',
+    };
   }
   
   // Otherwise, use template-based system (free plan)
@@ -173,8 +188,11 @@ async function generateRealAIResponse(
     };
   } catch (error) {
     console.error('Error calling AI API:', error);
-    // Fallback to template-based system on error
-    return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
+    // Do NOT silently fall back to Free mode. Return a clear error message.
+    return {
+      response: `Error calling the AI provider API: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your API key configuration in Settings.`,
+      category: 'general_help'
+    };
   }
 }
 

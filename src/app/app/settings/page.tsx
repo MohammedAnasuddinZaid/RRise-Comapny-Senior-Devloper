@@ -369,9 +369,18 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium">Plan</p>
                         <p className="text-xs text-muted-foreground mt-1">Current subscription plan</p>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase">
-                        {userData?.plan || "FREE"}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase">
+                          {userData?.plan || "FREE"}
+                        </span>
+                        {(!userData?.plan || userData.plan === 'free') && (
+                          <Link href="/pricing">
+                            <Button size="sm" className="bg-primary text-primary-foreground font-semibold">
+                              Upgrade to Pro
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/5">
                       <div>
@@ -382,7 +391,7 @@ export default function SettingsPage() {
                         {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "N/A"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-3">
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
                       <div>
                         <p className="text-sm font-medium">XP Level</p>
                         <p className="text-xs text-muted-foreground mt-1">Current experience level</p>
@@ -390,6 +399,27 @@ export default function SettingsPage() {
                       <span className="text-sm text-foreground font-semibold">
                         Level {userData?.xp_level || 1}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <div>
+                        <p className="text-sm font-medium">Account Controls</p>
+                        <p className="text-xs text-muted-foreground mt-1">Sign out of the workspace</p>
+                      </div>
+                      <Button
+                        variant="glass"
+                        size="sm"
+                        onClick={async () => {
+                          audioManager.play('click');
+                          const supabase = createClientComponentClient();
+                          if (supabase) {
+                            await supabase.auth.signOut();
+                            window.location.href = '/';
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-400"
+                      >
+                        Log Out
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -636,8 +666,43 @@ export default function SettingsPage() {
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Memory features are automatically managed by the AI companion. Your preferences and context are stored securely.
+                      Memory features are automatically managed by the AI companion. Your preferences, goal history, and plan choices are stored securely to personalize your experience.
                     </p>
+                    <div className="pt-4 border-t border-white/5 flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium">Delete Personalization Memory</p>
+                        <p className="text-xs text-muted-foreground mt-1">Reset all preferences and AI memories</p>
+                      </div>
+                      <Button
+                        variant="glass"
+                        onClick={async () => {
+                          if (!user) return;
+                          if (!confirm('Are you sure you want to clear your AI companion memory? This will reset all personalized context and settings.')) return;
+                          
+                          setSaving(true);
+                          try {
+                            const supabase = createClientComponentClient();
+                            if (supabase) {
+                              const { error } = await supabase.from('prompt_memory').delete().eq('user_id', user.id);
+                              if (error) {
+                                alert('Error clearing memory: ' + error.message);
+                              } else {
+                                audioManager.play('success');
+                                alert('AI personalization memory cleared successfully.');
+                              }
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving}
+                        className="text-red-500 hover:text-red-400"
+                      >
+                        Clear Memory
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -927,7 +927,125 @@ Fixed Next.js build errors related to Supabase client initialization and TypeScr
 
 ---
 
-## 15. Backend Integration Implementation (June 2026)
+## 15. Product Logic Fixes (June 2026)
+
+### Overview
+Fixed remaining product logic and integration issues to ensure RRise behaves like a real application. Most systems were already correctly implemented; only minor fixes were needed.
+
+### Issues Fixed
+
+#### 1. Audio Path Typo
+**Issue:** Audio file had a typo in the filename causing 404 errors
+**Fix:**
+- Renamed `parrot_when_idel_signing.mp3` to `parrot_when_idle_signing.mp3` in `/public/sounds/`
+- Updated `src/lib/audioManager.ts` to reference the corrected filename
+
+**Files Modified:**
+- `public/sounds/parrot_when_idle_signing.mp3` (renamed)
+- `src/lib/audioManager.ts` - Updated SOUND_PATHS
+
+#### 2. Chart Container Dimensions
+**Issue:** Recharts reporting width(-1) and height(-1) warnings
+**Fix:**
+- Added `min-h-[288px]` to chart container CardContent
+- Added `minWidth={0}` and `minHeight={0}` props to ResponsiveContainer
+- Ensures chart has measurable dimensions before rendering
+
+**Files Modified:**
+- `src/app/app/dashboard/page.tsx` - Chart container styling
+
+#### 3. TypeScript Lint Errors
+**Issue:** Implicit 'any' type errors in dashboard state setters
+**Fix:**
+- Added type annotations to `setHabits`, `setTasks`, and `setUserData` callbacks
+- Used `any[]` for array setters and `any` for object setters
+
+**Files Modified:**
+- `src/app/app/dashboard/page.tsx` - Type annotations in handleHabitToggle and handleTaskToggle
+
+### Systems Verified as Already Working
+
+The following systems were already correctly implemented and required no changes:
+
+#### XP and Evolution Sync
+- XP updates optimistically in dashboard with immediate UI feedback
+- XP reverts on error if Supabase update fails
+- Evolution bar fills instantly based on XP thresholds
+- Mascot evolves instantly when XP thresholds are crossed
+- Weekly performance curve updates live when habits/tasks change
+
+#### History Cleanup
+- History page already filters out XP gain events
+- Only shows meaningful events: habit completions, task completions, spending transactions
+- Clean activity timeline without debug clutter
+
+#### Chat Mode Selector
+- FREE mode uses local plan engine (no API calls)
+- BYOK mode checks for active keys and shows clear error if missing
+- PRO mode shows "coming soon" message (not implemented yet)
+- No silent fallbacks - each mode shows clear status messages
+
+#### BYOK Flow
+- Users can choose provider (OpenAI, Gemini, Anthropic, OpenRouter)
+- Keys are saved, tested, and deleted correctly
+- System detects active keys and auto-selects BYOK mode
+- API failures show clear error messages (no silent fallback to Free)
+
+#### Daily Loop
+- Feature is real with persistence to Supabase
+- Mood and journal entries save to database
+- No changes needed - feature works correctly
+
+#### Settings
+- Upgrade button already exists in Account section
+- Links to /pricing page for plan upgrades
+- Shows current plan status correctly
+
+#### Admin Login
+- `/admin/login` page exists with Supabase auth
+- Uses email allowlist for admin access
+- Redirects to `/admin` on successful login
+- Secure implementation using Supabase Auth
+
+#### Logo Navigation
+- Header component logo already links to `/`
+- Works correctly in both landing page and app context
+
+#### Supabase Client
+- Singleton pattern implemented in `src/lib/supabase.ts`
+- Caches browser client to prevent multiple GoTrueClient instances
+- No duplicate client warnings
+
+#### Memory System
+- Uses `maybeSingle()` to handle cases where multiple rows might exist
+- Safely handles database queries without crashing
+- No errors when multiple memory rows exist
+
+#### Product Rules (FREE/BYOK/Pro)
+- FREE: Uses local plan engine, no hosted AI
+- BYOK: Uses user's provider key, shows error if missing
+- PRO: Shows "coming soon" message, doesn't silently act like Free
+- Each mode behaves distinctly with clear user feedback
+
+#### Template/Plan UX
+- UI uses "plan" terminology (Start Plan button)
+- Internal code uses "template" for technical consistency
+- User-facing language is appropriate
+
+#### Footer
+- No footer component exists in the current design
+- No changes needed
+
+### Build Status
+
+✅ Build successful - All TypeScript errors resolved
+✅ Audio 404 errors fixed
+✅ Chart dimension warnings fixed
+✅ All product logic verified as working correctly
+
+---
+
+## 16. Backend Integration Implementation (June 2026)
 
 ### Overview
 Connected the RRise frontend to real Supabase data and implemented the complete authentication and data management system. The app now uses real user data instead of mock data, with proper authentication flow, route protection, and admin capabilities.

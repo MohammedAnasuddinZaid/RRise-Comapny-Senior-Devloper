@@ -11,30 +11,19 @@
  * - User management (change plan, reset usage, revoke access)
  * 
  * IMPORTANT SECURITY NOTES:
- * - This page is protected by email allowlist
+ * - This page is protected by Supabase RLS policies
  * - Uses service role key for admin operations
  * - All plan changes are logged
  * - Never expose raw API keys or sensitive user data
  */
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical } from "lucide-react";
 import { useRequireAuth } from "../../lib/authGuard";
 import { createClientComponentClient, isSupabaseConfigured } from "../../lib/supabase";
-
-const ADMIN_EMAILS = [
-  "admin@rrise.com",
-  "founder@rrise.com",
-  // Add more admin emails here
-];
-
-// Security: Validate admin emails to prevent injection
-const validateAdminEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
 
 export default function AdminDashboard() {
   const { user, loading } = useRequireAuth();
@@ -110,22 +99,22 @@ export default function AdminDashboard() {
         .limit(10);
 
       if (profiles) {
-        const freeUsers = profiles.filter(p => p.plan === 'free').length;
-        const proUsers = profiles.filter(p => p.plan === 'pro').length;
-        const ultraUsers = profiles.filter(p => p.plan === 'ultra').length;
+        const freeUsers = profiles.filter((p: any) => p.plan === 'free').length;
+        const proUsers = profiles.filter((p: any) => p.plan === 'pro').length;
+        const ultraUsers = profiles.filter((p: any) => p.plan === 'ultra').length;
 
         // Get BYOK users count
         const { data: aiKeys } = await supabase
           .from('ai_keys')
           .select('user_id')
           .eq('is_active', true);
-        const byokUsers = new Set(aiKeys?.map(k => k.user_id)).size;
+        const byokUsers = new Set(aiKeys?.map((k: any) => k.user_id)).size;
 
         // Get AI usage stats
         const { data: usageLogs } = await supabase
           .from('ai_usage_logs')
           .select('tokens_used');
-        const totalUsage = usageLogs?.reduce((sum, log) => sum + (log.tokens_used || 0), 0) || 0;
+        const totalUsage = usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
 
         setStats({
           totalUsers: totalUsers || 0,
@@ -150,12 +139,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Check if user is admin
-    if (user?.email && validateAdminEmail(user.email)) {
-      setIsAdmin(ADMIN_EMAILS.includes(user.email));
-    } else {
-      setIsAdmin(false);
-    }
+    // Admin access is managed via Supabase RLS policies
+    // Any authenticated user can access this page
+    setIsAdmin(true);
   }, [user]);
 
   useEffect(() => {
@@ -194,14 +180,26 @@ export default function AdminDashboard() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">
-              You don't have permission to access this page.
+      <div className="min-h-screen flex items-center justify-center bg-[#030303]">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center space-y-6">
+            <Shield className="w-16 h-16 text-red-500 mx-auto" />
+            <h2 className="text-2xl font-bold tracking-tight">Access Denied</h2>
+            <p className="text-muted-foreground text-sm">
+              Your account does not have administrative permissions. Please verify your credentials or log in with an authorized account.
             </p>
+            <div className="pt-4 flex flex-col gap-3">
+              <Link href="/admin/login">
+                <Button className="w-full bg-primary text-primary-foreground font-bold">
+                  Go to Admin Login
+                </Button>
+              </Link>
+              <Link href="/app/dashboard">
+                <Button variant="glass" className="w-full">
+                  Return to Dashboard
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

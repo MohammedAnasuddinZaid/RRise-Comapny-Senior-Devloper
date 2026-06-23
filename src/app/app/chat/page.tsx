@@ -164,7 +164,7 @@ export default function ChatPage() {
         setInput("");
         
         // Use AI mode to generate response
-        const aiResponse = await generateAIResponse(user.id, sanitizedInput);
+        const aiResponse = await generateAIResponse(user.id, sanitizedInput, selectedAPI);
         
         // Filter AI response for safety
         const filteredResponse = filterAIResponse(aiResponse.response);
