@@ -1,0 +1,109 @@
+{
+  "id": "relationships-marriage",
+  "title": "Marriage Improvement",
+  "category": "relationships",
+  "age_range": "25-50",
+  "difficulty": "intermediate",
+  "description": "Strengthen your marriage with better communication, quality time, and mutual appreciation",
+  "goals": [
+    {
+      "title": "Improve Communication",
+      "description": "Have open, honest conversations regularly",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Increase Quality Time",
+      "description": "Spend meaningful time together daily",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Deepen Emotional Connection",
+      "description": "Build greater intimacy and understanding",
+      "target_date": "10 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Check-In",
+      "description": "Ask about partner's day and share yours",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Express Gratitude",
+      "description": "Tell partner one thing you appreciate",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Quality Time",
+      "description": "20 minutes of focused time together",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Kind Gesture",
+      "description": "Do something thoughtful for partner",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Schedule Date Night",
+      "description": "Set aside weekly time just for two of you",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Discuss Love Languages",
+      "description": "Learn each other's preferred ways to receive love",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Shared Goals",
+      "description": "Plan future together",
+      "priority": "medium",
+      "xp_reward": 12
+    },
+    {
+      "title": "Practice Active Listening",
+      "description": "Learn to listen without interrupting",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Plan Weekend Activity",
+      "description": "Choose something fun to do together",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Relationships require consistent effort from both partners",
+    "Communication is key - don't assume your partner knows what you need",
+    "Small gestures matter more than grand ones",
+    "Seek couples counseling if serious issues arise"
+  ],
+  "estimated_duration": "10 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.2,
+    "streak_bonus": 1.2
+  },
+  "plan_type": "free",
+  "tags": ["relationships", "marriage", "couple", "communication", "love"],
+  "keywords": ["marriage", "relationship", "spouse", "partner", "couple", "love"],
+  "fallback_message": "I found a marriage improvement template! This plan will help you strengthen your relationship through better communication and connection."
+}

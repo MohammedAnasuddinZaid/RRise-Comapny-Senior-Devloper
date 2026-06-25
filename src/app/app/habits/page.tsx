@@ -161,7 +161,7 @@ export default function HabitsPage() {
       <div className="space-y-4">
         <h1 className="font-playfair text-4xl font-bold tracking-tight">Habit Rituals</h1>
         <p className="text-muted-foreground font-light">
-          Consistency is the cornerstone of mastery. Track your daily loops and build your character.
+          Consistency is the cornerstone of mastery. Build your character through daily habits.
         </p>
       </div>
 

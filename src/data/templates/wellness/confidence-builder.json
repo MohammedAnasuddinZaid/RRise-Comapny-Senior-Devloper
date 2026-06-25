@@ -1,0 +1,109 @@
+{
+  "id": "wellness-confidence",
+  "title": "Confidence Builder",
+  "category": "wellness",
+  "age_range": "16-30",
+  "difficulty": "beginner",
+  "description": "Build self-confidence through small wins, positive self-talk, and stepping outside comfort zones",
+  "goals": [
+    {
+      "title": "Increase Self-Esteem",
+      "description": "Feel more confident in daily life",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Speak Up More",
+      "description": "Express opinions and ideas more frequently",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Take Calculated Risks",
+      "description": "Step outside comfort zone regularly",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Affirmations",
+      "description": "Say 3 positive things about yourself",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Power Pose",
+      "description": "Stand confidently for 2 minutes",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 5
+    },
+    {
+      "title": "Achievement Log",
+      "description": "Write one thing you did well today",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Compliment Others",
+      "description": "Give genuine compliments to 3 people",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    }
+  ],
+  "tasks": [
+    {
+      "title": "List Strengths",
+      "description": "Write down 10 things you're good at",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Small Challenge",
+      "description": "Choose one thing that scares you slightly",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Practice Eye Contact",
+      "description": "Maintain eye contact in conversations",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Learn Something New",
+      "description": "Start learning a new skill",
+      "priority": "medium",
+      "xp_reward": 12
+    },
+    {
+      "title": "Celebrate Small Wins",
+      "description": "Acknowledge every achievement",
+      "priority": "high",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Confidence builds gradually through action",
+    "Fake it till you make it actually works",
+    "Focus on progress, not perfection",
+    "Everyone feels insecure sometimes"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 40
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["confidence", "self-esteem", "personal growth", "courage"],
+  "keywords": ["confidence", "self-esteem", "courage", "brave", "believe", "worth"],
+  "fallback_message": "I found a confidence builder template! This plan will help you build genuine self-esteem through small wins."
+}

@@ -1,0 +1,109 @@
+{
+  "id": "recovery-gaming",
+  "title": "Gaming Addiction Recovery",
+  "category": "recovery",
+  "age_range": "16-35",
+  "difficulty": "intermediate",
+  "description": "Recovery plan for reducing problematic gaming and building a balanced lifestyle with real-world activities",
+  "goals": [
+    {
+      "title": "Reduce Gaming Time",
+      "description": "Limit gaming to healthy amounts (1-2 hours/day)",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Balance Activities",
+      "description": "Engage in diverse real-world activities",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Improve Sleep",
+      "description": "Establish healthy sleep schedule",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "Time Limit",
+      "description": "Set and stick to daily gaming time limit",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    },
+    {
+      "title": "Real-World Activity",
+      "description": "Spend time on non-gaming hobbies",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 10
+    },
+    {
+      "title": "Social Connection",
+      "description": "Interact with people face-to-face",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Physical Activity",
+      "description": "30 minutes of exercise",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Gaming Schedule",
+      "description": "Create specific time blocks for gaming",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Install Time Limits",
+      "description": "Set up parental controls or timers",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Find New Hobbies",
+      "description": "Identify 3 activities to replace gaming",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Join Club or Group",
+      "description": "Connect with others offline",
+      "priority": "medium",
+      "xp_reward": 12
+    },
+    {
+      "title": "Create Gaming-Free Zones",
+      "description": "Designate areas without gaming",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Gaming in moderation can be healthy",
+    "Focus on adding positive activities, not just removing",
+    "Social support is crucial for success",
+    "It's okay to slip up - just get back on track"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.3,
+    "streak_bonus": 1.3
+  },
+  "plan_type": "free",
+  "tags": ["recovery", "gaming", "addiction", "balance", "health"],
+  "keywords": ["gaming", "addiction", "video games", "balance", "limit", "reduce"],
+  "fallback_message": "I found a gaming addiction recovery template! This plan will help you find balance and reduce problematic gaming."
+}

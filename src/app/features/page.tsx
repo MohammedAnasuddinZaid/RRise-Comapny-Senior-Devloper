@@ -46,8 +46,8 @@ const FEATURES = [
   },
   {
     icon: "flame",
-    title: "Streaks & Daily Loop",
-    desc: "The Daily Loop keeps your routine non-negotiable. Streaks make consistency addictive.",
+    title: "Streaks",
+    desc: "Streaks make consistency addictive. Build unbreakable habits with visual progress tracking.",
     back: "Visual streak counters, recovery mechanics, and a mascot that evolves as you level up.",
     accentClass: "text-primary",
     borderHover: "hover:border-primary/30",

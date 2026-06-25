@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, CheckSquare, Target, CreditCard, Settings, Play, MessageSquare, Clock, Crown } from "lucide-react";
+import { Home, CheckSquare, Target, CreditCard, Settings, MessageSquare, Clock, Crown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
@@ -16,7 +16,6 @@ const NAV_ITEMS = [
   { icon: CheckSquare, label: "Tasks", href: "/app/tasks" },
   { icon: Target, label: "Habits", href: "/app/habits" },
   { icon: CreditCard, label: "Spending", href: "/app/spending" },
-  { icon: Play, label: "Daily Loop", href: "/app/loop" },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

@@ -1,0 +1,96 @@
+{
+  "id": "study-sprint",
+  "title": "Study Sprint",
+  "category": "study",
+  "age_range": "15-25",
+  "difficulty": "advanced",
+  "description": "Intensive short-term study plan for rapid learning and deadline-focused preparation",
+  "goals": [
+    {
+      "title": "Complete Course Material",
+      "description": "Cover all required course content",
+      "target_date": "7 days from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Master Key Concepts",
+      "description": "Achieve understanding of core concepts",
+      "target_date": "5 days from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Deep Focus Session",
+      "description": "2-hour focused study block with no distractions",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 20
+    },
+    {
+      "title": "Quick Review",
+      "description": "15-minute review of previous material",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 5
+    },
+    {
+      "title": "Active Recall",
+      "description": "Test yourself without looking at notes",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Sprint Goals",
+      "description": "Define what you need to learn in this sprint",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Study Blocks",
+      "description": "Schedule focused study sessions",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Eliminate Distractions",
+      "description": "Set up phone-free study environment",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Practice Problems",
+      "description": "Complete 20 practice problems",
+      "priority": "high",
+      "xp_reward": 20
+    },
+    {
+      "title": "Teach Back",
+      "description": "Explain concepts in your own words",
+      "priority": "medium",
+      "xp_reward": 15
+    }
+  ],
+  "warnings": [
+    "Intensive study requires adequate rest",
+    "Don't sacrifice sleep for extra study time",
+    "Take short breaks every 45-60 minutes",
+    "Stay hydrated and maintain nutrition"
+  ],
+  "estimated_duration": "1 week",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 30
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.3,
+    "streak_bonus": 1.2
+  },
+  "plan_type": "free",
+  "tags": ["study", "sprint", "intensive", "deadline", "cram"],
+  "keywords": ["sprint", "intensive", "deadline", "cram", "quick", "fast", "rush"],
+  "fallback_message": "I found a study sprint template! This intensive plan will help you learn quickly when you're short on time."
+}

@@ -24,7 +24,6 @@ const PLANS = [
       "goals",
       "habits",
       "tasks",
-      "daily loop",
       "dashboards",
       "streaks",
       "mascot",

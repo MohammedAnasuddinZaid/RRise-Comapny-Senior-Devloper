@@ -1,0 +1,109 @@
+{
+  "id": "wellness-anxiety-recovery",
+  "title": "Anxiety Recovery",
+  "category": "wellness",
+  "age_range": "16-30",
+  "difficulty": "intermediate",
+  "description": "Gentle recovery plan for managing anxiety with breathing exercises, mindfulness, and gradual exposure",
+  "goals": [
+    {
+      "title": "Reduce Anxiety Episodes",
+      "description": "Decrease frequency and intensity of anxiety attacks",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build Coping Toolkit",
+      "description": "Develop personalized anxiety management strategies",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Improve Sleep Quality",
+      "description": "Establish calming bedtime routine for better rest",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Breathing",
+      "description": "5 minutes of deep breathing exercises",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Mindfulness Practice",
+      "description": "10 minutes of guided meditation",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Gratitude Journal",
+      "description": "Write 3 things you're grateful for",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Progressive Muscle Relaxation",
+      "description": "15-minute body relaxation exercise",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Identify Triggers",
+      "description": "List situations that cause anxiety",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Safe Space",
+      "description": "Designate a calming area in your home",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Learn Breathing Techniques",
+      "description": "Practice 4-7-8 and box breathing",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Download Meditation App",
+      "description": "Find a guided meditation resource",
+      "priority": "medium",
+      "xp_reward": 8
+    },
+    {
+      "title": "Establish Sleep Routine",
+      "description": "Set consistent bedtime and wake time",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "This is not a replacement for professional therapy",
+    "Seek help if anxiety becomes overwhelming",
+    "Be patient with your progress",
+    "It's okay to have setbacks"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["anxiety", "mental health", "wellness", "recovery", "calm"],
+  "keywords": ["anxiety", "panic", "worry", "stress", "nervous", "calm", "relax"],
+  "fallback_message": "I found an anxiety recovery template. This gentle plan will help you manage anxiety with proven techniques."
+}

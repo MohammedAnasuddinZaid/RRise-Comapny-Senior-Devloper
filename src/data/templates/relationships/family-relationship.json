@@ -1,0 +1,109 @@
+{
+  "id": "relationships-family",
+  "title": "Family Relationship",
+  "category": "relationships",
+  "age_range": "18-50",
+  "difficulty": "beginner",
+  "description": "Build stronger family bonds with better communication, quality time, and mutual support",
+  "goals": [
+    {
+      "title": "Improve Family Communication",
+      "description": "Have more open and positive family conversations",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Increase Family Time",
+      "description": "Spend regular quality time together",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Resolve Conflicts",
+      "description": "Address and work through family issues",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Family Meal",
+      "description": "Eat together at least once a day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Check-In",
+      "description": "Ask family members about their day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Express Appreciation",
+      "description": "Tell family members you appreciate them",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Help Out",
+      "description": "Contribute to household tasks",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Schedule Family Activity",
+      "description": "Plan regular family time together",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Family Meeting",
+      "description": "Have a meeting to discuss family matters",
+      "priority": "medium",
+      "xp_reward": 12
+    },
+    {
+      "title": "Learn Communication Skills",
+      "description": "Practice better ways to talk and listen",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Set Boundaries",
+      "description": "Establish healthy family boundaries",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Family Traditions",
+      "description": "Start new family rituals or activities",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Every family is different - find what works for yours",
+    "Consistency is more important than perfection",
+    "Respect individual differences within the family",
+    "Seek family therapy if conflicts are severe"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 40
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["relationships", "family", "communication", "bonding"],
+  "keywords": ["family", "parents", "siblings", "relationship", "bond", "connect"],
+  "fallback_message": "I found a family relationship template! This plan will help you build stronger connections with your family."
+}

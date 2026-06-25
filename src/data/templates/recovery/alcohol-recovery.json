@@ -1,0 +1,109 @@
+{
+  "id": "recovery-alcohol",
+  "title": "Alcohol Recovery",
+  "category": "recovery",
+  "age_range": "21-45",
+  "difficulty": "advanced",
+  "description": "Recovery plan for reducing or eliminating alcohol use with coping strategies, support systems, and lifestyle changes",
+  "goals": [
+    {
+      "title": "Reduce Alcohol Consumption",
+      "description": "Significantly decrease or eliminate alcohol use",
+      "target_date": "12 weeks from start",
+      "xp_reward": 150
+    },
+    {
+      "title": "Manage Cravings",
+      "description": "Develop effective strategies for handling urges",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Improve Overall Health",
+      "description": "Enhance physical and mental wellbeing",
+      "target_date": "10 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Daily Sobriety Check",
+      "description": "Commit to staying alcohol-free today",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Stress Management",
+      "description": "Practice healthy stress relief techniques",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 10
+    },
+    {
+      "title": "Hydration",
+      "description": "Drink 8 glasses of water daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Support Connection",
+      "description": "Reach out to support network daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Remove Alcohol from Home",
+      "description": "Clear environment of alcohol",
+      "priority": "high",
+      "xp_reward": 20
+    },
+    {
+      "title": "Identify Triggers",
+      "description": "List situations that lead to drinking",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Find Support Group",
+      "description": "Connect with AA or similar support",
+      "priority": "high",
+      "xp_reward": 25
+    },
+    {
+      "title": "Create Coping Toolkit",
+      "description": "List strategies for handling cravings",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Schedule Health Check",
+      "description": "See doctor for health assessment",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Alcohol withdrawal can be dangerous - seek medical help",
+    "Recovery is possible with the right support",
+    "Every day sober is a victory",
+    "Don't be afraid to ask for help"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 350,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.5,
+    "streak_bonus": 1.5
+  },
+  "plan_type": "free",
+  "tags": ["recovery", "alcohol", "sobriety", "health", "addiction"],
+  "keywords": ["alcohol", "drinking", "sober", "sobriety", "quit", "recovery"],
+  "fallback_message": "I found an alcohol recovery template. This supportive plan will help you on your journey to sobriety."
+}

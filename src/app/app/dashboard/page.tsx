@@ -40,35 +40,36 @@ const initialChartData = [
 ];
 
 /**
- * Get parrot evolution stage based on XP level
+ * Get parrot evolution stage based on completion percentage
  * 
- * IMPORTANT: Evolution stages are based on XP thresholds:
- * - Level 1 (0-99 XP): Baby Parrot
- * - Level 2 (100-249 XP): Young Parrot
- * - Level 3 (250-499 XP): Adult Parrot
- * - Level 4 (500+ XP): Phoenix
+ * IMPORTANT: Evolution stages are based on completion percentage:
+ * - 0-20%: Egg
+ * - 21-40%: Baby
+ * - 41-60%: Young
+ * - 61-80%: Adult
+ * - 81-100%: Elder
  * 
- * @param level - Evolution level (1-4)
+ * @param percentage - Completion percentage (0-100)
  * @returns Stage name
  */
-function getParrotStage(level: number): string {
-  if (level === 1) return "Baby Parrot";
-  if (level === 2) return "Young Parrot";
-  if (level === 3) return "Adult Parrot";
-  if (level === 4) return "Phoenix";
-  return "Baby Parrot"; // Default
+function getParrotStage(percentage: number): string {
+  if (percentage <= 20) return "Egg";
+  if (percentage <= 40) return "Baby";
+  if (percentage <= 60) return "Young";
+  if (percentage <= 80) return "Adult";
+  return "Elder";
 }
 
 function getParrotStages(): string[] {
-  return ["Baby Parrot", "Young Parrot", "Adult Parrot", "Phoenix"];
+  return ["Egg", "Baby", "Young", "Adult", "Elder"];
 }
 
-function getCurrentStageIndex(level: number): number {
-  if (level === 1) return 0;
-  if (level === 2) return 1;
-  if (level === 3) return 2;
-  if (level === 4) return 3;
-  return 0; // Default
+function getCurrentStageIndex(percentage: number): number {
+  if (percentage <= 20) return 0;
+  if (percentage <= 40) return 1;
+  if (percentage <= 60) return 2;
+  if (percentage <= 80) return 3;
+  return 4;
 }
 
 export default function DashboardPage() {
@@ -103,46 +104,26 @@ export default function DashboardPage() {
   const [dataLoading, setDataLoading] = useState(true);
 
   /**
-   * Calculate evolution level based on total XP from database
+   * Calculate completion percentage based on habits and tasks
    * 
-   * IMPORTANT: Evolution is based on TOTAL XP, not completion percentage
-   * XP thresholds:
-   * - 0-99 XP: Level 1 Baby
-   * - 100-249 XP: Level 2 Young
-   * - 250-499 XP: Level 3 Adult
-   * - 500+ XP: Level 4 Phoenix
+   * IMPORTANT: Progress is based on completion percentage (completed/total * 100)
+   * Evolution stages:
+   * - 0-20%: Egg
+   * - 21-40%: Baby
+   * - 41-60%: Young
+   * - 61-80%: Adult
+   * - 81-100%: Elder
    * 
-   * @param totalXP - Total XP from profiles table
-   * @returns Level, current XP, and XP needed for next level
+   * @param habits - Array of habits with completed status
+   * @param tasks - Array of tasks with completed status
+   * @returns Percentage and stage info
    */
-  const calculateEvolutionLevel = (totalXP: number) => {
-    let level = 1;
-    let nextLevelXp = 100;
-    let currentLevelXp = 0;
+  const calculateProgressPercentage = (habits: any[], tasks: any[]) => {
+    const totalItems = habits.length + tasks.length;
+    const completedItems = habits.filter(h => h.completed).length + tasks.filter(t => t.completed).length;
+    const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
     
-    if (totalXP >= 500) {
-      level = 4; // Phoenix
-      currentLevelXp = 500;
-      nextLevelXp = totalXP; // Max level
-    } else if (totalXP >= 250) {
-      level = 3; // Adult
-      currentLevelXp = 250;
-      nextLevelXp = 500;
-    } else if (totalXP >= 100) {
-      level = 2; // Young
-      currentLevelXp = 100;
-      nextLevelXp = 250;
-    } else {
-      level = 1; // Baby
-      currentLevelXp = 0;
-      nextLevelXp = 100;
-    }
-    
-    const xpInCurrentLevel = totalXP - currentLevelXp;
-    const xpToNextLevel = nextLevelXp - currentLevelXp;
-    const progressPercent = xpToNextLevel > 0 ? (xpInCurrentLevel / xpToNextLevel) * 100 : 100;
-    
-    return { level, totalXP, nextLevelXp, progressPercent };
+    return { percentage, totalItems, completedItems };
   };
 
   // Load user data from Supabase
@@ -206,8 +187,8 @@ export default function DashboardPage() {
     loadUserData();
   }, [user]);
 
-  // Calculate evolution level from actual XP in database
-  const evolutionData = calculateEvolutionLevel(userData?.xp_total || 0);
+  // Calculate progress percentage from habits and tasks
+  const progressData = calculateProgressPercentage(habits, tasks);
 
   // Import audio manager (must be before early return to satisfy Rules of Hooks)
   useEffect(() => {
@@ -245,14 +226,6 @@ export default function DashboardPage() {
     );
   }
 
-  const recalculateLevelAndXP = (currentHabits: typeof habits, currentTasks: typeof tasks) => {
-    const totalItems = currentHabits.length + currentTasks.length;
-    const completedItems = currentHabits.filter(h => h.completed).length + currentTasks.filter(t => t.completed).length;
-    const completionPercentage = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-    
-    return { completionPercentage };
-  };
-
   const handleHabitToggle = async (id: string) => {
     if (!user) return;
     
@@ -260,20 +233,15 @@ export default function DashboardPage() {
     if (!habit) return;
     
     const nextState = !habit.completed;
-    const xpChange = nextState ? 10 : -10; // XP rule: if unchecked, decrease XP by 10 to sync correctly
     
     // Optimistic UI update
     setHabits((prevHabits: any[]) => prevHabits.map(h => 
       h.id === id ? { ...h, completed: nextState } : h
     ));
-    setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) + xpChange) } : null);
     
-    // Only play sounds and show XP gain if checking (not unchecking)
+    // Play sound on completion
     if (nextState) {
       audioManager.play('success');
-      setLastXpAmount(10); // habits give 10 XP
-      setXpGain(true);
-      setTimeout(() => setXpGain(false), 2000);
     }
     
     // Persist to Supabase
@@ -283,7 +251,6 @@ export default function DashboardPage() {
       setHabits((prevHabits: any[]) => prevHabits.map(h => 
         h.id === id ? { ...h, completed: !nextState } : h
       ));
-      setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) - xpChange) } : null);
       console.error('Failed to toggle habit:', result.error);
     }
   };
@@ -295,20 +262,15 @@ export default function DashboardPage() {
     if (!task) return;
     
     const nextState = !task.completed;
-    const xpChange = nextState ? 15 : -15; // XP reward for task completion is 15
     
     // Optimistic UI update
     setTasks((prevTasks: any[]) => prevTasks.map(t => 
       t.id === id ? { ...t, completed: nextState } : t
     ));
-    setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) + xpChange) } : null);
     
-    // Only play sounds and show XP gain if checking (not unchecking)
+    // Play sound on completion
     if (nextState) {
       audioManager.play('success');
-      setLastXpAmount(15); // tasks give 15 XP
-      setXpGain(true);
-      setTimeout(() => setXpGain(false), 2000);
     }
     
     // Persist to Supabase
@@ -318,7 +280,6 @@ export default function DashboardPage() {
       setTasks((prevTasks: any[]) => prevTasks.map(t => 
         t.id === id ? { ...t, completed: !nextState } : t
       ));
-      setUserData((prev: any) => prev ? { ...prev, xp_total: Math.max(0, (prev.xp_total || 0) - xpChange) } : null);
       console.error('Failed to toggle task:', result.error);
     }
   };
@@ -430,7 +391,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Companion</p>
-                <p className="font-semibold text-base">Level {evolutionData.level}</p>
+                <p className="font-semibold text-base">{getParrotStage(progressData.percentage)}</p>
               </div>
             </div>
           </div>
@@ -444,11 +405,11 @@ export default function DashboardPage() {
           
           <div className="absolute inset-0 bg-primary/5 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <Mascot level={evolutionData.level} className="relative z-10 w-44 h-44 mb-4" />
+          <Mascot level={getCurrentStageIndex(progressData.percentage) + 1} className="relative z-10 w-44 h-44 mb-4" />
           
           <div className="space-y-1 z-10">
             <h3 className="font-playfair text-xl font-bold tracking-wide">Evolving Parrot</h3>
-            <p className="text-xs text-primary font-medium tracking-wider uppercase">Level {evolutionData.level} • {getParrotStage(evolutionData.level)}</p>
+            <p className="text-xs text-primary font-medium tracking-wider uppercase">{getParrotStage(progressData.percentage)}</p>
           </div>
         </div>
       </div>
@@ -461,22 +422,20 @@ export default function DashboardPage() {
           <CardContent className="p-8 space-y-4">
             <div className="flex justify-between items-end">
               <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">XP Evolution Progress</p>
-                <h3 className="font-playfair text-2xl font-bold">Level {evolutionData.level} - {getParrotStage(evolutionData.level)}</h3>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-1">Progress</p>
+                <h3 className="font-playfair text-2xl font-bold">{getParrotStage(progressData.percentage)}</h3>
               </div>
               <div className="text-right">
-                {/* Show XP progress within current level, not total XP vs absolute threshold */}
-                <p className="text-sm font-semibold text-primary">{evolutionData.totalXP} XP total</p>
-                <p className="text-xs text-muted-foreground">{Math.round(evolutionData.progressPercent)}% to next level</p>
+                <p className="text-sm font-semibold text-primary">{progressData.completedItems} / {progressData.totalItems}</p>
+                <p className="text-xs text-muted-foreground">{progressData.percentage}% complete</p>
               </div>
             </div>
-            {/* progressPercent is already 0-100, so pass as value and 100 as max */}
-            <ProgressBar value={evolutionData.progressPercent} max={100} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
+            <ProgressBar value={progressData.percentage} max={100} className={`h-2.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-green-500/10'}`} />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               {getParrotStages().map((stage, index) => (
                 <span 
                   key={index} 
-                  className={index <= getCurrentStageIndex(evolutionData.level) ? "text-primary font-semibold" : ""}
+                  className={index <= getCurrentStageIndex(progressData.percentage) ? "text-primary font-semibold" : ""}
                 >
                   {stage}
                 </span>
@@ -553,7 +512,6 @@ export default function DashboardPage() {
                     onClick={() => {
                       audioManager.play('click');
                       setHabits(habits.filter(h => h.id !== habit.id));
-                      setTimeout(() => recalculateLevelAndXP(habits.filter(h => h.id !== habit.id), tasks), 0);
                     }}
                     className="w-7 h-7 rounded-full border-2 border-red-500/30 text-red-500/50 hover:border-red-500 hover:text-red-500 flex items-center justify-center transition-all"
                   >
@@ -618,7 +576,6 @@ export default function DashboardPage() {
                     onClick={() => {
                       audioManager.play('click');
                       setTasks(tasks.filter(t => t.id !== task.id));
-                      setTimeout(() => recalculateLevelAndXP(habits, tasks.filter(t => t.id !== task.id)), 0);
                     }}
                     className="w-6 h-6 rounded-lg border-2 border-red-500/30 text-red-500/50 hover:border-red-500 hover:text-red-500 flex items-center justify-center flex-shrink-0 transition-all"
                   >

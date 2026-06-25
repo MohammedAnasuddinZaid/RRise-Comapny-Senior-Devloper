@@ -1,0 +1,109 @@
+{
+  "id": "recovery-porn",
+  "title": "Porn Recovery",
+  "category": "recovery",
+  "age_range": "18-35",
+  "difficulty": "advanced",
+  "description": "Recovery plan for overcoming pornography addiction with trigger management, healthy alternatives, and accountability",
+  "goals": [
+    {
+      "title": "Eliminate Pornography Use",
+      "description": "Achieve complete abstinence from pornography",
+      "target_date": "12 weeks from start",
+      "xp_reward": 150
+    },
+    {
+      "title": "Reduce Urges",
+      "description": "Decrease frequency and intensity of urges",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    },
+    {
+      "title": "Build Healthy Habits",
+      "description": "Replace porn with positive activities",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Intention",
+      "description": "Set daily intention to stay porn-free",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Trigger Check",
+      "description": "Identify and avoid triggers throughout day",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 8
+    },
+    {
+      "title": "Healthy Alternative",
+      "description": "Engage in healthy activity when urge hits",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Evening Reflection",
+      "description": "Review day and plan for tomorrow",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Install Blockers",
+      "description": "Set up content blockers on all devices",
+      "priority": "high",
+      "xp_reward": 20
+    },
+    {
+      "title": "Identify Triggers",
+      "description": "List situations that lead to porn use",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Emergency Plan",
+      "description": "Plan what to do when urges hit",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Find Accountability Partner",
+      "description": "Connect with someone for support",
+      "priority": "high",
+      "xp_reward": 20
+    },
+    {
+      "title": "List Healthy Alternatives",
+      "description": "Identify activities to replace porn",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Recovery is a journey with ups and downs",
+    "Relapse doesn't mean failure - learn from it",
+    "Seek professional help if needed",
+    "Be patient and compassionate with yourself"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.5,
+    "streak_bonus": 1.5
+  },
+  "plan_type": "free",
+  "tags": ["recovery", "addiction", "porn", "habit", "health"],
+  "keywords": ["porn", "addiction", "recovery", "habit", "quit", "stop"],
+  "fallback_message": "I found a porn recovery template. This supportive plan will help you build a healthier relationship with sexuality."
+}

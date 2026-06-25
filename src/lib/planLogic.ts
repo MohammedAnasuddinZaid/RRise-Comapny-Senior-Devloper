@@ -180,7 +180,7 @@ export async function getUserUsage(userId: string): Promise<{
     }
 
     const monthly_ai_requests = data?.length || 0;
-    const monthly_token_usage = data?.reduce((sum, log) => sum + (log.tokens_used || 0), 0) || 0;
+    const monthly_token_usage = data?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
 
     // Calculate next reset date (first day of next month)
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);

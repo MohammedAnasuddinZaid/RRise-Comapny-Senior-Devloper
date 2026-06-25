@@ -1,0 +1,109 @@
+{
+  "id": "wellness-overthinking",
+  "title": "Overthinking Reduction",
+  "category": "wellness",
+  "age_range": "16-30",
+  "difficulty": "intermediate",
+  "description": "Break free from overthinking patterns with grounding techniques, thought challenging, and mindfulness",
+  "goals": [
+    {
+      "title": "Reduce Rumination",
+      "description": "Decrease time spent stuck in negative thought loops",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Improve Decision Making",
+      "description": "Make decisions more quickly and confidently",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Increase Present Moment Awareness",
+      "description": "Spend more time focused on the present",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Thought Journal",
+      "description": "Write down recurring thoughts for 5 minutes",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "5-4-3-2-1 Grounding",
+      "description": "Practice grounding technique when overthinking",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 10
+    },
+    {
+      "title": "Worry Time",
+      "description": "Schedule 15 minutes to worry, then stop",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Fact Check Thoughts",
+      "description": "Challenge 3 negative thoughts daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Identify Patterns",
+      "description": "Notice when and why you overthink",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Learn Grounding Techniques",
+      "description": "Practice 5-4-3-2-1 and other methods",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Create Distraction List",
+      "description": "List activities to shift your focus",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Decision Deadlines",
+      "description": "Give yourself time limits for decisions",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Practice Acceptance",
+      "description": "Learn to accept uncertainty",
+      "priority": "high",
+      "xp_reward": 15
+    }
+  ],
+  "warnings": [
+    "Overthinking is a habit that takes time to break",
+    "Be patient with yourself during the process",
+    "Some thoughts are just noise - let them pass",
+    "Consider therapy if overthinking affects daily life"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 250,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["overthinking", "mental health", "mindfulness", "grounding"],
+  "keywords": ["overthink", "ruminate", "worry", "obsess", "loop", "thoughts"],
+  "fallback_message": "I found an overthinking reduction template! This plan will help you break free from negative thought loops."
+}

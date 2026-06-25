@@ -91,12 +91,11 @@ export default function AdminDashboard() {
         .from('profiles')
         .select('*', { count: 'exact', head: false });
 
-      // Get users by plan
+      // Get users by plan (show all users, not just 10)
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('plan, created_at, email, full_name')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .select('plan, created_at, email, full_name, id')
+        .order('created_at', { ascending: false });
 
       if (profiles) {
         const freeUsers = profiles.filter((p: any) => p.plan === 'free').length;
@@ -398,6 +397,42 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              <div className="pt-4 border-t border-white/10">
+                <Button
+                  variant="glass"
+                  className="w-full text-red-500 hover:text-red-400"
+                  onClick={async () => {
+                    if (!confirm(`Are you sure you want to delete user ${selectedUser.email}? This action cannot be undone.`)) return;
+                    
+                    try {
+                      const supabase = createClientComponentClient();
+                      if (!supabase) return;
+                      
+                      // Delete user from auth (requires service role key - this is a placeholder)
+                      // For now, just delete from profiles
+                      const { error } = await supabase
+                        .from('profiles')
+                        .delete()
+                        .eq('id', selectedUser.id);
+                      
+                      if (error) {
+                        alert('Failed to delete user: ' + error.message);
+                      } else {
+                        alert('User deleted successfully');
+                        setShowUserModal(false);
+                        setSelectedUser(null);
+                        loadAdminData();
+                      }
+                    } catch (error) {
+                      console.error('Error deleting user:', error);
+                      alert('Failed to delete user');
+                    }
+                  }}
+                >
+                  Delete User
+                </Button>
+              </div>
+
               <Button
                 variant="glass"
                 className="w-full"
@@ -421,8 +456,9 @@ export default function AdminDashboard() {
             <div>
               <h3 className="font-semibold text-yellow-500 mb-1">Security Notice</h3>
               <p className="text-sm text-muted-foreground">
-                This dashboard is protected by email allowlist. Only authorized admins can access this page.
-                Ensure your email is added to the ADMIN_EMAILS array in the admin dashboard component.
+                This dashboard is protected by Supabase authentication and RLS policies.
+                Admin access is managed through Supabase user management.
+                Ensure proper RLS policies are configured for admin operations.
               </p>
             </div>
           </div>

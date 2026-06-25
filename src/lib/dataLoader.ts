@@ -82,7 +82,7 @@ export async function loadHabits(userId: string): Promise<any[]> {
     const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
     
     const habitsWithStatus = await Promise.all(
-      habits.map(async (habit) => {
+      habits.map(async (habit: any) => {
         const { data: logs } = await supabase
           .from('habit_logs')
           .select('*')
@@ -159,7 +159,7 @@ export async function loadTasks(userId: string): Promise<any[]> {
     const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
     
     const tasksWithStatus = await Promise.all(
-      tasks.map(async (task) => {
+      tasks.map(async (task: any) => {
         const { data: logs } = await supabase
           .from('task_logs')
           .select('*')
@@ -971,7 +971,7 @@ export async function loadSpendingData(userId: string): Promise<{
 
     let totalSpent = 0;
 
-    transactions?.forEach(tx => {
+    transactions?.forEach((tx: any) => {
       if (tx.category && categoryTotals[tx.category] !== undefined) {
         categoryTotals[tx.category] += tx.amount || 0;
       }
@@ -985,7 +985,7 @@ export async function loadSpendingData(userId: string): Promise<{
       { name: "Shopping", amount: categoryTotals["Shopping"], color: "#ffd93d" },
     ];
 
-    const recentTransactions = (transactions || []).map(tx => ({
+    const recentTransactions = (transactions || []).map((tx: any) => ({
       id: tx.id,
       title: tx.description || tx.category, // Schema uses 'description' not 'title'
       amount: tx.amount,

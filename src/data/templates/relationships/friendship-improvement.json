@@ -1,0 +1,109 @@
+{
+  "id": "relationships-friendship",
+  "title": "Friendship Improvement",
+  "category": "relationships",
+  "age_range": "16-40",
+  "difficulty": "beginner",
+  "description": "Strengthen friendships and build new connections through better communication and consistent effort",
+  "goals": [
+    {
+      "title": "Strengthen Existing Friendships",
+      "description": "Deepen connections with current friends",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Make New Friends",
+      "description": "Build new meaningful connections",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Be a Better Friend",
+      "description": "Improve your friendship skills",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "Reach Out",
+      "description": "Contact a friend daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Active Listening",
+      "description": "Practice listening without interrupting",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 8
+    },
+    {
+      "title": "Show Interest",
+      "description": "Ask friends about their lives",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Be Supportive",
+      "description": "Offer help or encouragement to a friend",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Schedule Hangouts",
+      "description": "Plan regular time to see friends",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Join a Group",
+      "description": "Find a club or group with shared interests",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Practice Conversation",
+      "description": "Work on conversation skills",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Remember Important Dates",
+      "description": "Track birthdays and important events",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Be Reliable",
+      "description": "Follow through on commitments to friends",
+      "priority": "high",
+      "xp_reward": 12
+    }
+  ],
+  "warnings": [
+    "Quality friendships require effort from both sides",
+    "It's normal for friendships to change over time",
+    "Be yourself - authentic connections last longer",
+    "Don't be afraid to let go of toxic friendships"
+  ],
+  "estimated_duration": "8 weeks",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 40
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.1,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["relationships", "friendship", "social", "connection"],
+  "keywords": ["friend", "friendship", "social", "connect", "relationship", "bond"],
+  "fallback_message": "I found a friendship improvement template! This plan will help you build stronger, more meaningful friendships."
+}

@@ -49,6 +49,24 @@ export async function generateAIResponse(
 }> {
   const lowerMessage = userMessage.toLowerCase();
   
+  // Crisis detection - check for self-harm/suicide keywords
+  const crisisKeywords = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'end my life', 'want to die'];
+  if (crisisKeywords.some(keyword => lowerMessage.includes(keyword))) {
+    return {
+      response: `I'm concerned about what you're sharing. If you're thinking about hurting yourself, please reach out for help immediately:
+
+🆘 **Crisis Resources:**
+- **National Suicide Prevention Lifeline:** Call or text 988 (US)
+- **Crisis Text Line:** Text HOME to 741741
+- **International:** Find helplines at findahelpline.com
+
+You are not alone, and there are people who want to help. Please consider reaching out to a trusted adult, mental health professional, or the crisis lines above. Your life matters.
+
+If you're in immediate danger, please call emergency services (911 in the US).`,
+      category: 'general_help',
+    };
+  }
+  
   // Load user memory for personalization
   const userPreferences = await loadMemory(userId, 'preferences');
   const userGoals = await loadMemory(userId, 'goals');
@@ -315,6 +333,8 @@ async function callGemini(
   userGoals: any,
   userId: string
 ): Promise<string> {
+  console.log('[Gemini BYOK] Starting API call with key length:', apiKey?.length);
+  
   const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
 Your role is to help users build better habits, stay productive, and achieve their goals.
 
@@ -330,27 +350,64 @@ When suggesting plans or routines, focus on:
 
 Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
 
+  const requestBody = {
+    contents: [
+      { parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }
+    ],
+    generationConfig: {
+      maxOutputTokens: 500,
+    },
+  };
+
+  console.log('[Gemini BYOK] Request body:', JSON.stringify(requestBody, null, 2));
+
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      contents: [
-        { parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }
-      ],
-      generationConfig: {
-        maxOutputTokens: 500,
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
+  console.log('[Gemini BYOK] Response status:', response.status, response.statusText);
+
   if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error('[Gemini BYOK] Error response:', errorText);
+    throw new Error(`Gemini API error (${response.status}): ${response.statusText}. Details: ${errorText}`);
   }
 
   const data = await response.json();
-  const content = data.candidates[0].content.parts[0].text;
+  console.log('[Gemini BYOK] Response data:', JSON.stringify(data, null, 2));
+
+  // Check for safety filter or blocked response
+  if (!data.candidates || data.candidates.length === 0) {
+    const errorReason = data.promptFeedback?.blockReason || 'No candidates returned';
+    console.error('[Gemini BYOK] No candidates in response. Prompt feedback:', data.promptFeedback);
+    throw new Error(`Gemini blocked the response: ${errorReason}`);
+  }
+
+  const candidate = data.candidates[0];
+  
+  // Check if the candidate was blocked
+  if (candidate.finishReason === 'SAFETY') {
+    console.error('[Gemini BYOK] Response blocked by safety filter');
+    throw new Error('Gemini blocked this response due to safety guidelines. Please try rephrasing your request.');
+  }
+
+  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+    console.error('[Gemini BYOK] Invalid response structure:', candidate);
+    throw new Error('Gemini returned an invalid response structure');
+  }
+
+  const content = candidate.content.parts[0].text;
+  
+  if (!content) {
+    console.error('[Gemini BYOK] Empty content in response');
+    throw new Error('Gemini returned an empty response');
+  }
+  
+  console.log('[Gemini BYOK] Success! Content length:', content.length);
   
   // Log usage (estimate tokens from response length)
   const tokensUsed = Math.ceil(content.length / 4); // Rough estimate

@@ -1,0 +1,109 @@
+{
+  "id": "recovery-social-media",
+  "title": "Social Media Detox",
+  "category": "recovery",
+  "age_range": "16-35",
+  "difficulty": "beginner",
+  "description": "Reduce social media usage and reclaim time and attention with mindful consumption and real-world engagement",
+  "goals": [
+    {
+      "title": "Reduce Screen Time",
+      "description": "Limit social media to 30 minutes/day",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Increase Real Engagement",
+      "description": "Spend more time on face-to-face interactions",
+      "target_date": "6 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Improve Focus",
+      "description": "Enhance ability to concentrate without distractions",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "No-Phone Morning",
+      "description": "Don't check phone for first 30 minutes of day",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "App Limits",
+      "description": "Use built-in screen time limits",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    },
+    {
+      "title": "Phone-Free Meals",
+      "description": "Keep phone away during meals",
+      "frequency": "daily",
+      "target_count": 3,
+      "xp_reward": 8
+    },
+    {
+      "title": "Real Connection",
+      "description": "Have one meaningful in-person conversation",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Delete Time-Wasting Apps",
+      "description": "Remove apps that consume excessive time",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Turn Off Notifications",
+      "description": "Disable non-essential notifications",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Create Phone-Free Zones",
+      "description": "Designate areas without phones",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Find Offline Hobbies",
+      "description": "Identify activities that don't require screens",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Schedule Social Time",
+      "description": "Plan regular in-person meetups",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Social media is designed to be addictive",
+    "It's normal to feel withdrawal at first",
+    "Focus on what you're gaining, not what you're losing",
+    "Curate your feed to reduce negativity"
+  ],
+  "estimated_duration": "4 weeks",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 30
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.2,
+    "streak_bonus": 1.2
+  },
+  "plan_type": "free",
+  "tags": ["recovery", "social media", "detox", "digital wellness", "focus"],
+  "keywords": ["social media", "detox", "phone", "screen time", "addiction", "digital"],
+  "fallback_message": "I found a social media detox template! This plan will help you reclaim your time and attention from screens."
+}

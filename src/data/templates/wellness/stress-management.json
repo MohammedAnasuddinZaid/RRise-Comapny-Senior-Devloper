@@ -1,0 +1,109 @@
+{
+  "id": "wellness-stress-management",
+  "title": "Stress Management",
+  "category": "wellness",
+  "age_range": "16-35",
+  "difficulty": "beginner",
+  "description": "Comprehensive stress reduction plan with relaxation techniques, time management, and self-care practices",
+  "goals": [
+    {
+      "title": "Reduce Daily Stress",
+      "description": "Lower overall stress levels significantly",
+      "target_date": "6 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Improve Work-Life Balance",
+      "description": "Create healthy boundaries between work and rest",
+      "target_date": "4 weeks from start",
+      "xp_reward": 50
+    },
+    {
+      "title": "Build Resilience",
+      "description": "Develop ability to handle stress better",
+      "target_date": "8 weeks from start",
+      "xp_reward": 75
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Stretch",
+      "description": "10 minutes of gentle stretching",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    },
+    {
+      "title": "Break Reminders",
+      "description": "Take 5-minute breaks every hour",
+      "frequency": "daily",
+      "target_count": 8,
+      "xp_reward": 8
+    },
+    {
+      "title": "Evening Wind-Down",
+      "description": "30 minutes of relaxing activity",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Nature Time",
+      "description": "Spend 15 minutes outdoors",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 8
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Identify Stressors",
+      "description": "List main sources of stress in your life",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Prioritize Tasks",
+      "description": "Create a priority system for responsibilities",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Learn Relaxation",
+      "description": "Practice deep breathing and muscle relaxation",
+      "priority": "medium",
+      "xp_reward": 10
+    },
+    {
+      "title": "Set Boundaries",
+      "description": "Communicate limits to others",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Schedule Self-Care",
+      "description": "Block time for activities you enjoy",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Stress management is a journey, not a destination",
+    "Some stress is normal and healthy",
+    "Don't be too hard on yourself",
+    "Seek professional help if stress becomes unmanageable"
+  ],
+  "estimated_duration": "6 weeks",
+  "xp_rewards": {
+    "total": 200,
+    "completion_bonus": 40
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.0,
+    "streak_bonus": 1.0
+  },
+  "plan_type": "free",
+  "tags": ["stress", "wellness", "relaxation", "balance", "self-care"],
+  "keywords": ["stress", "overwhelm", "pressure", "relax", "balance", "burnout"],
+  "fallback_message": "I found a stress management template! This plan will help you reduce stress and find better balance."
+}

@@ -1,0 +1,121 @@
+{
+  "id": "study-exam-prep",
+  "title": "Exam Preparation",
+  "category": "study",
+  "age_range": "15-25",
+  "difficulty": "intermediate",
+  "description": "Comprehensive exam preparation plan with focused study sessions, review strategies, and stress management",
+  "goals": [
+    {
+      "title": "Master All Topics",
+      "description": "Complete review of all exam topics",
+      "target_date": "2 weeks before exam",
+      "xp_reward": 100
+    },
+    {
+      "title": "Practice Tests",
+      "description": "Complete 3 full practice exams",
+      "target_date": "1 week before exam",
+      "xp_reward": 75
+    },
+    {
+      "title": "Weak Areas",
+      "description": "Identify and strengthen weak areas",
+      "target_date": "3 days before exam",
+      "xp_reward": 50
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Review",
+      "description": "Review key concepts for 30 minutes each morning",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Practice Problems",
+      "description": "Solve 10 practice problems daily",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 15
+    },
+    {
+      "title": "Flashcard Review",
+      "description": "Review flashcards for 15 minutes",
+      "frequency": "daily",
+      "target_count": 2,
+      "xp_reward": 8
+    },
+    {
+      "title": "Evening Summary",
+      "description": "Summarize what you learned today",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 5
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Create Study Schedule",
+      "description": "Plan daily study sessions for each subject",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Gather Study Materials",
+      "description": "Collect textbooks, notes, and practice tests",
+      "priority": "high",
+      "xp_reward": 10
+    },
+    {
+      "title": "Create Flashcards",
+      "description": "Make flashcards for key terms and concepts",
+      "priority": "medium",
+      "xp_reward": 20
+    },
+    {
+      "title": "Take Practice Test 1",
+      "description": "Complete first full practice exam",
+      "priority": "high",
+      "xp_reward": 25
+    },
+    {
+      "title": "Review Mistakes",
+      "description": "Analyze and learn from practice test errors",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Take Practice Test 2",
+      "description": "Complete second full practice exam",
+      "priority": "high",
+      "xp_reward": 25
+    },
+    {
+      "title": "Final Review",
+      "description": "Quick review of all key concepts",
+      "priority": "high",
+      "xp_reward": 15
+    }
+  ],
+  "warnings": [
+    "Don't cram the night before",
+    "Get adequate sleep for memory consolidation",
+    "Stay hydrated and eat well",
+    "Take regular breaks to maintain focus"
+  ],
+  "estimated_duration": "4 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 50
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.2,
+    "streak_bonus": 1.1
+  },
+  "plan_type": "free",
+  "tags": ["exam", "test", "study", "academic", "preparation"],
+  "keywords": ["exam", "test", "study", "prepare", "review", "practice", "final", "midterm"],
+  "fallback_message": "I found an exam preparation template! Let me help you create a focused study plan for your upcoming exam."
+}

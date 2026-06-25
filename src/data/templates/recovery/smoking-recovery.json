@@ -1,0 +1,109 @@
+{
+  "id": "recovery-smoking",
+  "title": "Smoking Recovery",
+  "category": "recovery",
+  "age_range": "18-50",
+  "difficulty": "intermediate",
+  "description": "Quit smoking plan with nicotine withdrawal management, habit replacement, and relapse prevention",
+  "goals": [
+    {
+      "title": "Quit Smoking Completely",
+      "description": "Achieve complete cessation of smoking",
+      "target_date": "12 weeks from start",
+      "xp_reward": 150
+    },
+    {
+      "title": "Manage Withdrawal",
+      "description": "Successfully handle nicotine withdrawal symptoms",
+      "target_date": "4 weeks from start",
+      "xp_reward": 75
+    },
+    {
+      "title": "Break Smoking Habits",
+      "description": "Replace smoking triggers with healthy alternatives",
+      "target_date": "8 weeks from start",
+      "xp_reward": 100
+    }
+  ],
+  "habits": [
+    {
+      "title": "Morning Commitment",
+      "description": "Recommit to being smoke-free each morning",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Deep Breathing",
+      "description": "Practice deep breathing when urge hits",
+      "frequency": "daily",
+      "target_count": 5,
+      "xp_reward": 8
+    },
+    {
+      "title": "Healthy Replacement",
+      "description": "Use gum, mints, or water instead of smoking",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 10
+    },
+    {
+      "title": "Exercise",
+      "description": "30 minutes of physical activity",
+      "frequency": "daily",
+      "target_count": 1,
+      "xp_reward": 12
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Set Quit Date",
+      "description": "Choose and prepare for quit date",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Remove Smoking Paraphernalia",
+      "description": "Get rid of cigarettes, lighters, ashtrays",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Identify Triggers",
+      "description": "List situations that make you want to smoke",
+      "priority": "high",
+      "xp_reward": 12
+    },
+    {
+      "title": "Prepare Replacement Activities",
+      "description": "Plan what to do instead of smoking",
+      "priority": "high",
+      "xp_reward": 15
+    },
+    {
+      "title": "Tell Friends and Family",
+      "description": "Announce quit date for accountability",
+      "priority": "medium",
+      "xp_reward": 10
+    }
+  ],
+  "warnings": [
+    "Nicotine withdrawal is challenging but temporary",
+    "Cravings typically last 5-15 minutes",
+    "Each smoke-free day makes the next easier",
+    "Consider nicotine replacement therapy if needed"
+  ],
+  "estimated_duration": "12 weeks",
+  "xp_rewards": {
+    "total": 300,
+    "completion_bonus": 100
+  },
+  "mascot_effects": {
+    "xp_multiplier": 1.4,
+    "streak_bonus": 1.4
+  },
+  "plan_type": "free",
+  "tags": ["recovery", "smoking", "quit", "health", "addiction"],
+  "keywords": ["smoking", "quit", "cigarettes", "tobacco", "stop", "recovery"],
+  "fallback_message": "I found a smoking recovery template! This plan will help you quit smoking and improve your health."
+}

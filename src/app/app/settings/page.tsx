@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { User, Shield, Moon, Sun, Sparkles, Brain, Download, Trash2, AlertTriangle, Plus, Check, X, Key } from "lucide-react";
