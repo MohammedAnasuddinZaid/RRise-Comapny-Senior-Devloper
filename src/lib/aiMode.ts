@@ -163,27 +163,42 @@ async function generateRealAIResponse(
   templates?: Template[];
   category: ResponseCategory;
 }> {
+  console.log('[BYOK DIAGNOSTIC] Starting generateRealAIResponse');
+  console.log('[BYOK DIAGNOSTIC] User ID:', userId);
+  console.log('[BYOK DIAGNOSTIC] User Message:', userMessage);
+  
   try {
     // Determine which provider to use (priority: OpenAI > Gemini > Anthropic)
     let apiKey: string | null = null;
     let provider: AIProvider = 'openai';
     
+    console.log('[BYOK DIAGNOSTIC] Checking for OpenAI key...');
     apiKey = await getActiveAIKey(userId, 'openai');
-    if (!apiKey) {
-      apiKey = await getActiveAIKey(userId, 'gemini');
-      provider = 'gemini';
-    }
-    if (!apiKey) {
-      apiKey = await getActiveAIKey(userId, 'anthropic');
-      provider = 'anthropic';
-    }
+    console.log('[BYOK DIAGNOSTIC] OpenAI key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
     
     if (!apiKey) {
+      console.log('[BYOK DIAGNOSTIC] Checking for Gemini key...');
+      apiKey = await getActiveAIKey(userId, 'gemini');
+      provider = 'gemini';
+      console.log('[BYOK DIAGNOSTIC] Gemini key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
+    }
+    if (!apiKey) {
+      console.log('[BYOK DIAGNOSTIC] Checking for Anthropic key...');
+      apiKey = await getActiveAIKey(userId, 'anthropic');
+      provider = 'anthropic';
+      console.log('[BYOK DIAGNOSTIC] Anthropic key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
+    }
+    
+    console.log('[BYOK DIAGNOSTIC] Selected provider:', provider);
+    
+    if (!apiKey) {
+      console.log('[BYOK DIAGNOSTIC] No API key found, falling back to template-based system');
       // Fallback to template-based system if no key found
       return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
     }
     
     // Call the appropriate AI API based on provider
+    console.log('[BYOK DIAGNOSTIC] Calling', provider, 'API...');
     let aiResponse: string;
     
     if (provider === 'openai') {
@@ -196,6 +211,8 @@ async function generateRealAIResponse(
       aiResponse = await callOpenAI(apiKey, userMessage, userPreferences, userGoals, userId);
     }
     
+    console.log('[BYOK DIAGNOSTIC] AI response received, length:', aiResponse?.length || 0);
+    
     // Parse AI response to extract any plan suggestions
     const templates = await parseAIResponseForPlans(aiResponse);
     
@@ -205,10 +222,35 @@ async function generateRealAIResponse(
       category: 'general_help',
     };
   } catch (error) {
-    console.error('Error calling AI API:', error);
-    // Do NOT silently fall back to Free mode. Return a clear error message.
+    console.error('[BYOK DIAGNOSTIC] Error calling AI API:', error);
+    console.error('[BYOK DIAGNOSTIC] Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('[BYOK DIAGNOSTIC] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Return specific error based on error type
+    let errorMessage = 'Unknown error occurred';
+    
+    if (error instanceof Error) {
+      const errorLower = error.message.toLowerCase();
+      
+      if (errorLower.includes('401') || errorLower.includes('unauthorized') || errorLower.includes('invalid api key')) {
+        errorMessage = 'Invalid API Key (401 Unauthorized). Please check your API key in Settings.';
+      } else if (errorLower.includes('403') || errorLower.includes('forbidden') || errorLower.includes('permission denied')) {
+        errorMessage = 'Permission Denied (403 Forbidden). Your API key may not have access to this resource.';
+      } else if (errorLower.includes('429') || errorLower.includes('quota') || errorLower.includes('rate limit')) {
+        errorMessage = 'Quota Exceeded (429). You have exceeded your API rate limit. Please try again later.';
+      } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('connection')) {
+        errorMessage = 'Network Error. Unable to connect to the AI API. Please check your internet connection.';
+      } else if (errorLower.includes('model') || errorLower.includes('not found')) {
+        errorMessage = 'Model Not Found. The requested AI model is not available.';
+      } else if (errorLower.includes('gemini')) {
+        errorMessage = `Gemini API Error: ${error.message}`;
+      } else {
+        errorMessage = `API Error: ${error.message}`;
+      }
+    }
+    
     return {
-      response: `Error calling the AI provider API: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your API key configuration in Settings.`,
+      response: errorMessage,
       category: 'general_help'
     };
   }
@@ -374,6 +416,7 @@ Keep responses concise, encouraging, and actionable. If you suggest a plan, desc
   if (!response.ok) {
     const errorText = await response.text();
     console.error('[Gemini BYOK] Error response:', errorText);
+    console.error('[Gemini BYOK] Status code:', response.status);
     throw new Error(`Gemini API error (${response.status}): ${response.statusText}. Details: ${errorText}`);
   }
 

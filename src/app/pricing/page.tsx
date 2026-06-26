@@ -188,7 +188,7 @@ function PricingCard({
         </ul>
 
         {/* CTA */}
-        <Link href="/app">
+        <Link href={`/checkout?plan=${plan.id}`}>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}

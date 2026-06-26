@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     freeUsers: 0,
     proUsers: 0,
     ultraUsers: 0,
+    suspendedUsers: 0,
     byokUsers: 0,
     activeUsers: 0,
     totalUsage: 0,
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
    * Handle updating user plan (admin operation)
    * Uses service role key to bypass RLS for plan updates
    */
-  const handleUpdateUserPlan = async (userId: string, newPlan: 'free' | 'pro' | 'ultra') => {
+  const handleUpdateUserPlan = async (userId: string, newPlan: 'free' | 'pro' | 'ultra' | 'suspended') => {
     const supabase = createClientComponentClient();
     if (!supabase) return;
 
@@ -65,13 +66,41 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Refresh data
+      console.log('[ADMIN] Updated user plan:', userId, newPlan);
       loadAdminData();
       setShowUserModal(false);
       setSelectedUser(null);
     } catch (error) {
       console.error('Error updating user plan:', error);
       alert('Failed to update user plan');
+    }
+  };
+
+  /**
+   * Handle resetting user usage
+   */
+  const handleResetUsage = async (userId: string) => {
+    const supabase = createClientComponentClient();
+    if (!supabase) return;
+
+    try {
+      const { error } = await supabase
+        .from('ai_usage_logs')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error resetting usage:', error);
+        alert('Failed to reset usage');
+        return;
+      }
+
+      console.log('[ADMIN] Reset usage for user:', userId);
+      alert('Usage reset successfully');
+      loadAdminData();
+    } catch (error) {
+      console.error('Error resetting usage:', error);
+      alert('Failed to reset usage');
     }
   };
 
@@ -86,42 +115,56 @@ export default function AdminDashboard() {
     if (!supabase) return;
 
     try {
+      console.log('[ADMIN] Loading admin data...');
+      
       // Get total users
-      const { count: totalUsers } = await supabase
+      const { count: totalUsers, error: totalUsersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: false });
+      
+      console.log('[ADMIN] Total users:', totalUsers, 'Error:', totalUsersError);
 
       // Get users by plan (show all users, not just 10)
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('plan, created_at, email, full_name, id')
         .order('created_at', { ascending: false });
+      
+      console.log('[ADMIN] Profiles count:', profiles?.length, 'Error:', profilesError);
 
       if (profiles) {
         const freeUsers = profiles.filter((p: any) => p.plan === 'free').length;
         const proUsers = profiles.filter((p: any) => p.plan === 'pro').length;
         const ultraUsers = profiles.filter((p: any) => p.plan === 'ultra').length;
+        const suspendedUsers = profiles.filter((p: any) => p.plan === 'suspended').length;
+
+        console.log('[ADMIN] Plan breakdown - Free:', freeUsers, 'Pro:', proUsers, 'Ultra:', ultraUsers, 'Suspended:', suspendedUsers);
 
         // Get BYOK users count
-        const { data: aiKeys } = await supabase
+        const { data: aiKeys, error: aiKeysError } = await supabase
           .from('ai_keys')
           .select('user_id')
           .eq('is_active', true);
         const byokUsers = new Set(aiKeys?.map((k: any) => k.user_id)).size;
+        
+        console.log('[ADMIN] BYOK users:', byokUsers, 'Error:', aiKeysError);
 
         // Get AI usage stats
-        const { data: usageLogs } = await supabase
+        const { data: usageLogs, error: usageError } = await supabase
           .from('ai_usage_logs')
           .select('tokens_used');
         const totalUsage = usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
+        
+        console.log('[ADMIN] Total usage:', totalUsage, 'Error:', usageError);
 
         setStats({
           totalUsers: totalUsers || 0,
           freeUsers,
           proUsers,
           ultraUsers,
+          suspendedUsers,
           byokUsers,
-          activeUsers: profiles.length, // Simplified for now
+          activeUsers: profiles.length - suspendedUsers,
           totalUsage,
           monthlyRevenue: proUsers * 29 + ultraUsers * 99, // Placeholder calculation
           activeSubscriptions: proUsers + ultraUsers,
@@ -131,7 +174,7 @@ export default function AdminDashboard() {
         setRecentUsers(profiles);
       }
     } catch (error) {
-      console.error('Error loading admin data:', error);
+      console.error('[ADMIN] Error loading admin data:', error);
     } finally {
       setLoadingData(false);
     }
@@ -269,6 +312,16 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Suspended Users</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.suspendedUsers}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">BYOK Users</CardTitle>
             <Key className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -372,7 +425,7 @@ export default function AdminDashboard() {
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Change Plan:</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant={selectedUser.plan === 'free' ? 'default' : 'glass'}
                     size="sm"
@@ -394,7 +447,25 @@ export default function AdminDashboard() {
                   >
                     Ultra
                   </Button>
+                  <Button
+                    variant={selectedUser.plan === 'suspended' ? 'default' : 'glass'}
+                    size="sm"
+                    className="text-red-500 hover:text-red-400"
+                    onClick={() => handleUpdateUserPlan(selectedUser.id, 'suspended')}
+                  >
+                    Suspend
+                  </Button>
                 </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <Button
+                  variant="glass"
+                  className="w-full"
+                  onClick={() => handleResetUsage(selectedUser.id)}
+                >
+                  Reset AI Usage
+                </Button>
               </div>
 
               <div className="pt-4 border-t border-white/10">

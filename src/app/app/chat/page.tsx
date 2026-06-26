@@ -35,6 +35,13 @@ export default function ChatPage() {
   const [hasBYOK, setHasBYOK] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [byokDebug, setByokDebug] = useState<{ mode: string; provider: string; model: string; status: string; lastError: string }>({
+    mode: 'free',
+    provider: 'none',
+    model: 'none',
+    status: 'idle',
+    lastError: 'none'
+  });
 
   // Load user profile on mount
   useEffect(() => {
@@ -110,6 +117,31 @@ export default function ChatPage() {
     if (input.trim()) {
       audioManager.play('click');
       
+      // Crisis detection - check BEFORE safety check
+      const crisisKeywords = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'end my life', 'want to die', 'no reason to live', 'better off dead'];
+      const lowerInput = input.toLowerCase();
+      
+      if (crisisKeywords.some(keyword => lowerInput.includes(keyword))) {
+        setMessages([...messages, { role: 'user', content: input }]);
+        setInput("");
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: `I'm concerned about what you're sharing. If you're thinking about hurting yourself, please reach out for help immediately:
+
+🆘 **Crisis Resources:**
+- **National Suicide Prevention Lifeline:** Call or text 988 (US)
+- **Crisis Text Line:** Text HOME to 741741
+- **International:** Find helplines at findahelpline.com
+
+You are not alone, and there are people who want to help. Please consider reaching out to a trusted adult, mental health professional, or the crisis lines above. Your life matters.
+
+If you're in immediate danger, please call emergency services (911 in the US).`,
+          }]);
+        }, 500);
+        return;
+      }
+      
       // Check if user can use AI mode
       if (selectedAPI === 'pro') {
         // PRO mode is coming soon
@@ -163,6 +195,9 @@ export default function ChatPage() {
         setMessages([...messages, { role: 'user', content: sanitizedInput }]);
         setInput("");
         
+        // Update debug state
+        setByokDebug(prev => ({ ...prev, mode: selectedAPI, status: 'calling', lastError: 'none' }));
+        
         // Use AI mode to generate response
         const aiResponse = await generateAIResponse(user.id, sanitizedInput, selectedAPI);
         
@@ -171,6 +206,7 @@ export default function ChatPage() {
         
         if (!filteredResponse.isSafe) {
           logSafetyViolation(user.id, 'output_safety', filteredResponse.reason || 'Unknown');
+          setByokDebug(prev => ({ ...prev, status: 'blocked', lastError: 'safety_filter' }));
           setTimeout(() => {
             setMessages(prev => [...prev, { 
               role: 'assistant', 
@@ -295,6 +331,20 @@ export default function ChatPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
+        {/* BYOK Debug Card (Development Only) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs">
+            <div className="font-bold text-yellow-500 mb-2">BYOK DEBUG (Development Only)</div>
+            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+              <div>Mode: <span className="text-foreground">{byokDebug.mode}</span></div>
+              <div>Provider: <span className="text-foreground">{byokDebug.provider}</span></div>
+              <div>Model: <span className="text-foreground">{byokDebug.model}</span></div>
+              <div>Status: <span className="text-foreground">{byokDebug.status}</span></div>
+              <div className="col-span-2">Last Error: <span className="text-foreground">{byokDebug.lastError}</span></div>
+            </div>
+          </div>
+        )}
+        
         {/* Chat Messages */}
         <div className="flex-1 space-y-6 mb-8 overflow-y-auto">
           {messages.length === 0 ? (
