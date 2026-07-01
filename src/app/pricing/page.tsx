@@ -1,94 +1,74 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "../../components/layout/Header";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { createClientComponentClient } from "@/lib/supabase";
 
-const PLANS = [
-  {
-    id: "free",
-    name: "rrise free",
-    price: "$0",
-    period: "forever",
-    tagline: "Everything you need to start",
-    color: "from-white/[0.06] to-white/[0.02]",
-    border: "border-white/8",
-    glow: "rgba(0,255,135,0.05)",
-    hoverGlow: "rgba(0,255,135,0.15)",
-    badge: null,
-    ctaLabel: "Get started free",
-    ctaVariant: "glass" as const,
-    features: [
-      "goals",
-      "habits",
-      "tasks",
-      "dashboards",
-      "streaks",
-      "mascot",
-      "limited alex usage",
-    ],
-    accentColor: "text-primary",
-    dotColor: "bg-primary",
-  },
-  {
-    id: "pro",
-    name: "rrise pro",
-    price: "$20",
-    period: "per month",
-    tagline: "For those serious about growth",
-    color: "from-primary/15 to-secondary/10",
-    border: "border-primary/30",
-    glow: "rgba(0,255,135,0.12)",
-    hoverGlow: "rgba(0,255,135,0.28)",
-    badge: "Most Popular",
-    ctaLabel: "Start pro",
-    ctaVariant: "gradient" as const,
-    features: [
-      "unlimited alex",
-      "ai insights",
-      "ai recommendations",
-      "ai generated plans",
-      "advanced analytics",
-      "deeper personalisation",
-    ],
-    accentColor: "text-primary",
-    dotColor: "bg-primary",
-  },
-  {
-    id: "elite",
-    name: "rrise elite",
-    price: "$49",
-    period: "per month",
-    tagline: "The full system, plus human touch",
-    color: "from-secondary/15 to-primary/10",
-    border: "border-secondary/30",
-    glow: "rgba(0,229,255,0.10)",
-    hoverGlow: "rgba(0,229,255,0.25)",
-    badge: "Most Complete",
-    ctaLabel: "Go elite",
-    ctaVariant: "gradient-blue" as const,
-    features: [
-      "everything in pro",
-      "human accountability",
-      "accountability check-ins",
-      "personalised feedback",
-      "future community access",
-    ],
-    accentColor: "text-secondary",
-    dotColor: "bg-secondary",
-  },
-];
+// Default prices — overridden by system_settings from DB
+const DEFAULT_SETTINGS = {
+  pro_price: "20",
+  ultra_price: "40",
+  pro_link: "",   // if set, links directly to Stripe checkout link
+  ultra_link: "", // if set, links directly to Stripe checkout link
+};
+
+function usePricingSettings() {
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const supabase = createClientComponentClient();
+        if (!supabase) return;
+        const { data } = await supabase
+          .from("system_settings")
+          .select("key, value")
+          .in("key", [
+            "stripe_pro_price",
+            "stripe_ultra_price",
+            "stripe_pro_link",
+            "stripe_ultra_link",
+          ]);
+
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((row: any) => { map[row.key] = row.value; });
+          setSettings({
+            pro_price: map["stripe_pro_price"] || DEFAULT_SETTINGS.pro_price,
+            ultra_price: map["stripe_ultra_price"] || DEFAULT_SETTINGS.ultra_price,
+            pro_link: map["stripe_pro_link"] || DEFAULT_SETTINGS.pro_link,
+            ultra_link: map["stripe_ultra_link"] || DEFAULT_SETTINGS.ultra_link,
+          });
+        }
+      } catch (e) {
+        // silently fall back to defaults
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSettings();
+  }, []);
+
+  return { settings, loading };
+}
 
 function PricingCard({
   plan,
   index,
+  priceOverride,
+  ctaHref,
 }: {
-  plan: (typeof PLANS)[0];
+  plan: any;
   index: number;
+  priceOverride?: string;
+  ctaHref: string;
 }) {
   const [hovered, setHovered] = useState(false);
+  const displayPrice = priceOverride ? `$${priceOverride}` : plan.price;
 
   return (
     <motion.div
@@ -152,7 +132,7 @@ function PricingCard({
               className={`font-space text-5xl font-bold ${plan.accentColor}`}
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              {plan.price}
+              {displayPrice}
             </span>
             <span className="font-inter text-sm text-muted-foreground">/{plan.period}</span>
           </div>
@@ -162,7 +142,7 @@ function PricingCard({
         {/* Divider */}
         <div
           className={`h-px w-full mb-6 ${
-            plan.id === "elite"
+            plan.id === "ultra"
               ? "bg-gradient-to-r from-transparent via-secondary/40 to-transparent"
               : "bg-gradient-to-r from-transparent via-primary/30 to-transparent"
           }`}
@@ -170,11 +150,11 @@ function PricingCard({
 
         {/* Features */}
         <ul className="space-y-3 flex-1 mb-8">
-          {plan.features.map((feat) => (
+          {plan.features.map((feat: string) => (
             <li key={feat} className="flex items-center gap-3">
               <div
                 className={`w-5 h-5 rounded-full ${plan.dotColor} bg-opacity-20 border ${
-                  plan.id === "elite" ? "border-secondary/40" : "border-primary/40"
+                  plan.id === "ultra" ? "border-secondary/40" : "border-primary/40"
                 } flex items-center justify-center flex-shrink-0`}
               >
                 <Check
@@ -188,7 +168,7 @@ function PricingCard({
         </ul>
 
         {/* CTA */}
-        <Link href={`/checkout?plan=${plan.id}`}>
+        <Link href={ctaHref}>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -209,7 +189,104 @@ function PricingCard({
   );
 }
 
+const PLAN_DEFS = [
+  {
+    id: "free",
+    name: "rrise free",
+    price: "$0",
+    period: "forever",
+    tagline: "Everything you need to start",
+    color: "from-white/[0.06] to-white/[0.02]",
+    border: "border-white/8",
+    glow: "rgba(0,255,135,0.05)",
+    hoverGlow: "rgba(0,255,135,0.15)",
+    badge: null,
+    ctaLabel: "Get started free",
+    ctaVariant: "glass" as const,
+    features: [
+      "goals",
+      "habits",
+      "tasks",
+      "dashboards",
+      "streaks",
+      "mascot",
+      "limited alex usage",
+    ],
+    accentColor: "text-primary",
+    dotColor: "bg-primary",
+  },
+  {
+    id: "pro",
+    name: "rrise pro",
+    price: "$20",
+    period: "per month",
+    tagline: "For those serious about growth",
+    color: "from-primary/15 to-secondary/10",
+    border: "border-primary/30",
+    glow: "rgba(0,255,135,0.12)",
+    hoverGlow: "rgba(0,255,135,0.28)",
+    badge: "Most Popular",
+    ctaLabel: "Start pro",
+    ctaVariant: "gradient" as const,
+    features: [
+      "unlimited alex",
+      "ai insights",
+      "ai recommendations",
+      "ai generated plans",
+      "advanced analytics",
+      "deeper personalisation",
+    ],
+    accentColor: "text-primary",
+    dotColor: "bg-primary",
+  },
+  {
+    id: "ultra",
+    name: "rrise ultra",
+    price: "$40",
+    period: "per month",
+    tagline: "The full system, plus human touch",
+    color: "from-secondary/15 to-primary/10",
+    border: "border-secondary/30",
+    glow: "rgba(0,229,255,0.10)",
+    hoverGlow: "rgba(0,229,255,0.25)",
+    badge: "Most Complete",
+    ctaLabel: "Go ultra",
+    ctaVariant: "gradient-blue" as const,
+    features: [
+      "everything in pro",
+      "human accountability",
+      "accountability check-ins",
+      "personalised feedback",
+      "future community access",
+    ],
+    accentColor: "text-secondary",
+    dotColor: "bg-secondary",
+  },
+];
+
 export default function PricingPage() {
+  const { settings, loading } = usePricingSettings();
+
+  function getCtaHref(planId: string): string {
+    if (planId === "free") return "/app/dashboard";
+    if (planId === "pro") {
+      // Use direct Stripe link from DB if admin set it, otherwise route through our checkout
+      if (settings.pro_link && settings.pro_link.startsWith("http")) return settings.pro_link;
+      return "/checkout?plan=pro";
+    }
+    if (planId === "ultra") {
+      if (settings.ultra_link && settings.ultra_link.startsWith("http")) return settings.ultra_link;
+      return "/checkout?plan=ultra";
+    }
+    return "/checkout?plan=" + planId;
+  }
+
+  function getPriceOverride(planId: string): string | undefined {
+    if (planId === "pro") return settings.pro_price;
+    if (planId === "ultra") return settings.ultra_price;
+    return undefined;
+  }
+
   return (
     <div className="relative min-h-screen bg-background">
       {/* Ambient */}
@@ -242,8 +319,14 @@ export default function PricingPage() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-start mb-20">
-          {PLANS.map((plan, i) => (
-            <PricingCard key={plan.id} plan={plan} index={i} />
+          {PLAN_DEFS.map((plan, i) => (
+            <PricingCard
+              key={plan.id}
+              plan={plan}
+              index={i}
+              priceOverride={getPriceOverride(plan.id)}
+              ctaHref={getCtaHref(plan.id)}
+            />
           ))}
         </div>
 
@@ -272,12 +355,12 @@ export default function PricingPage() {
                 a: "Alex is your AI companion inside RRise. Think of it as a coach that knows your patterns and pushes you at exactly the right moment.",
               },
               {
-                q: "What does 'human accountability' mean in Elite?",
+                q: "What does 'human accountability' mean in Ultra?",
                 a: "You get real check-ins from a human accountability partner — not just an AI. Someone who reviews your progress and gives personalised feedback.",
               },
               {
-                q: "Is there a free trial for Pro or Elite?",
-                a: "The Free plan is available forever. Pro and Elite plans include a 14-day money-back guarantee.",
+                q: "Is there a free trial for Pro or Ultra?",
+                a: "The Free plan is available forever. Pro and Ultra plans include a 14-day money-back guarantee.",
               },
             ].map((faq, i) => (
               <motion.div

@@ -166,8 +166,17 @@ async function generateRealAIResponse(
   console.log('[AI GATEWAY] User ID:', userId);
   console.log('[AI GATEWAY] User Message:', userMessage);
   
+  // Default models per provider in case selected_model is not set in DB
+  const DEFAULT_MODELS: Record<string, string> = {
+    gemini: 'gemini-2.5-flash',
+    openai: 'gpt-4o-mini',
+    anthropic: 'claude-3-haiku-20240307',
+    groq: 'llama3-8b-8192',
+    openrouter: 'openai/gpt-4o-mini',
+  };
+
   try {
-    // Get all user's API keys
+    // Get all user's API keys (already ordered newest-first, active only)
     const allKeys = await getAllAPIKeys(userId);
     
     if (!allKeys || allKeys.length === 0) {
@@ -175,10 +184,14 @@ async function generateRealAIResponse(
       return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
     }
 
+    // Use newest key (allKeys already sorted newest first)
     const activeKey = allKeys[0];
     const provider = activeKey.provider as AIProviderType;
-    const model = activeKey.selected_model;
+    // Use stored model or fall back to a sensible default for that provider
+    const model = activeKey.selected_model || DEFAULT_MODELS[provider] || 'gemini-2.5-flash';
     const apiKey = activeKey.encrypted_key;
+    
+    console.log('[AI GATEWAY] Key provider:', provider, '| stored model:', activeKey.selected_model, '| resolved model:', model);
 
     console.log('[AI GATEWAY] Using provider:', provider, 'model:', model);
     

@@ -33,6 +33,7 @@ export interface ProviderConfig {
 
 /**
  * Save or update an API key configuration
+ * Deactivates any existing keys for the same provider, then inserts a fresh one.
  */
 export async function saveAPIKey(
   userId: string,
@@ -44,16 +45,25 @@ export async function saveAPIKey(
   if (!supabase || !isSupabaseConfigured()) return null;
 
   try {
+    // Deactivate any existing active keys for this provider
+    await supabase
+      .from('ai_keys')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('provider', provider)
+      .eq('is_active', true);
+
+    // Insert the new key
     const { data, error } = await supabase
       .from('ai_keys')
-      .upsert({
+      .insert({
         user_id: userId,
         provider,
         selected_model: model,
         key_name: 'BYOK Key',
-        encrypted_key: apiKey, // TODO: Encrypt before storing
+        encrypted_key: apiKey,
         is_active: true,
-        updated_at: new Date().toISOString(),
+        token_usage: 0,
       })
       .select()
       .single();
@@ -102,6 +112,7 @@ export async function getAPIKey(
 
 /**
  * Get all API key configurations for a user
+ * Returns only active keys, ordered newest first
  */
 export async function getAllAPIKeys(userId: string): Promise<APIKeyRecord[]> {
   const supabase = createClientComponentClient();
@@ -111,7 +122,9 @@ export async function getAllAPIKeys(userId: string): Promise<APIKeyRecord[]> {
     const { data, error } = await supabase
       .from('ai_keys')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];

@@ -30,9 +30,37 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
   
   const [newTokenLimit, setNewTokenLimit] = useState("");
-  const [newKeyProvider, setNewKeyProvider] = useState("openai");
+  const [newKeyProvider, setNewKeyProvider] = useState("gemini");
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyValue, setNewKeyValue] = useState("");
+  const [newKeyModel, setNewKeyModel] = useState("gemini-2.5-flash");
+
+  // Default models per provider
+  const PROVIDER_DEFAULT_MODELS: Record<string, { model: string; label: string }[]> = {
+    gemini: [
+      { model: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Recommended)' },
+      { model: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+      { model: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
+    ],
+    openai: [
+      { model: 'gpt-4o-mini', label: 'GPT-4o Mini (Recommended)' },
+      { model: 'gpt-4o', label: 'GPT-4o' },
+      { model: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    ],
+    anthropic: [
+      { model: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Recommended)' },
+      { model: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+      { model: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+    ],
+    groq: [
+      { model: 'llama3-8b-8192', label: 'Llama 3 8B (Recommended)' },
+      { model: 'llama3-70b-8192', label: 'Llama 3 70B' },
+    ],
+    openrouter: [
+      { model: 'openai/gpt-4o-mini', label: 'GPT-4o Mini via OpenRouter' },
+      { model: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash via OpenRouter' },
+    ],
+  };
 
   const getAuthToken = async () => {
     const supabase = createClientComponentClient();
@@ -164,15 +192,17 @@ export default function AdminDashboard() {
           userId, 
           provider: newKeyProvider, 
           keyName: newKeyName, 
-          key: newKeyValue 
+          key: newKeyValue,
+          model: newKeyModel
         })
       });
 
       if (!res.ok) throw new Error("Failed to add key");
 
-      alert("API key added successfully");
+      alert("API key assigned! User will use this key for AI responses.");
       setNewKeyName("");
       setNewKeyValue("");
+      setNewKeyModel(PROVIDER_DEFAULT_MODELS[newKeyProvider]?.[0]?.model || 'gemini-2.5-flash');
     } catch (error) {
       console.error(error);
       alert("Failed to add key");
@@ -314,10 +344,17 @@ export default function AdminDashboard() {
               <div>
                 <h3 className="font-semibold mb-2">Assign Platform Key (BYOK)</h3>
                 <div className="space-y-2">
-                  <select value={newKeyProvider} onChange={e => setNewKeyProvider(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <select value={newKeyProvider} onChange={e => { setNewKeyProvider(e.target.value); setNewKeyModel(PROVIDER_DEFAULT_MODELS[e.target.value]?.[0]?.model || ''); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="gemini">Google Gemini</option>
                     <option value="openai">OpenAI</option>
-                    <option value="anthropic">Anthropic</option>
-                    <option value="gemini">Gemini</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="groq">Groq</option>
+                    <option value="openrouter">OpenRouter</option>
+                  </select>
+                  <select value={newKeyModel} onChange={e => setNewKeyModel(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    {(PROVIDER_DEFAULT_MODELS[newKeyProvider] || []).map(({ model, label }) => (
+                      <option key={model} value={model}>{label}</option>
+                    ))}
                   </select>
                   <input type="text" placeholder="Key Name (e.g. Pro User Key)" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                   <input type="password" placeholder="sk-..." value={newKeyValue} onChange={e => setNewKeyValue(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />

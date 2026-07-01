@@ -42,14 +42,14 @@ type ContentCategory =
  * In production, this should be more comprehensive and possibly use ML models
  */
 const BLOCKED_PHRASES: Record<ContentCategory, string[]> = {
-  hate_speech: [], // Would contain hate speech terms
-  violence: ['kill', 'murder', 'attack', 'hurt', 'harm'],
-  self_harm: ['suicide', 'kill myself', 'end it', 'hurt myself'],
-  sexual_content: [], // Would contain inappropriate terms
-  harassment: ['stalking', 'threaten', 'bully'],
-  illegal_activities: ['drug', 'steal', 'hack', 'pirate'],
-  medical_advice: ['diagnose', 'prescribe', 'cure'],
-  financial_advice: ['invest', 'stock', 'crypto', 'trading'],
+  hate_speech: [], // handled by AI provider guardrails
+  violence: ['murder', 'massacre', 'genocide'],
+  self_harm: ['suicide', 'kill myself', 'end my life', 'hurt myself'],
+  sexual_content: [],
+  harassment: ['stalking', 'doxxing'],
+  illegal_activities: [], // too broad - let AI provider handle it
+  medical_advice: [], // too broad - let AI provider handle it  
+  financial_advice: [], // too broad - words like invest/stock are normal
   personal_info: [], // PII patterns handled separately
 };
 
@@ -168,15 +168,15 @@ export function checkOutputSafety(output: string): SafetyCheckResult {
     };
   }
   
-  // Check for suspicious patterns (e.g., asking for passwords, credit cards)
+  // Check for truly suspicious patterns (soliciting credentials, not normal content)
   const suspiciousPatterns = [
-    /password/i,
-    /credit card/i,
-    /social security/i,
+    /your password is/i,
+    /enter your credit card/i,
+    /give me your social security/i,
   ];
   
   for (const pattern of suspiciousPatterns) {
-    if (pattern.test(lowerOutput)) {
+    if (pattern.test(output)) {
       return {
         isSafe: false,
         reason: 'AI output contains suspicious patterns',

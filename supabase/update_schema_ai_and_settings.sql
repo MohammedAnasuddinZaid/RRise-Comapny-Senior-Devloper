@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access (so frontend can show prices)
+DROP POLICY IF EXISTS "Anyone can read system settings" ON system_settings;
 CREATE POLICY "Anyone can read system settings" ON system_settings
   FOR SELECT USING (true);
 
