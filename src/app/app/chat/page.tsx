@@ -43,30 +43,30 @@ export default function ChatPage() {
     lastError: 'none'
   });
 
-  // Load user profile on mount
+  // Load user profile and set default API mode
   useEffect(() => {
-    async function loadProfile() {
+    async function loadProfileAndKeys() {
       if (!user) return;
+      
       const profile = await loadUserProfile(user.id);
       setUserProfile(profile);
-    }
-    loadProfile();
-  }, [user]);
-
-  // Check for BYOK keys on mount
-  useEffect(() => {
-    async function checkBYOK() {
-      if (!user) return;
+      
       const hasOpenAI = await hasActiveAIKey(user.id, 'openai');
       const hasGemini = await hasActiveAIKey(user.id, 'gemini');
       const hasAnthropic = await hasActiveAIKey(user.id, 'anthropic');
       const hasOpenRouter = await hasActiveAIKey(user.id, 'openrouter');
-      setHasBYOK(hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter);
+      const keysAvailable = hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter;
       
-      // Auto-select BYOK mode if keys available
-      if (hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter) setSelectedAPI('byok');
+      setHasBYOK(keysAvailable);
+      
+      // Auto-select mode based on profile plan and available keys
+      if (profile && (profile.plan === 'pro' || profile.plan === 'ultra')) {
+        setSelectedAPI('pro');
+      } else if (keysAvailable) {
+        setSelectedAPI('byok');
+      }
     }
-    checkBYOK();
+    loadProfileAndKeys();
   }, [user]);
 
   // Handle starting a plan from plan suggestion
@@ -137,20 +137,6 @@ export default function ChatPage() {
 You are not alone, and there are people who want to help. Please consider reaching out to a trusted adult, mental health professional, or the crisis lines above. Your life matters.
 
 If you're in immediate danger, please call emergency services (911 in the US).`,
-          }]);
-        }, 500);
-        return;
-      }
-      
-      // Check if user can use AI mode
-      if (selectedAPI === 'pro') {
-        // PRO mode is coming soon
-        setMessages([...messages, { role: 'user', content: input }]);
-        setInput("");
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: "PRO mode is coming soon! For now, please use FREE mode for plans or BYOK mode with your own API keys.",
           }]);
         }, 500);
         return;

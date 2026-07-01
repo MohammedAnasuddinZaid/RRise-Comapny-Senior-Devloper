@@ -10,13 +10,15 @@
  * - Context-aware response generation
  * - Fallback responses for unmatched queries
  * - Memory integration for personalization
+ * - AI Gateway integration for BYOK mode
  */
 
 import { searchTemplates, loadAllTemplates } from './templateLoader';
 import type { Template } from './templateLoader';
 import { loadMemory } from './memorySystem';
-import { getActiveAIKey, hasActiveAIKey } from './byok';
-import type { AIProvider } from '@/types/database';
+import { aiGateway } from './aiGateway';
+import { getAPIKey, getAllAPIKeys, updateUsage } from './aiGateway/database';
+import type { AIProviderType } from './aiGateway/types';
 import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
@@ -73,28 +75,25 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
   const templateHistory = await loadMemory(userId, 'template_history');
   
   // Explicitly check selectedMode
-  if (selectedMode === 'byok') {
-    // Determine which provider is active or check keys
-    const hasOpenAIKey = await hasActiveAIKey(userId, 'openai');
-    const hasGeminiKey = await hasActiveAIKey(userId, 'gemini');
-    const hasAnthropicKey = await hasActiveAIKey(userId, 'anthropic');
-    const hasOpenRouterKey = await hasActiveAIKey(userId, 'openrouter');
-
-    if (!hasOpenAIKey && !hasGeminiKey && !hasAnthropicKey && !hasOpenRouterKey) {
-      return {
-        response: "BYOK Mode selected, but no API keys are connected. Please go to Settings > AI Settings to add your key.",
-        category: 'general_help',
-      };
+  if (selectedMode === 'byok' || selectedMode === 'pro') {
+    // Check if user has any API keys configured (PRO mode uses a key assigned by Admin)
+    const allKeys = await getAllAPIKeys(userId);
+    
+    if (!allKeys || allKeys.length === 0) {
+      if (selectedMode === 'pro') {
+        return {
+          response: "PRO Mode selected, but your account doesn't have an active AI key yet. Please contact support.",
+          category: 'general_help',
+        };
+      } else {
+        return {
+          response: "BYOK Mode selected, but no API keys are connected. Please go to Settings > AI Settings to add your key.",
+          category: 'general_help',
+        };
+      }
     }
 
     return await generateRealAIResponse(userId, userMessage, userPreferences, userGoals);
-  }
-
-  if (selectedMode === 'pro') {
-    return {
-      response: "PRO Mode is selected, but hosted Pro AI capabilities are currently locked/coming soon. For now, please use FREE Mode or connect your own key in BYOK Mode.",
-      category: 'general_help',
-    };
   }
   
   // Otherwise, use template-based system (free plan)
@@ -163,68 +162,74 @@ async function generateRealAIResponse(
   templates?: Template[];
   category: ResponseCategory;
 }> {
-  console.log('[BYOK DIAGNOSTIC] Starting generateRealAIResponse');
-  console.log('[BYOK DIAGNOSTIC] User ID:', userId);
-  console.log('[BYOK DIAGNOSTIC] User Message:', userMessage);
+  console.log('[AI GATEWAY] Starting generateRealAIResponse');
+  console.log('[AI GATEWAY] User ID:', userId);
+  console.log('[AI GATEWAY] User Message:', userMessage);
   
   try {
-    // Determine which provider to use (priority: OpenAI > Gemini > Anthropic)
-    let apiKey: string | null = null;
-    let provider: AIProvider = 'openai';
+    // Get all user's API keys
+    const allKeys = await getAllAPIKeys(userId);
     
-    console.log('[BYOK DIAGNOSTIC] Checking for OpenAI key...');
-    apiKey = await getActiveAIKey(userId, 'openai');
-    console.log('[BYOK DIAGNOSTIC] OpenAI key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
-    
-    if (!apiKey) {
-      console.log('[BYOK DIAGNOSTIC] Checking for Gemini key...');
-      apiKey = await getActiveAIKey(userId, 'gemini');
-      provider = 'gemini';
-      console.log('[BYOK DIAGNOSTIC] Gemini key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
-    }
-    if (!apiKey) {
-      console.log('[BYOK DIAGNOSTIC] Checking for Anthropic key...');
-      apiKey = await getActiveAIKey(userId, 'anthropic');
-      provider = 'anthropic';
-      console.log('[BYOK DIAGNOSTIC] Anthropic key exists:', !!apiKey, 'Length:', apiKey?.length || 0);
-    }
-    
-    console.log('[BYOK DIAGNOSTIC] Selected provider:', provider);
-    
-    if (!apiKey) {
-      console.log('[BYOK DIAGNOSTIC] No API key found, falling back to template-based system');
-      // Fallback to template-based system if no key found
+    if (!allKeys || allKeys.length === 0) {
+      console.log('[AI GATEWAY] No API keys found, falling back to template-based system');
       return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
     }
+
+    const activeKey = allKeys[0];
+    const provider = activeKey.provider as AIProviderType;
+    const model = activeKey.selected_model;
+    const apiKey = activeKey.encrypted_key;
+
+    console.log('[AI GATEWAY] Using provider:', provider, 'model:', model);
     
-    // Call the appropriate AI API based on provider
-    console.log('[BYOK DIAGNOSTIC] Calling', provider, 'API...');
-    let aiResponse: string;
+    // Generate system prompt
+    const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
+Your role is to help users build better habits, stay productive, and achieve their goals.
+
+User preferences: ${JSON.stringify(userPreferences || {})}
+User goals: ${JSON.stringify(userGoals || [])}
+
+When suggesting plans or routines, focus on:
+- Habit building and consistency
+- Productivity and time management
+- Personal development and growth
+- Fitness and wellness
+- Study skills and learning
+
+Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
+
+    // Call AI Gateway
+    const result = await aiGateway.generateResponse(
+      provider,
+      model,
+      apiKey,
+      userMessage,
+      {
+        maxTokens: 500,
+        temperature: 0.7,
+        systemPrompt,
+      }
+    );
+
+    console.log('[AI GATEWAY] AI response received, length:', result.content?.length || 0);
     
-    if (provider === 'openai') {
-      aiResponse = await callOpenAI(apiKey, userMessage, userPreferences, userGoals, userId);
-    } else if (provider === 'gemini') {
-      aiResponse = await callGemini(apiKey, userMessage, userPreferences, userGoals, userId);
-    } else if (provider === 'anthropic') {
-      aiResponse = await callAnthropic(apiKey, userMessage, userPreferences, userGoals, userId);
-    } else {
-      aiResponse = await callOpenAI(apiKey, userMessage, userPreferences, userGoals, userId);
+    // Update usage statistics
+    if (result.tokensUsed) {
+      await updateUsage(userId, provider, result.tokensUsed);
     }
-    
-    console.log('[BYOK DIAGNOSTIC] AI response received, length:', aiResponse?.length || 0);
-    
+
     // Parse AI response to extract any plan suggestions
-    const templates = await parseAIResponseForPlans(aiResponse);
+    const templates = await parseAIResponseForPlans(result.content);
     
     return {
-      response: aiResponse,
+      response: result.content,
       templates: templates.length > 0 ? templates : undefined,
       category: 'general_help',
     };
   } catch (error) {
-    console.error('[BYOK DIAGNOSTIC] Error calling AI API:', error);
-    console.error('[BYOK DIAGNOSTIC] Error message:', error instanceof Error ? error.message : 'Unknown error');
-    console.error('[BYOK DIAGNOSTIC] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[AI GATEWAY] Error calling AI API:', error);
+    console.error('[AI GATEWAY] Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('[AI GATEWAY] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     // Return specific error based on error type
     let errorMessage = 'Unknown error occurred';
@@ -242,8 +247,6 @@ async function generateRealAIResponse(
         errorMessage = 'Network Error. Unable to connect to the AI API. Please check your internet connection.';
       } else if (errorLower.includes('model') || errorLower.includes('not found')) {
         errorMessage = 'Model Not Found. The requested AI model is not available.';
-      } else if (errorLower.includes('gemini')) {
-        errorMessage = `Gemini API Error: ${error.message}`;
       } else {
         errorMessage = `API Error: ${error.message}`;
       }
@@ -311,211 +314,6 @@ async function generateTemplateBasedResponse(
 }
 
 /**
- * Call OpenAI API
- */
-async function callOpenAI(
-  apiKey: string,
-  userMessage: string,
-  userPreferences: any,
-  userGoals: any,
-  userId: string
-): Promise<string> {
-  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
-Your role is to help users build better habits, stay productive, and achieve their goals.
-
-User preferences: ${JSON.stringify(userPreferences || {})}
-User goals: ${JSON.stringify(userGoals || [])}
-
-When suggesting plans or routines, focus on:
-- Habit building and consistency
-- Productivity and time management
-- Personal development and growth
-- Fitness and wellness
-- Study skills and learning
-
-Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      max_tokens: 500,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-  
-  // Log usage (estimate tokens from response)
-  const tokensUsed = data.usage?.total_tokens || 0;
-  await logAIUsage(userId, 'openai', tokensUsed, 'chat');
-  
-  return content;
-}
-
-/**
- * Call Gemini API
- */
-async function callGemini(
-  apiKey: string,
-  userMessage: string,
-  userPreferences: any,
-  userGoals: any,
-  userId: string
-): Promise<string> {
-  console.log('[Gemini BYOK] Starting API call with key length:', apiKey?.length);
-  
-  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
-Your role is to help users build better habits, stay productive, and achieve their goals.
-
-User preferences: ${JSON.stringify(userPreferences || {})}
-User goals: ${JSON.stringify(userGoals || [])}
-
-When suggesting plans or routines, focus on:
-- Habit building and consistency
-- Productivity and time management
-- Personal development and growth
-- Fitness and wellness
-- Study skills and learning
-
-Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
-
-  const requestBody = {
-    contents: [
-      { parts: [{ text: `${systemPrompt}\n\nUser: ${userMessage}` }] }
-    ],
-    generationConfig: {
-      maxOutputTokens: 500,
-    },
-  };
-
-  console.log('[Gemini BYOK] Request body:', JSON.stringify(requestBody, null, 2));
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  console.log('[Gemini BYOK] Response status:', response.status, response.statusText);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Gemini BYOK] Error response:', errorText);
-    console.error('[Gemini BYOK] Status code:', response.status);
-    throw new Error(`Gemini API error (${response.status}): ${response.statusText}. Details: ${errorText}`);
-  }
-
-  const data = await response.json();
-  console.log('[Gemini BYOK] Response data:', JSON.stringify(data, null, 2));
-
-  // Check for safety filter or blocked response
-  if (!data.candidates || data.candidates.length === 0) {
-    const errorReason = data.promptFeedback?.blockReason || 'No candidates returned';
-    console.error('[Gemini BYOK] No candidates in response. Prompt feedback:', data.promptFeedback);
-    throw new Error(`Gemini blocked the response: ${errorReason}`);
-  }
-
-  const candidate = data.candidates[0];
-  
-  // Check if the candidate was blocked
-  if (candidate.finishReason === 'SAFETY') {
-    console.error('[Gemini BYOK] Response blocked by safety filter');
-    throw new Error('Gemini blocked this response due to safety guidelines. Please try rephrasing your request.');
-  }
-
-  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-    console.error('[Gemini BYOK] Invalid response structure:', candidate);
-    throw new Error('Gemini returned an invalid response structure');
-  }
-
-  const content = candidate.content.parts[0].text;
-  
-  if (!content) {
-    console.error('[Gemini BYOK] Empty content in response');
-    throw new Error('Gemini returned an empty response');
-  }
-  
-  console.log('[Gemini BYOK] Success! Content length:', content.length);
-  
-  // Log usage (estimate tokens from response length)
-  const tokensUsed = Math.ceil(content.length / 4); // Rough estimate
-  await logAIUsage(userId, 'gemini', tokensUsed, 'chat');
-  
-  return content;
-}
-
-/**
- * Call Anthropic API
- */
-async function callAnthropic(
-  apiKey: string,
-  userMessage: string,
-  userPreferences: any,
-  userGoals: any,
-  userId: string
-): Promise<string> {
-  const systemPrompt = `You are Alex, a personal growth and productivity AI companion for RRise. 
-Your role is to help users build better habits, stay productive, and achieve their goals.
-
-User preferences: ${JSON.stringify(userPreferences || {})}
-User goals: ${JSON.stringify(userGoals || [])}
-
-When suggesting plans or routines, focus on:
-- Habit building and consistency
-- Productivity and time management
-- Personal development and growth
-- Fitness and wellness
-- Study skills and learning
-
-Keep responses concise, encouraging, and actionable. If you suggest a plan, describe it clearly with habits and tasks.`;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const content = data.content[0].text;
-  
-  // Log usage (estimate tokens from response)
-  const tokensUsed = data.usage?.output_tokens || Math.ceil(content.length / 4);
-  await logAIUsage(userId, 'anthropic', tokensUsed, 'chat');
-  
-  return content;
-}
-
-/**
  * Parse AI response to extract plan suggestions
  * This is a simple implementation - could be enhanced with better parsing
  */
@@ -535,7 +333,7 @@ async function parseAIResponseForPlans(aiResponse: string): Promise<Template[]> 
  */
 export async function logAIUsage(
   userId: string,
-  provider: AIProvider | 'free',
+  provider: AIProviderType | 'free',
   tokensUsed: number,
   requestType: 'chat' | 'completion' | 'template'
 ): Promise<{ success: boolean; error?: string }> {

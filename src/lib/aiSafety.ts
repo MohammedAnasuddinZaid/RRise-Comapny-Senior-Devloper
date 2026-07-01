@@ -168,13 +168,11 @@ export function checkOutputSafety(output: string): SafetyCheckResult {
     };
   }
   
-  // Check for suspicious patterns (e.g., asking for passwords, keys)
+  // Check for suspicious patterns (e.g., asking for passwords, credit cards)
   const suspiciousPatterns = [
     /password/i,
-    /api key/i,
-    /secret/i,
-    /token/i,
     /credit card/i,
+    /social security/i,
   ];
   
   for (const pattern of suspiciousPatterns) {

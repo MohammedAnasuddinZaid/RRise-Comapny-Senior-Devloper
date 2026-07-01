@@ -131,7 +131,23 @@ rrise/
 
 The RRise application has been successfully transitioned from a frontend prototype to a fully functional SaaS application powered by real user data from Supabase.
 
-#### Major Changes:
+#### Major Changes (July 2026 - Admin & Stripe Update):
+
+1. **Admin Panel Redesign**
+   - Refactored `src/app/admin/page.tsx` to use a secure server-side API.
+   - Added `is_admin` and `token_limit` columns to `profiles` table.
+   - Created `/api/admin/users` API route using `SUPABASE_SERVICE_ROLE_KEY` to bypass RLS and fetch/manage all users securely.
+   - Added UI to edit user plans (Free/Pro/Ultra), set Token Limits, and assign Platform API keys (BYOK) directly from the admin panel.
+
+2. **Stripe Integration Updates**
+   - Updated `/api/checkout/route.ts` and `/api/webhooks/stripe/route.ts` to use explicit Price IDs for Pro (`price_1ToJGuIaxTgHtJYBAFVh6s4M`) and Ultra (`price_1ToJJVIaxTgHtJYBa2rkDBDo`) plans.
+   - Added fallback error responses for missing Stripe environment variables, ensuring the application gracefully handles misconfiguration.
+
+3. **BYOK Enhancements**
+   - Added explicit provider selection (OpenAI, Anthropic, Gemini, Groq, OpenRouter) and model loading to `src/app/app/settings/page.tsx`.
+   - Admin can assign platform-wide API keys for users.
+
+#### Major Changes (June 2026):
 
 1. **Database Integration**
    - Connected to Supabase PostgreSQL database with Row Level Security (RLS)

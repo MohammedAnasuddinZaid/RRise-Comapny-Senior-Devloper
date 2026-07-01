@@ -12,6 +12,10 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { audioManager } from "../../../lib/audioManager";
 import { saveAIKey, getUserAIKeys, deleteAIKey, testAIKey, hasActiveAIKey } from "../../../lib/byok";
 import { getAIUsageStats } from "../../../lib/aiMode";
+import { aiGateway } from "../../../lib/aiGateway";
+import { modelRegistry } from "../../../lib/aiGateway/models";
+import { saveAPIKey, getAPIKey, getAllAPIKeys, deleteAPIKey } from "../../../lib/aiGateway/database";
+import type { AIProviderType, AIModel } from "../../../lib/aiGateway/types";
 
 export default function SettingsPage() {
   const { user, loading } = useRequireAuth();
@@ -21,14 +25,16 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("profile");
   const [saving, setSaving] = useState(false);
   
-  // AI Settings state
-  const [aiKeys, setAiKeys] = useState<any[]>([]);
-  const [showAddKeyForm, setShowAddKeyForm] = useState(false);
-  const [newKeyName, setNewKeyName] = useState("");
-  const [newKeyProvider, setNewKeyProvider] = useState<"openai" | "gemini" | "anthropic" | "openrouter">("openai");
-  const [newKeyValue, setNewKeyValue] = useState("");
-  const [testingKey, setTestingKey] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  // AI Settings state (new AI Gateway)
+  const [aiConfigs, setAiConfigs] = useState<any[]>([]);
+  const [showAddConfigForm, setShowAddConfigForm] = useState(false);
+  const [newConfigProvider, setNewConfigProvider] = useState<AIProviderType>('gemini');
+  const [newConfigModel, setNewConfigModel] = useState('');
+  const [newConfigApiKey, setNewConfigApiKey] = useState('');
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
   
   // Usage stats state
   const [usageStats, setUsageStats] = useState<any>(null);
@@ -48,9 +54,9 @@ export default function SettingsPage() {
           // For now, use defaults
         }
         
-        // Load AI keys
-        const keys = await getUserAIKeys(user.id);
-        setAiKeys(keys);
+        // Load AI configs
+        const configs = await getAllAPIKeys(user.id);
+        setAiConfigs(configs);
         
         // Load usage stats
         setLoadingUsage(true);
@@ -67,52 +73,103 @@ export default function SettingsPage() {
     loadUserData();
   }, [user]);
 
-  // Handle adding new AI key
-  const handleAddAIKey = async (e: React.FormEvent) => {
+  // Load models when provider changes
+  useEffect(() => {
+    async function loadModels() {
+      if (!newConfigProvider || !newConfigApiKey) {
+        setAvailableModels([]);
+        return;
+      }
+
+      setLoadingModels(true);
+      try {
+        const models = await modelRegistry.fetchModels(newConfigProvider, newConfigApiKey);
+        setAvailableModels(models);
+        
+        // Set default model
+        if (models.length > 0 && !newConfigModel) {
+          setNewConfigModel(models[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading models:', error);
+        setAvailableModels([]);
+      } finally {
+        setLoadingModels(false);
+      }
+    }
+
+    loadModels();
+  }, [newConfigProvider, newConfigApiKey]);
+
+  // Handle adding new AI config
+  const handleAddAIConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newKeyName.trim() || !newKeyValue.trim()) return;
+    if (!user || !newConfigProvider || !newConfigModel || !newConfigApiKey.trim()) return;
 
     setSaving(true);
     try {
-      const result = await saveAIKey(user.id, newKeyProvider, newKeyName, newKeyValue);
-      if (result.success) {
-        // Reload AI keys
-        const keys = await getUserAIKeys(user.id);
-        setAiKeys(keys);
-        setShowAddKeyForm(false);
-        setNewKeyName("");
-        setNewKeyValue("");
+      const result = await saveAPIKey(user.id, newConfigProvider, newConfigModel, newConfigApiKey);
+      if (result) {
+        // Reload AI configs
+        const configs = await getAllAPIKeys(user.id);
+        setAiConfigs(configs);
+        setShowAddConfigForm(false);
+        setNewConfigApiKey('');
+        setNewConfigModel('');
         audioManager.play('success');
       } else {
-        alert(result.error || 'Failed to save AI key');
+        alert('Failed to save AI configuration');
       }
     } catch (error) {
-      console.error('Error saving AI key:', error);
-      alert('Failed to save AI key');
+      console.error('Error saving AI config:', error);
+      alert('Failed to save AI configuration');
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle deleting AI key
-  const handleDeleteAIKey = async (keyId: string) => {
+  // Handle deleting AI config
+  const handleDeleteAIConfig = async (provider: AIProviderType) => {
     if (!user) return;
 
-    if (!confirm('Are you sure you want to delete this API key?')) return;
+    if (!confirm(`Are you sure you want to delete your ${provider} API key?`)) return;
 
     try {
-      const result = await deleteAIKey(keyId, user.id);
-      if (result.success) {
-        // Reload AI keys
-        const keys = await getUserAIKeys(user.id);
-        setAiKeys(keys);
+      const result = await deleteAPIKey(user.id, provider);
+      if (result) {
+        // Reload AI configs
+        const configs = await getAllAPIKeys(user.id);
+        setAiConfigs(configs);
         audioManager.play('click');
       } else {
-        alert(result.error || 'Failed to delete AI key');
+        alert('Failed to delete AI configuration');
       }
     } catch (error) {
-      console.error('Error deleting AI key:', error);
-      alert('Failed to delete AI key');
+      console.error('Error deleting AI config:', error);
+      alert('Failed to delete AI configuration');
+    }
+  };
+
+  // Handle testing connection
+  const handleTestConnection = async () => {
+    if (!newConfigProvider || !newConfigModel || !newConfigApiKey.trim()) {
+      alert('Please fill in all fields before testing');
+      return;
+    }
+
+    setTestingConnection(true);
+    setTestResult(null);
+    
+    try {
+      const result = await aiGateway.testConnection(newConfigProvider, newConfigApiKey, newConfigModel);
+      setTestResult(result);
+      if (result.success) {
+        audioManager.play('success');
+      }
+    } catch (error) {
+      setTestResult({ success: false, error: 'Failed to test connection' });
+    } finally {
+      setTestingConnection(false);
     }
   };
 
@@ -151,24 +208,6 @@ export default function SettingsPage() {
       alert('Failed to update profile');
     } finally {
       setSaving(false);
-    }
-  };
-
-  // Handle testing AI key
-  const handleTestAIKey = async (provider: "openai" | "gemini" | "anthropic" | "openrouter", apiKey: string) => {
-    setTestingKey(apiKey);
-    setTestResult(null);
-    
-    try {
-      const result = await testAIKey(provider, apiKey);
-      setTestResult(result);
-      if (result.success) {
-        audioManager.play('success');
-      }
-    } catch (error) {
-      setTestResult({ success: false, error: 'Failed to test AI key' });
-    } finally {
-      setTestingKey(null);
     }
   };
 
@@ -489,29 +528,29 @@ export default function SettingsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Bring Your Own Key configuration</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                        aiKeys.length > 0 
+                        aiConfigs.length > 0 
                           ? "bg-green-500/10 text-green-500" 
                           : "bg-white/10 text-muted-foreground"
                       }`}>
-                        {aiKeys.length > 0 ? "Configured" : "Not Configured"}
+                        {aiConfigs.length > 0 ? "Configured" : "Not Configured"}
                       </span>
                     </div>
                     
-                    {aiKeys.length > 0 && (
+                    {aiConfigs.length > 0 && (
                       <div className="space-y-3">
-                        <p className="text-sm font-medium">Your API Keys</p>
-                        {aiKeys.map((key) => (
-                          <div key={key.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <p className="text-sm font-medium">Your AI Configurations</p>
+                        {aiConfigs.map((config) => (
+                          <div key={config.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <Key className="w-4 h-4 text-primary" />
                                 <div>
-                                  <p className="text-sm font-medium">{key.key_name}</p>
-                                  <p className="text-xs text-muted-foreground uppercase">{key.provider}</p>
+                                  <p className="text-sm font-medium capitalize">{config.provider}</p>
+                                  <p className="text-xs text-muted-foreground">{config.selected_model}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                {key.is_active && (
+                                {config.status === 'active' && (
                                   <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-500 text-xs">
                                     Active
                                   </span>
@@ -519,7 +558,7 @@ export default function SettingsPage() {
                                 <Button
                                   variant="glass"
                                   size="icon"
-                                  onClick={() => handleDeleteAIKey(key.id)}
+                                  onClick={() => handleDeleteAIConfig(config.provider)}
                                   className="text-red-500 hover:text-red-400"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -562,66 +601,86 @@ export default function SettingsPage() {
                       </div>
                     )}
 
-                    {!showAddKeyForm ? (
+                    {!showAddConfigForm ? (
                       <Button 
                         className="w-full mt-4"
                         onClick={() => {
                           audioManager.play('click');
-                          setShowAddKeyForm(true);
+                          setShowAddConfigForm(true);
                         }}
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Add API Key
+                        Add AI Configuration
                       </Button>
                     ) : (
                       <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                        <form onSubmit={handleAddAIKey} className="space-y-4">
+                        <form onSubmit={handleAddAIConfig} className="space-y-4">
                           <div>
                             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Provider</label>
                             <select
-                              value={newKeyProvider}
-                              onChange={(e) => setNewKeyProvider(e.target.value as any)}
+                              value={newConfigProvider}
+                              onChange={(e) => setNewConfigProvider(e.target.value as AIProviderType)}
                               className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
                             >
+                              <option value="gemini">Google Gemini</option>
                               <option value="openai">OpenAI</option>
-                              <option value="gemini">Gemini</option>
                               <option value="anthropic">Anthropic</option>
+                              <option value="groq">Groq</option>
                               <option value="openrouter">OpenRouter</option>
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Key Name</label>
+                            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">API Key</label>
                             <input
-                              type="text"
-                              value={newKeyName}
-                              onChange={(e) => setNewKeyName(e.target.value)}
+                              type="password"
+                              value={newConfigApiKey}
+                              onChange={(e) => setNewConfigApiKey(e.target.value)}
                               className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
-                              placeholder="e.g., My OpenAI Key"
+                              placeholder="Enter your API key"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">API Key</label>
-                            <div className="flex gap-2 mt-2">
-                              <input
-                                type="password"
-                                value={newKeyValue}
-                                onChange={(e) => setNewKeyValue(e.target.value)}
-                                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
-                                placeholder="sk-..."
-                              />
-                              <Button
-                                type="button"
-                                variant="glass"
-                                onClick={() => handleTestAIKey(newKeyProvider, newKeyValue)}
-                                disabled={!newKeyValue || testingKey === newKeyValue}
-                                className="px-4"
+                            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Model</label>
+                            {loadingModels ? (
+                              <div className="mt-2 text-sm text-muted-foreground">Loading models...</div>
+                            ) : (
+                              <select
+                                value={newConfigModel}
+                                onChange={(e) => setNewConfigModel(e.target.value)}
+                                disabled={!newConfigApiKey || availableModels.length === 0}
+                                className="w-full mt-2 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors disabled:opacity-50"
                               >
-                                {testingKey === newKeyValue ? "Testing..." : "Test"}
-                              </Button>
-                            </div>
+                                {availableModels.length === 0 ? (
+                                  <option value="">Enter API key to load models</option>
+                                ) : (
+                                  availableModels.map((model) => (
+                                    <option key={model.id} value={model.id}>
+                                      {model.name} {model.description ? `- ${model.description}` : ''}
+                                    </option>
+                                  ))
+                                )}
+                              </select>
+                            )}
+                          </div>
+                          <div>
+                            <Button
+                              type="button"
+                              variant="glass"
+                              onClick={handleTestConnection}
+                              disabled={!newConfigProvider || !newConfigModel || !newConfigApiKey || testingConnection}
+                              className="w-full"
+                            >
+                              {testingConnection ? "Testing Connection..." : "Test Connection"}
+                            </Button>
                             {testResult && (
-                              <div className={`mt-2 text-xs ${testResult.success ? 'text-green-500' : 'text-red-500'}`}>
-                                {testResult.success ? '✓ Key is valid' : `✗ ${testResult.error}`}
+                              <div className={`mt-2 text-xs p-2 rounded ${
+                                testResult.success 
+                                  ? 'bg-green-500/10 text-green-500' 
+                                  : 'bg-red-500/10 text-red-500'
+                              }`}>
+                                {testResult.success 
+                                  ? `✓ Connected (${testResult.responseTime}ms)` 
+                                  : `✗ ${testResult.error}`}
                               </div>
                             )}
                           </div>
@@ -631,16 +690,18 @@ export default function SettingsPage() {
                               disabled={saving}
                               className="flex-1"
                             >
-                              {saving ? "Saving..." : "Save Key"}
+                              {saving ? "Saving..." : "Save Configuration"}
                             </Button>
                             <Button
                               type="button"
                               variant="glass"
                               onClick={() => {
                                 audioManager.play('click');
-                                setShowAddKeyForm(false);
-                                setNewKeyName("");
-                                setNewKeyValue("");
+                                setShowAddConfigForm(false);
+                                setNewConfigApiKey('');
+                                setNewConfigModel('');
+                                setAvailableModels([]);
+                                setTestResult(null);
                               }}
                             >
                               Cancel

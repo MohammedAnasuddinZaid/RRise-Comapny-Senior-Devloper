@@ -27,21 +27,24 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Initialize Stripe with secret key (with fallback check)
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 // Initialize Supabase with service role key for admin operations
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 /**
  * Map Stripe price ID to plan type
  */
 function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'ultra' {
-  if (priceId.startsWith('price_pro_')) return 'pro';
-  if (priceId.startsWith('price_ultra_')) return 'ultra';
+  if (priceId === process.env.STRIPE_PRICE_PRO || priceId === 'price_1ToJGuIaxTgHtJYBAFVh6s4M') return 'pro';
+  if (priceId === process.env.STRIPE_PRICE_ULTRA || priceId === 'price_1ToJJVIaxTgHtJYBa2rkDBDo') return 'ultra';
   return 'free';
 }
 
@@ -86,6 +89,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   
+  if (!stripe) return;
   // Get user_id from customer metadata
   const customer = await stripe.customers.retrieve(customerId);
   const userId = (customer as Stripe.Customer).metadata?.user_id;
@@ -122,6 +126,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   
+  if (!stripe) {
+    console.error('Stripe client is not initialized');
+    return;
+  }
+  
   // Get user_id from customer metadata
   const customer = await stripe.customers.retrieve(customerId);
   const userId = (customer as Stripe.Customer).metadata?.user_id;
@@ -157,6 +166,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
+  
+  if (!stripe) {
+    console.error('Stripe client is not initialized');
+    return;
+  }
   
   // Get user_id from customer metadata
   const customer = await stripe.customers.retrieve(customerId);
@@ -195,6 +209,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
   
+  if (!stripe) {
+    console.error('Stripe client is not initialized');
+    return;
+  }
+  
   // Get user_id from customer metadata
   const customer = await stripe.customers.retrieve(customerId);
   const userId = (customer as Stripe.Customer).metadata?.user_id;
@@ -216,10 +235,17 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
  * Main webhook handler
  */
 export async function POST(request: Request) {
+  if (!stripe) {
+    return new NextResponse('Stripe not configured', { status: 503 });
+  }
+
   try {
     const body = await request.text();
-    const headersList = await headers();
-    const signature = headersList.get('stripe-signature')!;
+    const signature = (await headers()).get('stripe-signature');
+
+    if (!signature) {
+      return new NextResponse('Missing stripe-signature', { status: 400 });
+    }
 
     // Verify webhook signature
     const event = stripe.webhooks.constructEvent(

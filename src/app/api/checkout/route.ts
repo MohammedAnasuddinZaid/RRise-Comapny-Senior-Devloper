@@ -23,18 +23,21 @@ import Stripe from 'stripe';
 import { createClientComponentClient } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Initialize Stripe with secret key (with fallback check in the handler)
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 /**
  * Get Stripe price ID for a plan
  * In production, these should be configured in Stripe Dashboard
  */
 function getPriceIdForPlan(plan: 'pro' | 'ultra'): string {
-  // These are placeholder price IDs - replace with actual Stripe price IDs
+  // Use exact price IDs provided
   const priceIds: Record<string, string> = {
-    pro: process.env.STRIPE_PRICE_PRO || 'price_pro_placeholder',
-    ultra: process.env.STRIPE_PRICE_ULTRA || 'price_ultra_placeholder',
+    pro: process.env.STRIPE_PRICE_PRO || 'price_1ToJGuIaxTgHtJYBAFVh6s4M',
+    ultra: process.env.STRIPE_PRICE_ULTRA || 'price_1ToJJVIaxTgHtJYBa2rkDBDo',
   };
   return priceIds[plan];
 }
@@ -50,6 +53,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Invalid plan type' },
         { status: 400 }
+      );
+    }
+
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Payment system is currently unavailable (missing configuration)' },
+        { status: 503 }
       );
     }
 
