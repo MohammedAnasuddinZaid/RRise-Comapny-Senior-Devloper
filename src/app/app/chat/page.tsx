@@ -21,6 +21,9 @@ import { saveMemory } from "../../../lib/memorySystem";
 import { hasActiveAIKey } from "../../../lib/byok";
 import { loadUserProfile } from "../../../lib/dataLoader";
 import { getPlanBadgeColor, getPlanDisplayName, isAIEnabled, isFeatureAvailable } from "../../../lib/planLogic";
+import { createClientComponentClient } from "@/lib/supabase";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function ChatPage() {
   const { theme } = useTheme();
@@ -42,6 +45,12 @@ export default function ChatPage() {
     status: 'idle',
     lastError: 'none'
   });
+  
+  // Chat history state
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [loadingConversations, setLoadingConversations] = useState(false);
 
   // Load user profile and set default API mode
   useEffect(() => {
@@ -65,9 +74,123 @@ export default function ChatPage() {
       } else if (keysAvailable) {
         setSelectedAPI('byok');
       }
+      
+      // Load conversations
+      loadConversations();
     }
     loadProfileAndKeys();
   }, [user]);
+
+  // Load conversations
+  const loadConversations = async () => {
+    if (!user) return;
+    setLoadingConversations(true);
+    try {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) return;
+      
+      const res = await fetch('/api/chat/conversations', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    } finally {
+      setLoadingConversations(false);
+    }
+  };
+
+  // Create new conversation
+  const createNewConversation = async () => {
+    if (!user) return;
+    try {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) return;
+      
+      const res = await fetch('/api/chat/conversations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: 'New Conversation' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentConversationId(data.conversation.id);
+        setMessages([]);
+        loadConversations();
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+
+  // Load messages for a conversation
+  const loadConversationMessages = async (conversationId: string) => {
+    if (!user) return;
+    try {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) return;
+      
+      const res = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+        setCurrentConversationId(conversationId);
+        setShowConversationList(false);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
+
+  // Save message to conversation
+  const saveMessageToConversation = async (role: 'user' | 'assistant', content: string) => {
+    if (!user || !currentConversationId) {
+      // If no conversation, create one first
+      await createNewConversation();
+      return;
+    }
+    
+    try {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) return;
+      
+      await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          conversation_id: currentConversationId,
+          role,
+          content
+        })
+      });
+      loadConversations(); // Refresh to update timestamps
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
 
   // Handle starting a plan from plan suggestion
   const handleStartPlan = async (plan: Template) => {
@@ -384,7 +507,28 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
                       : 'bg-white/5 border border-white/10 text-foreground'
                   }`}
                 >
-                  {message.content}
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="text-sm">{children}</li>,
+                        h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-sm font-bold mb-2">{children}</h3>,
+                        code: ({ node, inline, children, ...props }: any) => 
+                          inline 
+                            ? <code className="bg-primary/10 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>{children}</code>
+                            : <code className="block bg-primary/10 p-3 rounded text-xs font-mono overflow-x-auto" {...props}>{children}</code>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                   {message.plans && message.plans.length > 0 && (
                     <div className="mt-4 space-y-2">
                       {message.plans.map((plan: Template, tIndex: number) => (

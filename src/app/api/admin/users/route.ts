@@ -43,7 +43,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ users: profiles });
+  // Fetch API keys and usage for each user
+  const usersWithDetails = await Promise.all(
+    profiles.map(async (profile: any) => {
+      // Get API keys
+      const { data: apiKeys } = await supabaseAdmin
+        .from('api_keys')
+        .select('*')
+        .eq('user_id', profile.id);
+
+      // Get usage stats
+      const { data: usageLogs } = await supabaseAdmin
+        .from('ai_usage_logs')
+        .select('tokens_used')
+        .eq('user_id', profile.id);
+
+      const totalTokensUsed = usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
+
+      return {
+        ...profile,
+        api_keys: apiKeys || [],
+        total_tokens_used: totalTokensUsed,
+        tokens_remaining: (profile.token_limit || 0) - totalTokensUsed,
+      };
+    })
+  );
+
+  return NextResponse.json({ users: usersWithDetails });
 }
 
 export async function PATCH(request: Request) {

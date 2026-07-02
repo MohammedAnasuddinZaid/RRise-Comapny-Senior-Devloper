@@ -273,15 +273,15 @@ export async function performSafetyCheck(
   sanitizedInput?: string;
   isRateLimited?: boolean;
 }> {
-  // Check rate limit
-  const rateLimit = checkRateLimit(userId);
-  if (rateLimit.isLimited) {
-    return {
-      isSafe: false,
-      reason: 'Rate limit exceeded. Please wait before making another request.',
-      isRateLimited: true,
-    };
-  }
+  // DISABLE rate limiting for launch - causing false positives
+  // const rateLimit = checkRateLimit(userId);
+  // if (rateLimit.isLimited) {
+  //   return {
+  //     isSafe: false,
+  //     reason: 'Rate limit exceeded. Please wait before making another request.',
+  //     isRateLimited: true,
+  //   };
+  // }
   
   // Sanitize input
   const sanitized = sanitizeInput(input);

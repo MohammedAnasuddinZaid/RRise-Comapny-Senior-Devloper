@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
   
+  const [userApiKeys, setUserApiKeys] = useState<any[]>([]);
   const [newTokenLimit, setNewTokenLimit] = useState("");
   const [newKeyProvider, setNewKeyProvider] = useState("gemini");
   const [newKeyName, setNewKeyName] = useState("");
@@ -199,13 +200,57 @@ export default function AdminDashboard() {
 
       if (!res.ok) throw new Error("Failed to add key");
 
-      alert("API key assigned! User will use this key for AI responses.");
+      alert("API key added successfully");
       setNewKeyName("");
       setNewKeyValue("");
-      setNewKeyModel(PROVIDER_DEFAULT_MODELS[newKeyProvider]?.[0]?.model || 'gemini-2.5-flash');
+      loadAdminData();
+      
+      // Reload user data to show new key
+      const updatedUsers = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const updatedData = await updatedUsers.json();
+      const updatedUser = updatedData.users.find((u: any) => u.id === userId);
+      if (updatedUser) {
+        setSelectedUser(updatedUser);
+        setUserApiKeys(updatedUser.api_keys || []);
+      }
     } catch (error) {
       console.error(error);
-      alert("Failed to add key");
+      alert("Failed to add API key");
+    }
+  };
+
+  const handleDeleteApiKey = async (keyId: string) => {
+    try {
+      const token = await getAuthToken();
+      const res = await fetch('/api/admin/keys', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ keyId })
+      });
+
+      if (!res.ok) throw new Error("Failed to delete key");
+
+      alert("API key deleted successfully");
+      loadAdminData();
+      
+      // Reload user data to remove deleted key
+      const updatedUsers = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const updatedData = await updatedUsers.json();
+      const updatedUser = updatedData.users.find((u: any) => u.id === selectedUser.id);
+      if (updatedUser) {
+        setSelectedUser(updatedUser);
+        setUserApiKeys(updatedUser.api_keys || []);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete API key");
     }
   };
 
@@ -317,52 +362,177 @@ export default function AdminDashboard() {
       {/* Manage User Modal */}
       {showUserModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-xl w-full max-h-[90vh] overflow-y-auto">
+          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Manage User: {selectedUser.email}</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>Manage User: {selectedUser.email}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  selectedUser.plan === 'pro' ? 'bg-primary/20 text-primary' :
+                  selectedUser.plan === 'ultra' ? 'bg-secondary/20 text-secondary' :
+                  selectedUser.plan === 'suspended' ? 'bg-red-500/20 text-red-500' :
+                  'bg-gray-500/20 text-gray-500'
+                }`}>
+                  {selectedUser.plan?.toUpperCase()}
+                </span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* User Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">{selectedUser.xp_total || 0}</p>
+                  <p className="text-xs text-muted-foreground">Total XP</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-secondary">{selectedUser.streak_count || 0}</p>
+                  <p className="text-xs text-muted-foreground">Streak Days</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{selectedUser.total_tokens_used || 0}</p>
+                  <p className="text-xs text-muted-foreground">Tokens Used</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-500">{selectedUser.tokens_remaining || 0}</p>
+                  <p className="text-xs text-muted-foreground">Tokens Left</p>
+                </div>
+              </div>
+
+              {/* Account Info */}
+              <div className="p-4 bg-background border rounded-lg space-y-2">
+                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Account Information</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Created</p>
+                    <p className="font-medium">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Stripe Customer</p>
+                    <p className="font-medium font-mono text-xs">{selectedUser.stripe_customer_id || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Token Limit</p>
+                    <p className="font-medium">{selectedUser.token_limit || 'Unlimited'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Admin Status</p>
+                    <p className="font-medium">{selectedUser.is_admin ? 'Yes' : 'No'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plan Management */}
               <div>
-                <h3 className="font-semibold mb-2">Plan Management</h3>
-                <div className="flex gap-2">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Plan Management
+                </h3>
+                <div className="flex gap-2 flex-wrap">
                   {['free', 'pro', 'ultra', 'suspended'].map(plan => (
-                    <Button key={plan} variant={selectedUser.plan === plan ? 'default' : 'outline'} onClick={() => handleUpdateUser(selectedUser.id, { plan })}>
-                      {plan}
+                    <Button 
+                      key={plan} 
+                      variant={selectedUser.plan === plan ? 'default' : 'outline'} 
+                      onClick={() => handleUpdateUser(selectedUser.id, { plan })}
+                      className={selectedUser.plan === plan ? 'bg-gradient-to-r from-primary to-secondary' : ''}
+                    >
+                      {plan.charAt(0).toUpperCase() + plan.slice(1)}
                     </Button>
                   ))}
                 </div>
               </div>
 
+              {/* Token Limit */}
               <div>
-                <h3 className="font-semibold mb-2">Token Limit</h3>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Token Limit
+                </h3>
                 <div className="flex gap-2">
-                  <input type="number" value={newTokenLimit} onChange={e => setNewTokenLimit(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                  <input 
+                    type="number" 
+                    value={newTokenLimit} 
+                    onChange={e => setNewTokenLimit(e.target.value)} 
+                    placeholder="Enter token limit"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
+                  />
                   <Button onClick={() => handleUpdateUser(selectedUser.id, { token_limit: parseInt(newTokenLimit) })}>Save</Button>
                 </div>
               </div>
 
+              {/* Existing API Keys */}
+              {userApiKeys.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Key className="w-4 h-4" />
+                    Existing API Keys ({userApiKeys.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {userApiKeys.map((key: any) => (
+                      <div key={key.id} className="p-3 bg-background border rounded-lg flex items-center justify-between">
+                        <div>
+                          <p className="font-medium capitalize">{key.provider}</p>
+                          <p className="text-sm text-muted-foreground">{key.selected_model}</p>
+                          <p className="text-xs text-muted-foreground">Status: {key.status}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeleteApiKey(key.id)}
+                          className="text-red-500 hover:text-red-400 border-red-500/30 hover:border-red-500"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add New API Key */}
               <div>
-                <h3 className="font-semibold mb-2">Assign Platform Key (BYOK)</h3>
-                <div className="space-y-2">
-                  <select value={newKeyProvider} onChange={e => { setNewKeyProvider(e.target.value); setNewKeyModel(PROVIDER_DEFAULT_MODELS[e.target.value]?.[0]?.model || ''); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Key className="w-4 h-4" />
+                  Assign Platform Key (BYOK)
+                </h3>
+                <div className="space-y-3 p-4 bg-background border rounded-lg">
+                  <select 
+                    value={newKeyProvider} 
+                    onChange={e => { setNewKeyProvider(e.target.value); setNewKeyModel(PROVIDER_DEFAULT_MODELS[e.target.value]?.[0]?.model || ''); }} 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
                     <option value="gemini">Google Gemini</option>
                     <option value="openai">OpenAI</option>
                     <option value="anthropic">Anthropic (Claude)</option>
                     <option value="groq">Groq</option>
                     <option value="openrouter">OpenRouter</option>
                   </select>
-                  <select value={newKeyModel} onChange={e => setNewKeyModel(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <select 
+                    value={newKeyModel} 
+                    onChange={e => setNewKeyModel(e.target.value)} 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
                     {(PROVIDER_DEFAULT_MODELS[newKeyProvider] || []).map(({ model, label }) => (
                       <option key={model} value={model}>{label}</option>
                     ))}
                   </select>
-                  <input type="text" placeholder="Key Name (e.g. Pro User Key)" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input type="password" placeholder="sk-..." value={newKeyValue} onChange={e => setNewKeyValue(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                  <input 
+                    type="text" 
+                    placeholder="Key Name (e.g. Pro User Key)" 
+                    value={newKeyName} 
+                    onChange={e => setNewKeyName(e.target.value)} 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="sk-..." 
+                    value={newKeyValue} 
+                    onChange={e => setNewKeyValue(e.target.value)} 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
+                  />
                   <Button className="w-full" onClick={() => handleAddAiKey(selectedUser.id)}>Assign Key</Button>
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-4 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowUserModal(false)}>Close</Button>
               </div>
             </CardContent>
