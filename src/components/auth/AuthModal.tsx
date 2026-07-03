@@ -32,17 +32,25 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (mode === 'signup' && !acceptTerms) {
+      setError('You must accept the Terms of Service to continue');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       if (mode === 'signup') {
-        const { error } = await signUpWithEmail(email, password, name);
+        const { error } = await signUpWithEmail(email, password, name, true); // Pass terms accepted
         if (error) {
           setError(error.message);
         } else {
@@ -219,9 +227,102 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </div>
                   )}
 
+                  {mode === 'signup' && (
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 focus:ring-primary focus:ring-offset-0"
+                      />
+                      <label htmlFor="terms" className="text-sm text-muted-foreground">
+                        I agree to the{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowTerms(true)}
+                          className="text-primary hover:underline"
+                        >
+                          Terms of Service
+                        </button>
+                        {' '}and{' '}
+                        <button
+                          type="button"
+                          onClick={() => window.open('/privacy', '_blank')}
+                          className="text-primary hover:underline"
+                        >
+                          Privacy Policy
+                        </button>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Terms Popup Modal */}
+                  <AnimatePresence>
+                    {showTerms && (
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          onClick={() => setShowTerms(false)}
+                          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+                        />
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+                          >
+                            <GlassCard className="p-6 relative">
+                              <button
+                                onClick={() => setShowTerms(false)}
+                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                              <h3 className="font-clash text-2xl font-bold text-foreground mb-4">
+                                Terms of Service
+                              </h3>
+                              <div className="text-sm text-muted-foreground space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                                <p><strong>1. Acceptance of Terms:</strong> By accessing or using RRise, you agree to be bound by these Terms of Service and our Privacy Policy.</p>
+                                <p><strong>2. Account Security:</strong> You are responsible for maintaining the confidentiality of your account credentials and all activities under your account.</p>
+                                <p><strong>3. Service Usage:</strong> You agree to use RRise for lawful purposes only. You must not use the service for illegal activities, attempt to gain unauthorized access, or interfere with service operations.</p>
+                                <p><strong>4. Subscription Plans:</strong> Paid subscriptions (Pro $20/month, Ultra $40/month) are charged monthly. You may cancel at any time, but fees are non-refundable.</p>
+                                <p><strong>5. AI Services:</strong> AI features are provided "as is" and may not always be accurate. For BYOK functionality, you are responsible for your API keys and any charges from AI providers.</p>
+                                <p><strong>6. Intellectual Property:</strong> All content and features of RRise are owned by us. You may not reproduce or distribute our content without consent.</p>
+                                <p><strong>7. Limitation of Liability:</strong> RRise shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+                                <p className="text-xs">By creating an account, you acknowledge that you have read, understood, and agree to these terms.</p>
+                              </div>
+                              <div className="mt-6 flex gap-3">
+                                <button
+                                  onClick={() => {
+                                    setAcceptTerms(true);
+                                    setShowTerms(false);
+                                  }}
+                                  className="flex-1 p-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all"
+                                >
+                                  Accept Terms
+                                </button>
+                                <button
+                                  onClick={() => setShowTerms(false)}
+                                  className="flex-1 p-3 rounded-xl border border-white/20 hover:bg-white/10 text-foreground font-semibold transition-all"
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            </GlassCard>
+                          </motion.div>
+                        </div>
+                      </>
+                    )}
+                  </AnimatePresence>
+
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (mode === 'signup' && !acceptTerms)}
                     className="w-full p-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}

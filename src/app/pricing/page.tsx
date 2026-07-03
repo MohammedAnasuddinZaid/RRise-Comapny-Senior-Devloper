@@ -7,53 +7,42 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { createClientComponentClient } from "@/lib/supabase";
 
-// Default prices — overridden by system_settings from DB
-const DEFAULT_SETTINGS = {
-  pro_price: "20",
-  ultra_price: "40",
-  pro_link: "",   // if set, links directly to Stripe checkout link
-  ultra_link: "", // if set, links directly to Stripe checkout link
+// Default prices — overridden by content management system
+const DEFAULT_PRICES = {
+  pro: "20",
+  ultra: "40",
 };
 
 function usePricingSettings() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [prices, setPrices] = useState(DEFAULT_PRICES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchSettings() {
+    async function fetchPrices() {
       try {
-        const supabase = createClientComponentClient();
-        if (!supabase) return;
-        const { data } = await supabase
-          .from("system_settings")
-          .select("key, value")
-          .in("key", [
-            "stripe_pro_price",
-            "stripe_ultra_price",
-            "stripe_pro_link",
-            "stripe_ultra_link",
-          ]);
+        // Fetch from new content management system
+        const [proRes, ultraRes] = await Promise.all([
+          fetch('/api/content?key=pro_price'),
+          fetch('/api/content?key=ultra_price')
+        ]);
 
-        if (data) {
-          const map: Record<string, string> = {};
-          data.forEach((row: any) => { map[row.key] = row.value; });
-          setSettings({
-            pro_price: map["stripe_pro_price"] || DEFAULT_SETTINGS.pro_price,
-            ultra_price: map["stripe_ultra_price"] || DEFAULT_SETTINGS.ultra_price,
-            pro_link: map["stripe_pro_link"] || DEFAULT_SETTINGS.pro_link,
-            ultra_link: map["stripe_ultra_link"] || DEFAULT_SETTINGS.ultra_link,
-          });
-        }
+        const proData = proRes.ok ? await proRes.json() : null;
+        const ultraData = ultraRes.ok ? await ultraRes.json() : null;
+
+        setPrices({
+          pro: proData?.content || DEFAULT_PRICES.pro,
+          ultra: ultraData?.content || DEFAULT_PRICES.ultra,
+        });
       } catch (e) {
         // silently fall back to defaults
       } finally {
         setLoading(false);
       }
     }
-    fetchSettings();
+    fetchPrices();
   }, []);
 
-  return { settings, loading };
+  return { prices, loading };
 }
 
 function PricingCard({
@@ -265,25 +254,22 @@ const PLAN_DEFS = [
 ];
 
 export default function PricingPage() {
-  const { settings, loading } = usePricingSettings();
+  const { prices, loading } = usePricingSettings();
 
   function getCtaHref(planId: string): string {
     if (planId === "free") return "/app/dashboard";
     if (planId === "pro") {
-      // Use direct Stripe link from DB if admin set it, otherwise route through our checkout
-      if (settings.pro_link && settings.pro_link.startsWith("http")) return settings.pro_link;
       return "/checkout?plan=pro";
     }
     if (planId === "ultra") {
-      if (settings.ultra_link && settings.ultra_link.startsWith("http")) return settings.ultra_link;
       return "/checkout?plan=ultra";
     }
     return "/checkout?plan=" + planId;
   }
 
   function getPriceOverride(planId: string): string | undefined {
-    if (planId === "pro") return settings.pro_price;
-    if (planId === "ultra") return settings.ultra_price;
+    if (planId === "pro") return prices.pro;
+    if (planId === "ultra") return prices.ultra;
     return undefined;
   }
 

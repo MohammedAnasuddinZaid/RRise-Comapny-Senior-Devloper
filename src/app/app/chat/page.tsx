@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Sparkles, Play, ChevronDown, Lock, ArrowRight } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Play, ChevronDown, Lock, ArrowRight, MessageSquare, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
@@ -304,6 +304,9 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
         setMessages([...messages, { role: 'user', content: sanitizedInput }]);
         setInput("");
         
+        // Save user message to conversation
+        await saveMessageToConversation('user', sanitizedInput);
+        
         // Update debug state
         setByokDebug(prev => ({ ...prev, mode: selectedAPI, status: 'calling', lastError: 'none' }));
         
@@ -335,6 +338,9 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
             followUpQuestions,
           }]);
           setSuggestedPlans(aiResponse.templates || []);
+          
+          // Save assistant message to conversation
+          saveMessageToConversation('assistant', filteredResponse.filteredResponse || aiResponse.response);
         }, 1000);
       } else {
         // Fallback for non-authenticated users
@@ -377,6 +383,21 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
           )}
         </div>
         <div className="flex items-center gap-4">
+          {/* Conversation History Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowConversationList(!showConversationList)}
+            className="relative"
+          >
+            <MessageSquare className="w-5 h-5" />
+            {conversations.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                {conversations.length}
+              </span>
+            )}
+          </Button>
+          
           {/* API Selector */}
           <div className="relative">
             <button
@@ -437,6 +458,61 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
           </div>
         </div>
       </header>
+
+      {/* Conversation Sidebar */}
+      {showConversationList && (
+        <motion.div
+          initial={{ x: -300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          className="fixed left-0 top-0 h-full w-80 bg-background border-r border-border z-40 p-4 overflow-y-auto"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Conversations</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowConversationList(false)}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <Button
+            onClick={createNewConversation}
+            className="w-full mb-4"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Conversation
+          </Button>
+          
+          {loadingConversations ? (
+            <div className="text-center text-muted-foreground py-8">Loading...</div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">No conversations yet</div>
+          ) : (
+            <div className="space-y-2">
+              {conversations.map((conv: any) => (
+                <div
+                  key={conv.id}
+                  onClick={() => loadConversationMessages(conv.id)}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    currentConversationId === conv.id
+                      ? 'bg-primary/10 border border-primary/20'
+                      : 'hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <div className="font-medium text-sm mb-1 truncate">{conv.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(conv.updated_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">

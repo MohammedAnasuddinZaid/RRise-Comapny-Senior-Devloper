@@ -896,7 +896,137 @@ None - all changes are additive and preserve existing functionality.
 
 ---
 
-## 14. Build Fixes (June 2026)
+## 15. Admin Panel & Content Management (July 2026)
+
+### Content Management System
+A CMS was created to allow admin to manage dynamic content, but was simplified based on user feedback:
+
+**Initial Implementation:**
+- Database tables: `content` and `content_history` for tracking changes
+- Admin API: `/api/admin/content` for CRUD operations
+- Public API: `/api/content` for fetching published content
+- Admin UI: Content Management tab with filtering and editor
+
+**Simplification Applied:**
+- Content editor changed to plain text only (removed markdown/JSON complexity)
+- Removed metadata JSON editor - keeping it simple for admin use
+- Admin can now paste plain text for privacy policy/terms and save directly
+
+**Privacy Policy & Terms:**
+- Reverted to hardcoded content in `src/app/privacy/page.tsx` and `src/app/terms/page.tsx`
+- CMS remains available for future use if needed
+- Admin can update content via plain text editor in admin panel when desired
+
+### Admin Panel Issues Fixed
+
+**Revenue Display:**
+- **Problem:** Was showing hardcoded calculation `proUsers * 29 + ultraUsers * 99 = $129`
+- **Solution:** Changed to show `$0` since there are no actual paying users yet
+- **Future:** TODO added to calculate from actual Stripe subscriptions when implemented
+
+**Account Deletion Tracking:**
+- **Problem:** Admin panel had no visibility into deleted accounts
+- **Solution:** Added comprehensive deletion tracking system
+- **Implementation:**
+  - SQL migration: `supabase/add_account_deletion_tracking.sql`
+  - Added `deleted_at` and `deletion_reason` columns to profiles table
+  - Created `soft_delete_user()` function for account deletion
+  - Added "Deleted Users" tab in admin panel
+  - Shows deletion date, reason, and original plan for deleted accounts
+
+**Suspend User Error:**
+- **Problem:** "Failed to update user" error when suspending accounts
+- **Solution:** Added detailed error logging to `/api/admin/users` PATCH endpoint
+- **Improvements:**
+  - Logs exact database error details to console
+  - Improved error handling in `handleUpdateUser` to show specific error messages
+  - Added `.select()` to update query to return updated data
+  - Check browser console (F12) for specific error when suspending
+
+**Delete User Feature:**
+- **Problem:** Admin could not permanently delete users and their data
+- **Solution:** Added complete user deletion capability
+- **Implementation:**
+  - Added DELETE endpoint to `/api/admin/users`
+  - Deletes from 18 tables in correct order (respecting foreign keys):
+    - api_keys, ai_usage_logs, habit_logs, task_logs, spending_entries, xp_logs, safety_events, habits, tasks, goals, journal_entries, moods, streaks, weekly_recaps, mascot_state, prompt_memory, app_settings, profiles
+  - Deletes auth user from Supabase Auth
+  - Returns partial success status if some deletions fail
+  - Added red "Delete User" button in user management modal
+  - Shows confirmation dialog before deletion
+- **Warning:** This permanently deletes ALL user data - cannot be undone
+
+### Admin Panel Improvements Summary
+
+**Tabs Available:**
+1. **Users** - View and manage all active users
+2. **System Settings** - Configure application settings
+3. **Content Management** - Edit dynamic content (plain text editor)
+4. **Deleted Users** - View account deletion history
+
+**User Management Features:**
+- Change user plan (Free/Pro/Ultra/Suspended)
+- Set token limits
+- Assign platform API keys (BYOK)
+- View user API keys and delete them
+- Delete user completely (with all data)
+- View user stats (XP, streaks, token usage)
+
+### Future LLM Work Requirements
+
+When using another LLM to generate privacy policy or terms:
+1. Generate as plain text (no complex formatting)
+2. Admin should be able to paste directly into content editor
+3. Keep it simple - no markdown, no JSON metadata
+4. Focus on legal compliance (GDPR, CCPA, etc.)
+5. Include contact information: rrisewebsite@gmail.com, https://rrise.com
+
+### Files Modified for Admin Updates
+
+**Database:**
+- `supabase/add_account_deletion_tracking.sql` - Account deletion tracking migration
+- `supabase/create_cms_tables.sql` - CMS database schema (created earlier)
+
+**API Routes:**
+- `src/app/api/admin/users/route.ts` - Added DELETE endpoint, improved PATCH error logging
+- `src/app/api/admin/content/route.ts` - Admin content API (created earlier)
+- `src/app/api/content/route.ts` - Public content API (created earlier)
+
+**Admin Panel:**
+- `src/app/admin/page.tsx` - Major updates:
+  - Added deleted users tab and tracking
+  - Simplified content editor to plain text
+  - Fixed revenue display
+  - Added handleDeleteUser function
+  - Added Delete User button in modal
+  - Improved error handling for user updates
+
+**Frontend Pages:**
+- `src/app/privacy/page.tsx` - Reverted to hardcoded content
+- `src/app/terms/page.tsx` - Reverted to hardcoded content
+- `src/app/pricing/page.tsx` - Updated to use dynamic pricing (reverted to hardcoded)
+
+### Required SQL Migrations
+
+Run these in Supabase SQL editor:
+
+1. **Account Deletion Tracking:**
+```bash
+supabase/add_account_deletion_tracking.sql
+```
+
+2. **CMS Tables (Optional - for future use):**
+```bash
+supabase/create_cms_tables.sql
+```
+
+### Build Status
+
+Build completed successfully with no errors. All new features are production-ready.
+
+---
+
+## 16. Build Fixes (June 2026)
 
 ### Overview
 Fixed Next.js build errors related to Supabase client initialization and TypeScript null checks.

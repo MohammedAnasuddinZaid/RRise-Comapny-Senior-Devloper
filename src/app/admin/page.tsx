@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical } from "lucide-react";
+import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical, FileText, Edit, Save, Plus, Trash2 } from "lucide-react";
 import { useRequireAuth } from "../../lib/authGuard";
 import { createClientComponentClient, isSupabaseConfigured } from "../../lib/supabase";
 
@@ -27,7 +27,18 @@ export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
   
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'content' | 'deleted'>('users');
+  
+  // Content management state
+  const [contentItems, setContentItems] = useState<any[]>([]);
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [editingContent, setEditingContent] = useState<any>(null);
+  const [showContentEditor, setShowContentEditor] = useState(false);
+  const [contentFilter, setContentFilter] = useState<'all' | 'pricing' | 'legal' | 'page'>('all');
+  
+  // Deleted users tracking
+  const [deletedUsers, setDeletedUsers] = useState<any[]>([]);
+  const [loadingDeleted, setLoadingDeleted] = useState(false);
   
   const [userApiKeys, setUserApiKeys] = useState<any[]>([]);
   const [newTokenLimit, setNewTokenLimit] = useState("");
@@ -107,7 +118,7 @@ export default function AdminDashboard() {
         ultraUsers,
         suspendedUsers,
         activeUsers: profiles.length - suspendedUsers,
-        monthlyRevenue: proUsers * 29 + ultraUsers * 99,
+        monthlyRevenue: 0, // TODO: Calculate from actual Stripe subscriptions
         activeSubscriptions: proUsers + ultraUsers,
       });
 
@@ -128,6 +139,114 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+    }
+  };
+
+  // Content management functions
+  const loadContent = async () => {
+    setLoadingContent(true);
+    try {
+      const token = await getAuthToken();
+      const url = contentFilter === 'all' 
+        ? '/api/admin/content' 
+        : `/api/admin/content?type=${contentFilter}`;
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setContentItems(data.content || []);
+      }
+    } catch (error) {
+      console.error('Error loading content:', error);
+    } finally {
+      setLoadingContent(false);
+    }
+  };
+
+  const handleSaveContent = async () => {
+    try {
+      const token = await getAuthToken();
+      const method = editingContent.id ? 'PUT' : 'POST';
+      const res = await fetch('/api/admin/content', {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editingContent)
+      });
+      if (res.ok) {
+        alert('Content saved successfully');
+        setShowContentEditor(false);
+        setEditingContent(null);
+        loadContent();
+      } else {
+        alert('Failed to save content');
+      }
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert('Error saving content');
+    }
+  };
+
+  const handleDeleteContent = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this content?')) return;
+    
+    try {
+      const token = await getAuthToken();
+      const res = await fetch('/api/admin/content', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        alert('Content deleted successfully');
+        loadContent();
+      } else {
+        alert('Failed to delete content');
+      }
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      alert('Error deleting content');
+    }
+  };
+
+  const openContentEditor = (content?: any) => {
+    if (content) {
+      setEditingContent({ ...content });
+    } else {
+      setEditingContent({
+        key: '',
+        type: 'page',
+        title: '',
+        content: '',
+        metadata: {},
+        is_published: true
+      });
+    }
+    setShowContentEditor(true);
+  };
+
+  const loadDeletedUsers = async () => {
+    setLoadingDeleted(true);
+    try {
+      const supabase = createClientComponentClient();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false });
+      
+      if (error) throw error;
+      setDeletedUsers(data || []);
+    } catch (error) {
+      console.error('Error loading deleted users:', error);
+    } finally {
+      setLoadingDeleted(false);
     }
   };
 
@@ -162,7 +281,11 @@ export default function AdminDashboard() {
         body: JSON.stringify({ userId, ...updates })
       });
 
-      if (!res.ok) throw new Error("Failed to update user");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Update user error:', errorData);
+        throw new Error(errorData.error || "Failed to update user");
+      }
 
       alert("User updated successfully");
       loadAdminData();
@@ -172,6 +295,38 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error(error);
       alert("Failed to update user");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (!confirm(`Are you sure you want to delete ${email}? This will permanently delete ALL their data including habits, tasks, spending, and account. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = await getAuthToken();
+      const res = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Delete user error:', errorData);
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+
+      alert("User and all data deleted successfully");
+      setShowUserModal(false);
+      setSelectedUser(null);
+      loadAdminData();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete user");
     }
   };
 
@@ -257,7 +412,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadAdminData();
     loadSystemSettings();
-  }, [user]);
+    if (activeTab === 'content') {
+      loadContent();
+    }
+    if (activeTab === 'deleted') {
+      loadDeletedUsers();
+    }
+  }, [user, activeTab]);
 
   if (loading) return <div>Loading...</div>;
   if (!isSupabaseConfigured()) return <div>Supabase Not Configured</div>;
@@ -282,6 +443,8 @@ export default function AdminDashboard() {
       <div className="flex gap-4 border-b pb-2">
         <Button variant={activeTab === 'users' ? 'default' : 'glass'} onClick={() => setActiveTab('users')}>Users</Button>
         <Button variant={activeTab === 'settings' ? 'default' : 'glass'} onClick={() => setActiveTab('settings')}>System Settings</Button>
+        <Button variant={activeTab === 'content' ? 'default' : 'glass'} onClick={() => setActiveTab('content')}>Content Management</Button>
+        <Button variant={activeTab === 'deleted' ? 'default' : 'glass'} onClick={() => setActiveTab('deleted')}>Deleted Users</Button>
       </div>
 
       {activeTab === 'users' && (
@@ -355,6 +518,157 @@ export default function AdminDashboard() {
               <div className="text-muted-foreground">No settings found. Run the SQL update script.</div>
             )}
           </div>
+        </CardContent>
+      </Card>
+      )}
+
+      {activeTab === 'content' && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Content Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg">
+            <h3 className="font-bold mb-1">Content Management System:</h3>
+            <p className="text-sm">Manage all dynamic content including pricing, legal documents, and page content. Changes here update the entire application in real-time.</p>
+          </div>
+          
+          {/* Filter and Add */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex gap-2">
+              <Button 
+                variant={contentFilter === 'all' ? 'default' : 'glass'} 
+                onClick={() => setContentFilter('all')}
+              >
+                All
+              </Button>
+              <Button 
+                variant={contentFilter === 'pricing' ? 'default' : 'glass'} 
+                onClick={() => setContentFilter('pricing')}
+              >
+                Pricing
+              </Button>
+              <Button 
+                variant={contentFilter === 'legal' ? 'default' : 'glass'} 
+                onClick={() => setContentFilter('legal')}
+              >
+                Legal
+              </Button>
+              <Button 
+                variant={contentFilter === 'page' ? 'default' : 'glass'} 
+                onClick={() => setContentFilter('page')}
+              >
+                Pages
+              </Button>
+            </div>
+            <Button 
+              onClick={() => openContentEditor()}
+              className="ml-auto"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Content
+            </Button>
+          </div>
+
+          {/* Content List */}
+          {loadingContent ? (
+            <div className="text-center py-8">Loading content...</div>
+          ) : contentItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No content found</div>
+          ) : (
+            <div className="space-y-4">
+              {contentItems.map((item) => (
+                <div key={item.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg gap-4">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        item.type === 'pricing' ? 'bg-green-500/10 text-green-500' :
+                        item.type === 'legal' ? 'bg-blue-500/10 text-blue-500' :
+                        item.type === 'page' ? 'bg-purple-500/10 text-purple-500' :
+                        'bg-gray-500/10 text-gray-500'
+                      }`}>
+                        {item.type}
+                      </span>
+                      <span className="font-medium">{item.title}</span>
+                      {!item.is_published && (
+                        <span className="px-2 py-1 rounded text-xs bg-yellow-500/10 text-yellow-500">Draft</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">Key: {item.key}</p>
+                    <p className="text-sm text-muted-foreground truncate max-w-md">
+                      {typeof item.content === 'string' ? item.content.substring(0, 100) + '...' : JSON.stringify(item.content).substring(0, 100) + '...'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Updated: {new Date(item.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => openContentEditor(item)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDeleteContent(item.id)}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      )}
+
+      {activeTab === 'deleted' && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Deleted Users</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 p-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg">
+            <h3 className="font-bold mb-1">Account Deletion History:</h3>
+            <p className="text-sm">View users who have deleted their accounts. This shows deletion date and reason if provided.</p>
+          </div>
+          
+          {loadingDeleted ? (
+            <div className="text-center py-8">Loading deleted users...</div>
+          ) : deletedUsers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No deleted users found</div>
+          ) : (
+            <div className="space-y-4">
+              {deletedUsers.map((user) => (
+                <div key={user.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg gap-4 bg-red-500/5 border-red-500/20">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-500">DELETED</span>
+                      <span className="font-medium">{user.email}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Deleted: {user.deleted_at ? new Date(user.deleted_at).toLocaleString() : 'Unknown'}
+                    </p>
+                    {user.deletion_reason && (
+                      <p className="text-sm text-muted-foreground">
+                        Reason: {user.deletion_reason}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Original Plan: {user.plan?.toUpperCase() || 'Free'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
       )}
@@ -533,7 +847,100 @@ export default function AdminDashboard() {
               </div>
 
               <div className="pt-4 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}
+                  className="text-red-500 hover:text-red-400 border-red-500/30 hover:border-red-500"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete User
+                </Button>
                 <Button variant="outline" onClick={() => setShowUserModal(false)}>Close</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Content Editor Modal */}
+      {showContentEditor && editingContent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>{editingContent.id ? 'Edit Content' : 'Add Content'}</span>
+                <Button variant="ghost" size="sm" onClick={() => setShowContentEditor(false)}>✕</Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Key (unique identifier)</label>
+                  <input 
+                    type="text" 
+                    value={editingContent.key}
+                    onChange={e => setEditingContent({ ...editingContent, key: e.target.value })}
+                    placeholder="e.g., pro_price, privacy_policy"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Type</label>
+                  <select 
+                    value={editingContent.type}
+                    onChange={e => setEditingContent({ ...editingContent, type: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="page">Page</option>
+                    <option value="pricing">Pricing</option>
+                    <option value="legal">Legal</option>
+                    <option value="setting">Setting</option>
+                    <option value="text">Text</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <input 
+                    type="text" 
+                    value={editingContent.title}
+                    onChange={e => setEditingContent({ ...editingContent, title: e.target.value })}
+                    placeholder="Content title"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Content (Plain Text)</label>
+                  <textarea 
+                    value={editingContent.content}
+                    onChange={e => setEditingContent({ ...editingContent, content: e.target.value })}
+                    placeholder="Enter content here..."
+                    rows={12}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Simple plain text content</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    id="is_published"
+                    checked={editingContent.is_published}
+                    onChange={e => setEditingContent({ ...editingContent, is_published: e.target.checked })}
+                    className="w-4 h-4 rounded border-input"
+                  />
+                  <label htmlFor="is_published" className="text-sm">Published (visible to users)</label>
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button variant="outline" onClick={() => setShowContentEditor(false)}>Cancel</Button>
+                  <Button onClick={handleSaveContent}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Content
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

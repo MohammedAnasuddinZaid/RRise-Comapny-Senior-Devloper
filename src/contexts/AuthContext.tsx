@@ -28,7 +28,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+  signUpWithEmail: (email: string, password: string, name: string, termsAccepted?: boolean) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Sign up with email, password, and name
    * The name is stored in user metadata and will be used to create the profile
    */
-  const signUpWithEmail = async (email: string, password: string, name: string) => {
+  const signUpWithEmail = async (email: string, password: string, name: string, termsAccepted?: boolean) => {
     if (!isSupabaseConfigured()) {
       return { error: { message: 'Supabase not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.' } as AuthError };
     }
@@ -155,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         data: {
           name,
+          terms_accepted: termsAccepted,
         },
         emailRedirectTo: `${window.location.origin}/app/dashboard`,
       },
@@ -162,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!error && data.user) {
       // Initialize user data after successful signup
-      await initializeUser(data.user.id, email, name);
+      await initializeUser(data.user.id, email, name, termsAccepted);
       
       // Redirect to dashboard after successful signup
       window.location.href = '/app/dashboard';

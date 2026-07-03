@@ -88,17 +88,94 @@ export async function PATCH(request: Request) {
     if (plan !== undefined) updates.plan = plan;
     if (token_limit !== undefined) updates.token_limit = token_limit;
 
-    const { error } = await supabaseAdmin
+    console.log('Updating user:', userId, 'with updates:', updates);
+
+    const { data, error } = await supabaseAdmin
       .from('profiles')
       .update(updates)
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Database error updating user:', error);
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    console.log('Update successful:', data);
+    return NextResponse.json({ success: true, data });
   } catch (err: any) {
+    console.error('Error in PATCH handler:', err);
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!await verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { userId } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    console.log('Deleting user and all data:', userId);
+
+    // Delete all user data in correct order (respecting foreign keys)
+    const tablesToDelete = [
+      'api_keys',
+      'ai_usage_logs',
+      'habit_logs',
+      'task_logs',
+      'spending_entries',
+      'xp_logs',
+      'safety_events',
+      'habits',
+      'tasks',
+      'goals',
+      'journal_entries',
+      'moods',
+      'streaks',
+      'weekly_recaps',
+      'mascot_state',
+      'prompt_memory',
+      'app_settings',
+      'profiles'
+    ];
+
+    const errors: string[] = [];
+    for (const table of tablesToDelete) {
+      const { error } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error(`Error deleting from ${table}:`, error);
+        errors.push(`${table}: ${error.message}`);
+      }
+    }
+
+    // Delete auth user
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) {
+      console.error('Error deleting auth user:', authError);
+      errors.push(`auth: ${authError.message}`);
+    }
+
+    if (errors.length > 0) {
+      return NextResponse.json({ 
+        error: 'Partial deletion completed with errors', 
+        details: errors 
+      }, { status: 207 });
+    }
+
+    console.log('User deletion successful');
+    return NextResponse.json({ success: true, message: 'User and all data deleted successfully' });
+  } catch (err: any) {
+    console.error('Error in DELETE handler:', err);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

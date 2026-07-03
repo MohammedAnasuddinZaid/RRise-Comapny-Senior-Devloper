@@ -570,7 +570,7 @@ export default function SettingsPage() {
                       </div>
                     )}
 
-                    {/* Usage Stats */}
+                    {/* Usage Stats - Show for all plans */}
                     {usageStats && (
                       <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
                         <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -586,6 +586,38 @@ export default function SettingsPage() {
                             <span className="text-muted-foreground">Total Tokens</span>
                             <span className="font-medium">{usageStats.totalTokens.toLocaleString()}</span>
                           </div>
+                          {/* Show token limit for Pro/Ultra users */}
+                          {(userData?.plan === 'pro' || userData?.plan === 'ultra') && (
+                            <>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Token Limit</span>
+                                <span className="font-medium">{userData?.token_limit?.toLocaleString() || 'Unlimited'}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Tokens Remaining</span>
+                                <span className={`font-medium ${usageStats.totalTokens >= (userData?.token_limit || Infinity) ? 'text-red-500' : 'text-green-500'}`}>
+                                  {userData?.token_limit ? Math.max(0, userData.token_limit - usageStats.totalTokens).toLocaleString() : 'Unlimited'}
+                                </span>
+                              </div>
+                              {userData?.token_limit && (
+                                <div className="pt-2">
+                                  <div className="w-full bg-white/10 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full transition-all ${
+                                        (usageStats.totalTokens / userData.token_limit) > 0.9 ? 'bg-red-500' :
+                                        (usageStats.totalTokens / userData.token_limit) > 0.7 ? 'bg-yellow-500' :
+                                        'bg-green-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, (usageStats.totalTokens / userData.token_limit) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {Math.round((usageStats.totalTokens / userData.token_limit) * 100)}% of monthly limit used
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
                           {Object.entries(usageStats.byProvider).length > 0 && (
                             <div className="pt-3 border-t border-white/10">
                               <p className="text-xs text-muted-foreground mb-2">By Provider</p>

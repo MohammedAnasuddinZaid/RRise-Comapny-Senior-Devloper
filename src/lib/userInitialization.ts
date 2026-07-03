@@ -26,7 +26,8 @@ import { PlanType } from '@/types/database';
 export async function initializeUser(
   userId: string,
   email: string,
-  name?: string
+  name?: string,
+  termsAccepted?: boolean
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured()) {
     return { success: false, error: 'Supabase not configured' };
@@ -60,6 +61,8 @@ export async function initializeUser(
       streak_count: 0,
       mascot_level: 1,
       onboarding_completed: false,
+      terms_accepted: termsAccepted || false,
+      terms_accepted_at: termsAccepted ? new Date().toISOString() : null,
     });
 
     if (profileError) {
