@@ -12,7 +12,6 @@ export default function TasksPage() {
   const { user, loading } = useRequireAuth();
   const [tasks, setTasks] = useState<any[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskTime, setNewTaskTime] = useState("12:00 PM");
   const [dataLoading, setDataLoading] = useState(true);
 
   // Load tasks from Supabase
@@ -50,13 +49,13 @@ export default function TasksPage() {
     e.preventDefault();
     if (!newTaskTitle.trim() || !user) return;
 
-    const result = await createTask(user.id, newTaskTitle, newTaskTime);
+    const result = await createTask(user.id, newTaskTitle, "");
     if (result.success && result.data) {
       setTasks(prevTasks => [...prevTasks, {
         id: result.data.id,
         title: result.data.title,
         completed: result.data.completed,
-        dueTime: result.data.due_date,
+        dueTime: result.data.dueTime,
       }]);
       setNewTaskTitle("");
     } else {
@@ -114,7 +113,7 @@ export default function TasksPage() {
       {/* Task Creation Form */}
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-8">
-          <form onSubmit={handleAddTask} className="flex flex-col md:flex-row gap-4">
+          <form onSubmit={handleAddTask} className="flex gap-4">
             <input
               type="text"
               value={newTaskTitle}
@@ -122,18 +121,9 @@ export default function TasksPage() {
               placeholder="What task needs your attention today?"
               className="flex-1 bg-black/20 border border-white/10 rounded-xl px-6 py-4 text-base placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
             />
-            <div className="flex gap-4">
-              <input
-                type="text"
-                value={newTaskTime}
-                onChange={(e) => setNewTaskTime(e.target.value)}
-                placeholder="Due time"
-                className="w-32 bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-center text-sm outline-none focus:border-primary/50 transition-colors"
-              />
-              <Button type="submit" className="rounded-xl h-full py-4 px-6">
-                <Plus className="w-5 h-5 mr-2" /> Add Task
-              </Button>
-            </div>
+            <Button type="submit" className="rounded-xl h-full py-4 px-6">
+              <Plus className="w-5 h-5 mr-2" /> Add Task
+            </Button>
           </form>
         </CardContent>
       </Card>

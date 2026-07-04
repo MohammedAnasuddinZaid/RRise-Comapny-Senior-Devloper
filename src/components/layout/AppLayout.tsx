@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, CheckSquare, Target, CreditCard, Settings, MessageSquare, Clock, Crown } from "lucide-react";
+import { Home, CheckSquare, CreditCard, Settings, MessageSquare, Clock, Crown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { icon: MessageSquare, label: "Chat", href: "/app/chat" },
   { icon: Clock, label: "History", href: "/app/history" },
   { icon: CheckSquare, label: "Tasks", href: "/app/tasks" },
-  { icon: Target, label: "Habits", href: "/app/habits" },
   { icon: CreditCard, label: "Spending", href: "/app/spending" },
 ];
 

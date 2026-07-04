@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Mail, Lock, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function AdminLoginPage() {
         setError(authError.message);
       } else {
         // Redirect directly to administrative dashboard
-        window.location.href = "/admin";
+        router.push("/admin");
       }
     } catch (err) {
       setError("An unexpected authentication error occurred.");
