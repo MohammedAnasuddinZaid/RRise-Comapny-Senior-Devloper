@@ -313,7 +313,7 @@ export async function loadMascotState(userId: string): Promise<MascotState | nul
  * Load streak data from Supabase
  * 
  * @param userId - The user's ID
- * @returns Streak count
+ * @returns Streak count from streaks table (overall type)
  */
 export async function loadStreakCount(userId: string): Promise<number> {
   if (!isSupabaseConfigured()) return 0;
@@ -323,17 +323,18 @@ export async function loadStreakCount(userId: string): Promise<number> {
 
   try {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('streak_count')
-      .eq('id', userId)
-      .single();
+      .from('streaks')
+      .select('current_streak')
+      .eq('user_id', userId)
+      .eq('type', 'overall')
+      .maybeSingle();
 
     if (error) {
       console.error('Error loading streak count:', error);
       return 0;
     }
 
-    return data?.streak_count || 0;
+    return data?.current_streak || 0;
   } catch (error) {
     console.error('Error loading streak count:', error);
     return 0;
@@ -880,14 +881,62 @@ export async function deleteTask(
       .eq('user_id', userId);
 
     if (error) {
+      console.error('Delete task error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (error) {
+    console.error('Delete task exception:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete task' 
+    };
+  }
+}
+
+/**
+ * Update task in Supabase
+ * 
+ * @param taskId - The task ID
+ * @param userId - The user's ID (for security)
+ * @param title - New task title
+ * @returns Success status with updated data
+ */
+export async function updateTask(
+  taskId: string,
+  userId: string,
+  title: string
+): Promise<{ success: boolean; error?: string; data?: any }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return { success: false, error: 'Supabase not configured' };
+
+  try {
+    if (!taskId || !userId || !title) {
+      return { success: false, error: 'Invalid input' };
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ title })
+      .eq('id', taskId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update task error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Update task exception:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update task' 
     };
   }
 }

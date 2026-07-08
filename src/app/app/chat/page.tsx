@@ -38,6 +38,7 @@ export default function ChatPage() {
   const [hasBYOK, setHasBYOK] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showBYOKPopup, setShowBYOKPopup] = useState(false);
   const [byokDebug, setByokDebug] = useState<{ mode: string; provider: string; model: string; status: string; lastError: string }>({
     mode: 'free',
     provider: 'none',
@@ -68,11 +69,13 @@ export default function ChatPage() {
       
       setHasBYOK(keysAvailable);
       
-      // Auto-select mode based on profile plan and available keys
-      if (profile && (profile.plan === 'pro' || profile.plan === 'ultra')) {
-        setSelectedAPI('pro');
-      } else if (keysAvailable) {
-        setSelectedAPI('byok');
+      // Always default to free mode
+      setSelectedAPI('free');
+      
+      // Show BYOK popup if keys are available
+      if (keysAvailable) {
+        setShowBYOKPopup(true);
+        setTimeout(() => setShowBYOKPopup(false), 3000);
       }
       
       // Load conversations
@@ -440,13 +443,21 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
                     </button>
                   )}
                   <button
-                    onClick={() => { setSelectedAPI('pro'); setShowAPIDropdown(false); }}
+                    onClick={() => { 
+                      if (userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') {
+                        setSelectedAPI('pro'); 
+                      } else {
+                        setShowUpgradePrompt(true);
+                      }
+                      setShowAPIDropdown(false); 
+                    }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                       selectedAPI === 'pro' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                    }`}
+                    } ${!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>PRO MODE</span>
+                    {!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') && <Lock className="w-3 h-3 ml-auto" />}
                   </button>
                 </div>
               </div>
@@ -514,22 +525,23 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
         </motion.div>
       )}
 
+      {/* BYOK Popup */}
+      {showBYOKPopup && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50"
+          onClick={() => setShowBYOKPopup(false)}
+        >
+          <div className="bg-primary/20 border border-primary/30 backdrop-blur-xl rounded-xl px-4 py-2 text-sm text-primary shadow-lg">
+            You can switch to BYOK mode in settings
+          </div>
+        </motion.div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
-        {/* BYOK Debug Card (Development Only) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs">
-            <div className="font-bold text-yellow-500 mb-2">BYOK DEBUG (Development Only)</div>
-            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-              <div>Mode: <span className="text-foreground">{byokDebug.mode}</span></div>
-              <div>Provider: <span className="text-foreground">{byokDebug.provider}</span></div>
-              <div>Model: <span className="text-foreground">{byokDebug.model}</span></div>
-              <div>Status: <span className="text-foreground">{byokDebug.status}</span></div>
-              <div className="col-span-2">Last Error: <span className="text-foreground">{byokDebug.lastError}</span></div>
-            </div>
-          </div>
-        )}
-        
         {/* Chat Messages */}
         <div className="flex-1 space-y-6 mb-8 overflow-y-auto">
           {messages.length === 0 ? (
@@ -711,13 +723,20 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
                       )}
                       <button
                         type="button"
-                        onClick={() => { setSelectedAPI('pro'); setShowAPIDropdown(false); }}
+                        onClick={() => { 
+                          if (userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') {
+                            setSelectedAPI('pro'); 
+                          } else {
+                            setShowUpgradePrompt(true);
+                          }
+                          setShowAPIDropdown(false); 
+                        }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                           selectedAPI === 'pro' ? 'bg-purple-500/20 text-purple-500' : 'text-muted-foreground hover:bg-white/5'
-                        }`}
+                        } ${!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <span>PRO</span>
-                        <span className="text-[10px] bg-purple-500/30 px-1.5 py-0.5 rounded">Soon</span>
+                        {!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') && <Lock className="w-3 h-3 ml-auto" />}
                       </button>
                     </div>
                   </div>

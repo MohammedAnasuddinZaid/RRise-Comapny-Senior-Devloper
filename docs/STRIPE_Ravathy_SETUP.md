@@ -181,11 +181,3 @@ If you encounter issues:
 3. Contact the developer with error messages
 4. Stripe support: [stripe.com/help](https://stripe.com/help)
 
-## Next Steps
-
-After setup:
-1. Test the payment flow in test mode
-2. Verify webhooks are updating plans correctly
-3. Test with different scenarios (success, failure, cancellation)
-4. Only switch to live mode after thorough testing
-5. Monitor first few live transactions closely

@@ -153,11 +153,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <span>Continue with Google</span>
                 </button>
 
-                {/* Supabase Configuration Warning */}
-                <div className="mb-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs text-center">
-                  Note: Supabase must be configured in .env.local for authentication to work
-                </div>
-
                 {/* Divider */}
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex-1 h-px bg-white/10" />

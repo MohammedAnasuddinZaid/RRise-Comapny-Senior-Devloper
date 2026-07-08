@@ -51,7 +51,7 @@ export async function generateAIResponse(
 }> {
   const lowerMessage = userMessage.toLowerCase();
   
-  // Crisis detection - check for self-harm/suicide keywords
+  // Crisis detection - check for self-harm/suicide keywords (keep this for user safety)
   const crisisKeywords = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'end my life', 'want to die'];
   if (crisisKeywords.some(keyword => lowerMessage.includes(keyword))) {
     return {

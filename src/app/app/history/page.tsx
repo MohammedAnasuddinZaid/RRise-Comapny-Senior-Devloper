@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, CheckCircle, Wallet, Calendar, Filter } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, Wallet, Calendar, Filter, TrendingUp, Activity, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/Button";
 import { audioManager } from "../../../lib/audioManager";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { loadActivityHistory } from "../../../lib/dataLoader";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
 type ActivityType = 'all' | 'habits' | 'tasks' | 'spending';
 
@@ -58,38 +59,48 @@ export default function HistoryPage() {
     );
   }
 
-  // Combine all activities into a single timeline (XP gain events removed)
-  const allActivities = [
-    ...activityData.habitCompletions.map(item => ({
-      id: item.id,
-      type: 'habit' as const,
-      title: `Habit Completed: ${item.habitTitle}`,
-      description: 'Daily habit tracked',
-      date: item.completedAt,
-      icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-    })),
-    ...activityData.taskCompletions.map(item => ({
-      id: item.id,
-      type: 'task' as const,
-      title: `Task Completed: ${item.taskTitle}`,
-      description: 'Task finished',
-      date: item.completedAt,
-      icon: <CheckCircle className="w-5 h-5 text-blue-500" />,
-    })),
-    ...activityData.spendingTransactions.map(item => ({
-      id: item.id,
-      type: 'spending' as const,
-      title: `Spent $${item.amount}`,
-      description: `Category: ${item.category}`,
-      date: item.spentAt,
-      icon: <Wallet className="w-5 h-5 text-yellow-500" />,
-    })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Process data for analytics charts
+  const processChartData = () => {
+    const last7Days = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      const habitCount = activityData.habitCompletions.filter(
+        h => h.completedAt.startsWith(dateStr)
+      ).length;
+      
+      const taskCount = activityData.taskCompletions.filter(
+        t => t.completedAt.startsWith(dateStr)
+      ).length;
+      
+      const spendingTotal = activityData.spendingTransactions
+        .filter(s => s.spentAt.startsWith(dateStr))
+        .reduce((sum, s) => sum + s.amount, 0);
+      
+      last7Days.push({
+        date: dayName,
+        habits: habitCount,
+        tasks: taskCount,
+        spending: spendingTotal,
+        total: habitCount + taskCount
+      });
+    }
+    
+    return last7Days;
+  };
 
-  // Filter activities based on selected filter
-  const filteredActivities = filter === 'all' 
-    ? allActivities 
-    : allActivities.filter(activity => activity.type === filter);
+  const chartData = processChartData();
+
+  // Calculate summary stats
+  const totalHabitsCompleted = activityData.habitCompletions.length;
+  const totalTasksCompleted = activityData.taskCompletions.length;
+  const totalSpending = activityData.spendingTransactions.reduce((sum, s) => sum + s.amount, 0);
+  const avgDailyCompletion = chartData.reduce((sum, day) => sum + day.total, 0) / 7;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -129,75 +140,107 @@ export default function HistoryPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {(['all', 'habits', 'tasks', 'spending'] as ActivityType[]).map((type) => (
-            <Button
-              key={type}
-              variant={filter === type ? 'default' : 'glass'}
-              size="sm"
-              onClick={() => {
-                audioManager.play('click');
-                setFilter(type);
-              }}
-              className={filter === type ? 'bg-primary text-primary-foreground' : ''}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          ))}
+      <main className="flex-1 pt-24 pb-8 px-4 md:px-12 max-w-6xl mx-auto w-full">
+        {/* Summary Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <span className="text-sm text-muted-foreground">Habits Completed</span>
+            </div>
+            <p className="text-3xl font-bold">{totalHabitsCompleted}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Activity className="w-5 h-5 text-blue-500" />
+              <span className="text-sm text-muted-foreground">Tasks Completed</span>
+            </div>
+            <p className="text-3xl font-bold">{totalTasksCompleted}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <span className="text-sm text-muted-foreground">Avg Daily</span>
+            </div>
+            <p className="text-3xl font-bold">{avgDailyCompletion.toFixed(1)}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Wallet className="w-5 h-5 text-yellow-500" />
+              <span className="text-sm text-muted-foreground">Total Spent</span>
+            </div>
+            <p className="text-3xl font-bold">${totalSpending.toFixed(2)}</p>
+          </motion.div>
         </div>
 
-        {/* Activity Timeline */}
+        {/* Weekly Activity Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-4"
+          transition={{ delay: 0.4 }}
+          className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'} mb-8`}
         >
-          {filteredActivities.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-20"
-            >
-              <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="font-playfair text-2xl font-bold mb-2">No activity yet</h2>
-              <p className="text-muted-foreground mb-6">Complete habits, tasks, or track spending to see your activity here</p>
-              <Link href="/app/dashboard">
-                <Button className="bg-primary text-primary-foreground">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            </motion.div>
-          ) : (
-            filteredActivities.map((activity, index) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="relative p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] backdrop-blur-xl transition-all duration-300"
-              >
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-white/5">
-                    {activity.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-foreground">{activity.title}</h3>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        {formatDate(activity.date)}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{activity.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
+          <h3 className="font-playfair text-xl font-bold mb-4">Weekly Activity Trend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00e575" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#00e575" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,200,83,0.1)'} />
+              <XAxis dataKey="date" stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <YAxis stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: theme === 'dark' ? '#070709' : '#ffffff', borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,200,83,0.2)', borderRadius: '12px' }}
+                itemStyle={{ color: theme === 'dark' ? '#00e575' : '#00c853' }}
+              />
+              <Area type="monotone" dataKey="total" stroke="#00e575" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Habits vs Tasks Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+        >
+          <h3 className="font-playfair text-xl font-bold mb-4">Habits vs Tasks</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,200,83,0.1)'} />
+              <XAxis dataKey="date" stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <YAxis stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: theme === 'dark' ? '#070709' : '#ffffff', borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,200,83,0.2)', borderRadius: '12px' }}
+                itemStyle={{ color: theme === 'dark' ? '#00e575' : '#00c853' }}
+              />
+              <Bar dataKey="habits" fill="#22c55e" name="Habits" />
+              <Bar dataKey="tasks" fill="#3b82f6" name="Tasks" />
+            </BarChart>
+          </ResponsiveContainer>
         </motion.div>
       </main>
     </div>

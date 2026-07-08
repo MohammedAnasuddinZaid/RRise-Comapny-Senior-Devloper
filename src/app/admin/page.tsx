@@ -468,6 +468,7 @@ export default function AdminDashboard() {
                   <Button variant="outline" size="sm" onClick={() => {
                     setSelectedUser(profile);
                     setNewTokenLimit(profile.token_limit?.toString() || "0");
+                    setUserApiKeys(profile.api_keys || []);
                     setShowUserModal(true);
                   }}>
                     Manage

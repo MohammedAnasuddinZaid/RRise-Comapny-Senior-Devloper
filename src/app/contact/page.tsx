@@ -29,27 +29,31 @@ const CONTACT_METHODS = [
 type Status = "idle" | "sending" | "success" | "error";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", issue: "" });
   const [status, setStatus] = useState<Status>("idle");
   const [focused, setFocused] = useState<string | null>(null);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) return;
+    if (!form.name || !form.issue) return;
 
     setStatus("sending");
 
-    /* Simulate sending — replace with real email API (e.g. Resend, EmailJS) */
-    await new Promise((res) => setTimeout(res, 1800));
+    // Open LinkedIn message with pre-filled content
+    const linkedinUrl = `https://www.linkedin.com/messaging/thread/new/?`;
+    const message = `Name: ${form.name}\n\nIssue: ${form.issue}`;
+    
+    // Open LinkedIn in new tab
+    window.open(linkedinUrl, '_blank');
 
     setStatus("success");
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setForm({ name: "", issue: "" });
 
     setTimeout(() => setStatus("idle"), 5000);
   };
@@ -191,76 +195,36 @@ export default function ContactPage() {
                     exit={{ opacity: 0 }}
                     className="space-y-5"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
-                          Name *
-                        </label>
-                        <input
-                          name="name"
-                          value={form.name}
-                          onChange={handleChange}
-                          onFocus={() => setFocused("name")}
-                          onBlur={() => setFocused(null)}
-                          placeholder="Your name"
-                          required
-                          className={inputClass("name")}
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
-                          Email *
-                        </label>
-                        <input
-                          name="email"
-                          type="email"
-                          value={form.email}
-                          onChange={handleChange}
-                          onFocus={() => setFocused("email")}
-                          onBlur={() => setFocused(null)}
-                          placeholder="your@email.com"
-                          required
-                          className={inputClass("email")}
-                        />
-                      </div>
-                    </div>
-
                     <div>
                       <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
-                        Subject
+                        Name *
                       </label>
-                      <select
-                        name="subject"
-                        value={form.subject}
+                      <input
+                        name="name"
+                        value={form.name}
                         onChange={handleChange}
-                        onFocus={() => setFocused("subject")}
+                        onFocus={() => setFocused("name")}
                         onBlur={() => setFocused(null)}
-                        className={inputClass("subject")}
-                      >
-                        <option value="" className="bg-[#020408]">Select a topic…</option>
-                        <option value="feedback" className="bg-[#020408]">General feedback</option>
-                        <option value="feature" className="bg-[#020408]">Feature request</option>
-                        <option value="bug" className="bg-[#020408]">Bug report</option>
-                        <option value="partnership" className="bg-[#020408]">Partnership / collab</option>
-                        <option value="press" className="bg-[#020408]">Press / media</option>
-                        <option value="other" className="bg-[#020408]">Something else</option>
-                      </select>
+                        placeholder="Your name"
+                        required
+                        className={inputClass("name")}
+                      />
                     </div>
 
                     <div>
                       <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
-                        Message *
+                        Issue *
                       </label>
                       <textarea
-                        name="message"
-                        value={form.message}
+                        name="issue"
+                        value={form.issue}
                         onChange={handleChange}
-                        onFocus={() => setFocused("message")}
+                        onFocus={() => setFocused("issue")}
                         onBlur={() => setFocused(null)}
-                        placeholder="What's on your mind? The more detail, the better."
+                        placeholder="Describe your issue..."
                         required
                         rows={5}
-                        className={inputClass("message")}
+                        className={inputClass("issue")}
                       />
                     </div>
 
@@ -271,7 +235,7 @@ export default function ContactPage() {
                         className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
                       >
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        Something went wrong. Please try again or email directly.
+                        Something went wrong. Please try again.
                       </motion.div>
                     )}
 
@@ -293,19 +257,19 @@ export default function ContactPage() {
                               animate={{ rotate: 360 }}
                               transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                             />
-                            Sending…
+                            Opening LinkedIn…
                           </>
                         ) : (
                           <>
                             <Send className="w-4 h-4" />
-                            Send message
+                            Send via LinkedIn
                           </>
                         )}
                       </span>
                     </motion.button>
 
                     <p className="font-inter text-xs text-muted-foreground/50 text-center">
-                      Submits to rrisewebsite@gmail.com · Usually replied within 24h
+                      Opens LinkedIn messaging to send your issue directly
                     </p>
                   </motion.form>
                 )}
