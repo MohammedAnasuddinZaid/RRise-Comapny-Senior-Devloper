@@ -246,22 +246,23 @@ Keep responses concise, encouraging, and actionable. If you suggest a plan, desc
     
     // Return specific error based on error type
     let errorMessage = 'Unknown error occurred';
+    const troubleshootLink = '\n\n[Troubleshooting Guide](/app/troubleshoot)';
     
     if (error instanceof Error) {
       const errorLower = error.message.toLowerCase();
       
       if (errorLower.includes('401') || errorLower.includes('unauthorized') || errorLower.includes('invalid api key')) {
-        errorMessage = 'Invalid API Key (401 Unauthorized). Please check your API key in Settings.';
+        errorMessage = 'Invalid API Key (401 Unauthorized). Please check your API key in Settings.' + troubleshootLink;
       } else if (errorLower.includes('403') || errorLower.includes('forbidden') || errorLower.includes('permission denied')) {
-        errorMessage = 'Permission Denied (403 Forbidden). Your API key may not have access to this resource.';
+        errorMessage = 'Permission Denied (403). Your API key or project does not have access to this AI model. Please configure your API key in the provider console (e.g., Google Cloud Console for Gemini) with proper permissions.' + troubleshootLink;
       } else if (errorLower.includes('429') || errorLower.includes('quota') || errorLower.includes('rate limit')) {
-        errorMessage = 'Quota Exceeded (429). You have exceeded your API rate limit. Please try again later.';
+        errorMessage = 'Quota Exceeded (429). You have exceeded your API rate limit. Please try again later.' + troubleshootLink;
       } else if (errorLower.includes('network') || errorLower.includes('fetch') || errorLower.includes('connection')) {
-        errorMessage = 'Network Error. Unable to connect to the AI API. Please check your internet connection.';
+        errorMessage = 'Network Error. Unable to connect to the AI API. Please check your internet connection.' + troubleshootLink;
       } else if (errorLower.includes('model') || errorLower.includes('not found')) {
-        errorMessage = 'Model Not Found. The requested AI model is not available.';
+        errorMessage = 'Model Not Found. The requested AI model is not available.' + troubleshootLink;
       } else {
-        errorMessage = `API Error: ${error.message}`;
+        errorMessage = `API Error: ${error.message}` + troubleshootLink;
       }
     }
     

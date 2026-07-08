@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
-import { User, Shield, Moon, Sun, Sparkles, Brain, Download, Trash2, AlertTriangle, Plus, Check, X, Key } from "lucide-react";
+import { User, Shield, Moon, Sun, Sparkles, Brain, Download, Trash2, AlertTriangle, Plus, Check, X, Key, ExternalLink } from "lucide-react";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { loadUserProfile } from "../../../lib/dataLoader";
 import { createClientComponentClient } from "@/lib/supabase";
@@ -535,6 +535,20 @@ export default function SettingsPage() {
                         {aiConfigs.length > 0 ? "Configured" : "Not Configured"}
                       </span>
                     </div>
+
+                    {/* Troubleshooting Guide Link */}
+                    <Link href="/app/troubleshoot" className="block">
+                      <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/15 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <AlertTriangle className="w-4 h-4 text-blue-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-500">Troubleshooting Guide</p>
+                            <p className="text-xs text-muted-foreground">Having issues with your API keys? Get help here.</p>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-blue-500" />
+                        </div>
+                      </div>
+                    </Link>
                     
                     {aiConfigs.length > 0 && (
                       <div className="space-y-3">

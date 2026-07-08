@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical, FileText, Edit, Save, Plus, Trash2 } from "lucide-react";
+import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical, FileText, Edit, Save, Plus, Trash2, Settings, Sparkles } from "lucide-react";
 import { useRequireAuth } from "../../lib/authGuard";
 import { createClientComponentClient, isSupabaseConfigured } from "../../lib/supabase";
 
@@ -426,26 +426,106 @@ export default function AdminDashboard() {
   if (loadingData) return <div>Loading admin data...</div>;
 
   return (
-    <div className="space-y-8 pb-12 max-w-7xl mx-auto p-4">
-      <div className="space-y-4">
-        <h1 className="font-playfair text-4xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Monitor user activity, plans, and system performance.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="space-y-8 pb-12 max-w-7xl mx-auto p-4 md:p-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-muted-foreground text-lg">Monitor user activity, plans, and system performance.</p>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card><CardHeader><CardTitle>Total Users</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.totalUsers}</div></CardContent></Card>
-        <Card><CardHeader><CardTitle>Pro Users</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.proUsers}</div></CardContent></Card>
-        <Card><CardHeader><CardTitle>Ultra Users</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.ultraUsers}</div></CardContent></Card>
-        <Card><CardHeader><CardTitle>Monthly Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">${stats.monthlyRevenue}</div></CardContent></Card>
-      </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:border-blue-500/40 transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-blue-500 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Total Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-500">{stats.totalUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">Registered accounts</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-green-500 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                Pro Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-500">{stats.proUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">Active subscriptions</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-purple-500 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Ultra Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-500">{stats.ultraUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">Premium accounts</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-yellow-500 flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Monthly Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-500">${stats.monthlyRevenue}</div>
+              <p className="text-xs text-muted-foreground mt-1">This month</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      <div className="flex gap-4 border-b pb-2">
-        <Button variant={activeTab === 'users' ? 'default' : 'glass'} onClick={() => setActiveTab('users')}>Users</Button>
-        <Button variant={activeTab === 'settings' ? 'default' : 'glass'} onClick={() => setActiveTab('settings')}>System Settings</Button>
-        <Button variant={activeTab === 'content' ? 'default' : 'glass'} onClick={() => setActiveTab('content')}>Content Management</Button>
-        <Button variant={activeTab === 'deleted' ? 'default' : 'glass'} onClick={() => setActiveTab('deleted')}>Deleted Users</Button>
-      </div>
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2 p-1 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50">
+          <Button 
+            variant={activeTab === 'users' ? 'default' : 'ghost'} 
+            onClick={() => setActiveTab('users')}
+            className="flex-1 md:flex-none"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Users
+          </Button>
+          <Button 
+            variant={activeTab === 'settings' ? 'default' : 'ghost'} 
+            onClick={() => setActiveTab('settings')}
+            className="flex-1 md:flex-none"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            System Settings
+          </Button>
+          <Button 
+            variant={activeTab === 'content' ? 'default' : 'ghost'} 
+            onClick={() => setActiveTab('content')}
+            className="flex-1 md:flex-none"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Content
+          </Button>
+          <Button 
+            variant={activeTab === 'deleted' ? 'default' : 'ghost'} 
+            onClick={() => setActiveTab('deleted')}
+            className="flex-1 md:flex-none"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Deleted Users
+          </Button>
+        </div>
 
       {activeTab === 'users' && (
       <Card>
@@ -767,6 +847,11 @@ export default function AdminDashboard() {
                     value={newTokenLimit} 
                     onChange={e => setNewTokenLimit(e.target.value)} 
                     placeholder="Enter token limit"
+                    autoComplete="off"
+                    readOnly
+                    onFocus={(e) => e.target.readOnly = false}
+                    onBlur={(e) => e.target.readOnly = true}
+                    name="admin-token-limit-field"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
                   />
                   <Button onClick={() => handleUpdateUser(selectedUser.id, { token_limit: parseInt(newTokenLimit) })}>Save</Button>
@@ -786,7 +871,7 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium capitalize">{key.provider}</p>
                           <p className="text-sm text-muted-foreground">{key.selected_model}</p>
-                          <p className="text-xs text-muted-foreground">Status: {key.status}</p>
+                          <p className="text-xs text-muted-foreground">Status: {key.is_active ? 'Active' : 'Inactive'}</p>
                         </div>
                         <Button 
                           variant="outline" 
@@ -808,7 +893,7 @@ export default function AdminDashboard() {
                   <Key className="w-4 h-4" />
                   Assign Platform Key (BYOK)
                 </h3>
-                <div className="space-y-3 p-4 bg-background border rounded-lg">
+                <div className="space-y-3 p-4 bg-background border rounded-lg" data-form-type="other">
                   <select 
                     value={newKeyProvider} 
                     onChange={e => { setNewKeyProvider(e.target.value); setNewKeyModel(PROVIDER_DEFAULT_MODELS[e.target.value]?.[0]?.model || ''); }} 
@@ -834,6 +919,11 @@ export default function AdminDashboard() {
                     placeholder="Key Name (e.g. Pro User Key)" 
                     value={newKeyName} 
                     onChange={e => setNewKeyName(e.target.value)} 
+                    autoComplete="off"
+                    readOnly
+                    onFocus={(e) => e.target.readOnly = false}
+                    onBlur={(e) => e.target.readOnly = true}
+                    name="admin-key-name-field"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
                   />
                   <input 
@@ -841,6 +931,11 @@ export default function AdminDashboard() {
                     placeholder="sk-..." 
                     value={newKeyValue} 
                     onChange={e => setNewKeyValue(e.target.value)} 
+                    autoComplete="off"
+                    readOnly
+                    onFocus={(e) => e.target.readOnly = false}
+                    onBlur={(e) => e.target.readOnly = true}
+                    name="admin-key-value-field"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" 
                   />
                   <Button className="w-full" onClick={() => handleAddAiKey(selectedUser.id)}>Assign Key</Button>
@@ -856,7 +951,19 @@ export default function AdminDashboard() {
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete User
                 </Button>
-                <Button variant="outline" onClick={() => setShowUserModal(false)}>Close</Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowUserModal(false);
+                    setUserApiKeys([]);
+                    setNewKeyName("");
+                    setNewKeyValue("");
+                    setNewKeyProvider("gemini");
+                    setNewKeyModel("gemini-2.5-flash");
+                  }}
+                >
+                  Close
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -947,6 +1054,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -46,9 +46,9 @@ export async function GET(request: Request) {
   // Fetch API keys and usage for each user
   const usersWithDetails = await Promise.all(
     profiles.map(async (profile: any) => {
-      // Get API keys
+      // Get API keys from ai_keys table (not api_keys)
       const { data: apiKeys } = await supabaseAdmin
-        .from('api_keys')
+        .from('ai_keys')
         .select('*')
         .eq('user_id', profile.id);
 
