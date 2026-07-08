@@ -141,7 +141,18 @@ export class GeminiAdapter implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Gemini API error (${response.status}): ${response.statusText}. Details: ${errorText}`);
+      let errorMessage = `Gemini API error (${response.status}): ${response.statusText}`;
+      
+      // Provide specific guidance for common errors
+      if (response.status === 403) {
+        errorMessage += '\n\nYour Google Cloud project does not have access to the Gemini API. Please:\n1. Go to Google Cloud Console\n2. Enable the "Generative Language API" for your project\n3. Check your API key restrictions\n4. Ensure billing is enabled\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      } else if (response.status === 401) {
+        errorMessage += '\n\nYour API key is invalid. Please check your API key in Settings.\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      } else if (response.status === 429) {
+        errorMessage += '\n\nYou have exceeded your rate limit. Please try again later.\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      }
+      
+      throw new Error(errorMessage + (errorText ? `\n\nDetails: ${errorText}` : ''));
     }
 
     const data = await response.json();

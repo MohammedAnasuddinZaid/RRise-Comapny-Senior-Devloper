@@ -82,18 +82,54 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
     if (!allKeys || allKeys.length === 0) {
       if (selectedMode === 'pro') {
         return {
-          response: "PRO Mode selected, but your account doesn't have an active AI key yet. Please contact support.",
+          response: "PRO Mode selected, but your account doesn't have an active AI key yet. Please contact support or check if your admin has assigned a key.\n\n[Troubleshooting Guide](/app/troubleshoot)",
           category: 'general_help',
         };
       } else {
         return {
-          response: "BYOK Mode selected, but no API keys are connected. Please go to Settings > AI Settings to add your key.",
+          response: "BYOK Mode selected, but no API keys are connected. Please go to Settings > AI Settings to add your key.\n\n[Troubleshooting Guide](/app/troubleshoot)",
           category: 'general_help',
         };
       }
     }
 
-    return await generateRealAIResponse(userId, userMessage, userPreferences, userGoals);
+    // Check if any active keys exist
+    const activeKeys = allKeys.filter((key: any) => key.is_active);
+    if (activeKeys.length === 0) {
+      return {
+        response: "No active API keys found. Please add an API key in Settings > AI Settings or contact support if you're on PRO plan.\n\n[Troubleshooting Guide](/app/troubleshoot)",
+        category: 'general_help',
+      };
+    }
+
+    // Use server-side API route for AI generation (fixes CORS and security issues)
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          userMessage,
+          userPreferences,
+          userGoals,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate AI response');
+      }
+
+      const data = await response.json();
+      return {
+        response: data.response,
+        category: 'general_help',
+      };
+    } catch (error: any) {
+      console.error('[AI MODE] Server-side generation failed:', error);
+      // Fallback to template-based system if server fails
+      return generateTemplateBasedResponse(userId, userMessage, userPreferences, userGoals);
+    }
   }
   
   // Otherwise, use template-based system (free plan)
@@ -190,8 +226,6 @@ async function generateRealAIResponse(
     // Use stored model or fall back to a sensible default for that provider
     const model = activeKey.selected_model || DEFAULT_MODELS[provider] || 'gemini-2.5-flash';
     const apiKey = activeKey.encrypted_key;
-    
-    console.log('[AI GATEWAY] Key provider:', provider, '| stored model:', activeKey.selected_model, '| resolved model:', model);
 
     console.log('[AI GATEWAY] Using provider:', provider, 'model:', model);
     

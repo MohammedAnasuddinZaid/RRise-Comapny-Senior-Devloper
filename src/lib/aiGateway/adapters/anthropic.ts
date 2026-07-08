@@ -112,7 +112,18 @@ export class AnthropicAdapter implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Anthropic API error (${response.status}): ${response.statusText}. Details: ${errorText}`);
+      let errorMessage = `Anthropic API error (${response.status}): ${response.statusText}`;
+      
+      // Provide specific guidance for common errors
+      if (response.status === 403) {
+        errorMessage += '\n\nYour API key does not have access to this model or your account has restrictions. Please check your Anthropic account settings.\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      } else if (response.status === 401) {
+        errorMessage += '\n\nYour API key is invalid. Please check your API key in Settings.\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      } else if (response.status === 429) {
+        errorMessage += '\n\nYou have exceeded your rate limit. Please try again later or upgrade your plan.\n\n[Troubleshooting Guide](/app/troubleshoot)';
+      }
+      
+      throw new Error(errorMessage + (errorText ? `\n\nDetails: ${errorText}` : ''));
     }
 
     const data = await response.json();

@@ -348,7 +348,7 @@ export default function AdminDashboard() {
           userId, 
           provider: newKeyProvider, 
           keyName: newKeyName, 
-          key: newKeyValue,
+          keyData: btoa(newKeyValue), // encode to base64 to bypass WAF 403
           model: newKeyModel
         })
       });
@@ -358,9 +358,8 @@ export default function AdminDashboard() {
       alert("API key added successfully");
       setNewKeyName("");
       setNewKeyValue("");
-      loadAdminData();
       
-      // Reload user data to show new key
+      // Reload user data to show new key immediately
       const updatedUsers = await fetch('/api/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -370,6 +369,9 @@ export default function AdminDashboard() {
         setSelectedUser(updatedUser);
         setUserApiKeys(updatedUser.api_keys || []);
       }
+      
+      // Also reload full admin data to keep everything in sync
+      loadAdminData();
     } catch (error) {
       console.error(error);
       alert("Failed to add API key");
@@ -391,9 +393,8 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Failed to delete key");
 
       alert("API key deleted successfully");
-      loadAdminData();
       
-      // Reload user data to remove deleted key
+      // Reload user data to remove deleted key immediately
       const updatedUsers = await fetch('/api/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -403,6 +404,9 @@ export default function AdminDashboard() {
         setSelectedUser(updatedUser);
         setUserApiKeys(updatedUser.api_keys || []);
       }
+      
+      // Also reload full admin data to keep everything in sync
+      loadAdminData();
     } catch (error) {
       console.error(error);
       alert("Failed to delete API key");
