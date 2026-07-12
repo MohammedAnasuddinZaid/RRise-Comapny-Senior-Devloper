@@ -329,31 +329,36 @@ export async function testAIKey(
  * @param provider - The AI provider
  * @returns Whether the user has an active key
  */
+
+
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const supabase = createClientComponentClient();
+    if (!supabase) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function hasActiveAIKey(
   userId: string,
   provider: AIProvider
 ): Promise<boolean> {
-  if (!isSupabaseConfigured()) return false;
-  
   try {
-    const supabase = createClientComponentClient();
-    if (!supabase) {
-      return false;
+    const token = await getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
-
-    const { data, error } = await supabase
-      .from('ai_keys')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('provider', provider)
-      .eq('is_active', true)
-      .limit(1);
-
-    if (error) {
-      return false;
+    
+    const res = await fetch('/api/user/keys', { headers });
+    if (res.ok) {
+      const data = await res.json();
+      return (data.keys || []).some((k: any) => k.provider === provider);
     }
-
-    return (data && data.length > 0) || false;
+    return false;
   } catch (error) {
     return false;
   }

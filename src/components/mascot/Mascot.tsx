@@ -28,7 +28,7 @@ export function Mascot({ level, className }: MascotProps) {
 
   // Ensure we don't request levels beyond 4
   const currentLevel = Math.min(Math.max(level, 1), 4);
-  const imageSrc = `/mascots/parrot/level-${currentLevel}-${isOpen ? 'open' : 'closed'}.png`;
+  const imageSrc = `/mascots/parrot/level-${currentLevel}-${isOpen ? 'open' : 'closed'}.webp`;
 
   return (
     <motion.div

@@ -38,7 +38,7 @@ export function Header() {
               transition={{ duration: 0.2 }}
             >
               <img
-                src="/images/RRISE NEW LOGO.png"
+                src="/images/rrise-logo.webp"
                 alt="RRise"
                 className="h-10 w-auto object-contain"
               />

@@ -7,6 +7,17 @@
 import { createClientComponentClient, isSupabaseConfigured } from '../supabase';
 import type { AIProviderType, AIConfig } from './types';
 
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const supabase = createClientComponentClient();
+    if (!supabase) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export interface APIKeyRecord {
   id: string;
   user_id: string;
@@ -41,69 +52,37 @@ export async function saveAPIKey(
   model: string,
   apiKey: string
 ): Promise<APIKeyRecord | null> {
-  const supabase = createClientComponentClient();
-  if (!supabase || !isSupabaseConfigured()) return null;
-
   try {
-    // Deactivate any existing active keys for this provider
-    await supabase
-      .from('ai_keys')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('provider', provider)
-      .eq('is_active', true);
+    const token = await getAuthToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    // Insert the new key
-    const { data, error } = await supabase
-      .from('ai_keys')
-      .insert({
-        user_id: userId,
-        provider,
-        selected_model: model,
-        key_name: 'BYOK Key',
-        encrypted_key: apiKey,
-        is_active: true,
-        token_usage: 0,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    const res = await fetch('/api/user/keys', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ provider, model, apiKey })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      return data.key || null;
+    }
+    return null;
   } catch (error) {
     console.error('[AI Gateway DB] Error saving API key:', error);
     return null;
   }
 }
 
-/**
- * Get API key configuration for a user and provider
- */
 export async function getAPIKey(
   userId: string,
   provider: AIProviderType
 ): Promise<APIKeyRecord | null> {
-  const supabase = createClientComponentClient();
-  if (!supabase || !isSupabaseConfigured()) return null;
-
   try {
-    const { data, error } = await supabase
-      .from('ai_keys')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('provider', provider)
-      .eq('is_active', true)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No rows returned
-        return null;
-      }
-      throw error;
-    }
-
-    return data;
+    const keys = await getAllAPIKeys(userId);
+    return keys.find(k => k.provider === provider) || null;
   } catch (error) {
     console.error('[AI Gateway DB] Error getting API key:', error);
     return null;
@@ -115,19 +94,19 @@ export async function getAPIKey(
  * Returns only active keys, ordered newest first
  */
 export async function getAllAPIKeys(userId: string): Promise<APIKeyRecord[]> {
-  const supabase = createClientComponentClient();
-  if (!supabase || !isSupabaseConfigured()) return [];
-
   try {
-    const { data, error } = await supabase
-      .from('ai_keys')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+    const token = await getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    if (error) throw error;
-    return data || [];
+    const res = await fetch('/api/user/keys', { headers });
+    if (res.ok) {
+      const data = await res.json();
+      return data.keys || [];
+    }
+    return [];
   } catch (error) {
     console.error('[AI Gateway DB] Error getting all API keys:', error);
     return [];
@@ -141,18 +120,19 @@ export async function deleteAPIKey(
   userId: string,
   provider: AIProviderType
 ): Promise<boolean> {
-  const supabase = createClientComponentClient();
-  if (!supabase || !isSupabaseConfigured()) return false;
-
   try {
-    const { error } = await supabase
-      .from('ai_keys')
-      .delete()
-      .eq('user_id', userId)
-      .eq('provider', provider);
+    const token = await getAuthToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    if (error) throw error;
-    return true;
+    const res = await fetch('/api/user/keys', {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify({ provider })
+    });
+    return res.ok;
   } catch (error) {
     console.error('[AI Gateway DB] Error deleting API key:', error);
     return false;

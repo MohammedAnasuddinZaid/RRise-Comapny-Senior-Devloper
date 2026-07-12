@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical, FileText, Edit, Save, Plus, Trash2, Settings, Sparkles } from "lucide-react";
+import { Users, Activity, Zap, Key, TrendingUp, Calendar, Shield, AlertCircle, DollarSign, RefreshCw, MoreVertical, FileText, Edit, Save, Plus, Trash2, Settings, Sparkles, Download } from "lucide-react";
 import { useRequireAuth } from "../../lib/authGuard";
 import { createClientComponentClient, isSupabaseConfigured } from "../../lib/supabase";
 
@@ -79,6 +79,48 @@ export default function AdminDashboard() {
     if (!supabase) return null;
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token;
+  };
+
+  const handleExport = async (type: 'all' | 'chat' | 'user', userId?: string) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        alert('Authentication required');
+        return;
+      }
+
+      let url = `/api/admin/export?type=${type}`;
+      if (userId) {
+        url += `&userId=${userId}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Export failed' }));
+        throw new Error(errorData.error || 'Export failed');
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `rrise-export-${type}-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+      
+      alert('Export downloaded successfully!');
+    } catch (error: any) {
+      console.error('Export error:', error);
+      alert(`Export failed: ${error.message || 'Please try again.'}`);
+    }
   };
 
   const loadAdminData = async () => {
@@ -433,11 +475,41 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="space-y-8 pb-12 max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground text-lg">Monitor user activity, plans, and system performance.</p>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground text-lg">Monitor user activity, plans, and system performance.</p>
+          </div>
+          
+          {/* Export Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={() => handleExport('all')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export All Data
+            </Button>
+            <Button 
+              onClick={() => handleExport('chat')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export Chat History
+            </Button>
+            <Button 
+              onClick={() => handleExport('user')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export User Data
+            </Button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -946,7 +1018,15 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-2">
+              <div className="pt-4 flex flex-wrap justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleExport('user', selectedUser.id)}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export User Data
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => handleDeleteUser(selectedUser.id, selectedUser.email)}

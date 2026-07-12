@@ -2,21 +2,23 @@
  * Sound Configuration
  * Centralized sound paths for easy maintenance
  * All sounds are stored in /public/sounds/
+ * 
+ * NOTE: parrot_when_idle_signing.mp3 has been removed (file deleted).
+ * The idle detection callback still fires but no audio plays.
  */
 const SOUND_PATHS: Record<SoundType, string> = {
   click: '/sounds/click.mp3',
   success: '/sounds/success.mp3',
   evolve: '/sounds/parrot_evolving.mp3',
-  idle: '/sounds/parrot_when_idle_signing.mp3',
   level_up: '/sounds/level_up.mp3',
-  parrot_one_word: '/sounds/parrot_one_word.mp3'
+  parrot_one_word: '/sounds/parrot_one_word.mp3',
 };
 
-export type SoundType = 'click' | 'success' | 'evolve' | 'idle' | 'level_up' | 'parrot_one_word';
+export type SoundType = 'click' | 'success' | 'evolve' | 'level_up' | 'parrot_one_word';
 
 /**
  * AudioManager - Handles all audio playback in RRise
- * 
+ *
  * Fixed issues:
  * - Lazy loads sounds on first play instead of in constructor
  * - Uses absolute paths from /public/sounds/
@@ -28,17 +30,14 @@ class AudioManager {
   private audioContext: AudioContext | null = null;
   private sounds: Map<SoundType, HTMLAudioElement> = new Map();
   private idleTimeout: NodeJS.Timeout | null = null;
-  private isIdlePlaying: boolean = false;
   private loadingSounds: Map<SoundType, Promise<HTMLAudioElement>> = new Map();
 
   constructor() {
     // Don't load sounds in constructor - lazy load on first play
-    // This fixes the "source not found" issue on first load
   }
 
   /**
    * Initialize AudioContext (must be called after user interaction)
-   * Browsers require user interaction before AudioContext can be created
    */
   private initAudioContext() {
     if (!this.audioContext && typeof window !== 'undefined') {
@@ -53,7 +52,6 @@ class AudioManager {
 
   /**
    * Resume AudioContext if suspended
-   * Browsers suspend AudioContext until user interaction
    */
   private async resumeAudioContext() {
     const ctx = this.initAudioContext();
@@ -67,23 +65,15 @@ class AudioManager {
   }
 
   /**
-   * Load a single sound on demand
-   * This lazy loading approach fixes the first-load issue
+   * Load a single sound on demand (lazy loading)
    */
   private async loadSound(type: SoundType): Promise<HTMLAudioElement> {
-    // Return existing sound if already loaded
     const existing = this.sounds.get(type);
-    if (existing) {
-      return existing;
-    }
+    if (existing) return existing;
 
-    // Return existing promise if already loading
     const existingPromise = this.loadingSounds.get(type);
-    if (existingPromise) {
-      return existingPromise;
-    }
+    if (existingPromise) return existingPromise;
 
-    // Load the sound
     const path = SOUND_PATHS[type];
     const loadPromise = new Promise<HTMLAudioElement>((resolve, reject) => {
       if (typeof window === 'undefined') {
@@ -95,7 +85,6 @@ class AudioManager {
       audio.preload = 'auto';
 
       audio.addEventListener('canplaythrough', () => {
-        console.log(`Audio ${type} loaded successfully from ${path}`);
         this.sounds.set(type, audio);
         this.loadingSounds.delete(type);
         resolve(audio);
@@ -107,15 +96,9 @@ class AudioManager {
         reject(e);
       }, { once: true });
 
-      // Timeout fallback - use audio even if not fully loaded
+      // Timeout fallback
       setTimeout(() => {
-        if (audio.readyState >= 2) {
-          console.log(`Audio ${type} ready (fallback) from ${path}`);
-          this.sounds.set(type, audio);
-          this.loadingSounds.delete(type);
-          resolve(audio);
-        } else {
-          console.warn(`Audio ${type} loading timeout, using anyway`);
+        if (!this.sounds.has(type)) {
           this.sounds.set(type, audio);
           this.loadingSounds.delete(type);
           resolve(audio);
@@ -129,36 +112,27 @@ class AudioManager {
 
   /**
    * Play a sound
-   * Handles lazy loading, AudioContext initialization, and error recovery
    */
   async play(sound: SoundType) {
     if (typeof window === 'undefined') return;
 
     try {
-      // Initialize and resume AudioContext
       await this.resumeAudioContext();
-
-      // Lazy load the sound
       const audio = await this.loadSound(sound);
-
-      // Reset to beginning
       audio.currentTime = 0;
-
-      // Play the sound
       await audio.play();
     } catch (err) {
       console.error(`Failed to play sound ${sound}:`, err);
-      // Don't throw - fail silently for better UX
+      // Fail silently for better UX
     }
   }
 
   /**
-   * Start idle detection
-   * Plays idle sound after 5 seconds of no user activity
+   * Start idle detection (callback only — no idle audio plays)
    */
   startIdleDetection(callback: () => void) {
     this.resetIdleTimer(callback);
-    
+
     if (typeof window !== 'undefined') {
       const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
       events.forEach(event => {
@@ -174,33 +148,15 @@ class AudioManager {
     if (this.idleTimeout) {
       clearTimeout(this.idleTimeout);
     }
-    
-    if (this.isIdlePlaying) {
-      this.stopIdle();
-    }
 
     this.idleTimeout = setTimeout(() => {
-      this.play('idle');
-      this.isIdlePlaying = true;
+      // Idle detected — callback fires, but no audio (file removed)
       callback();
     }, 5000);
   }
 
   /**
-   * Stop idle sound
-   */
-  private stopIdle() {
-    const idleAudio = this.sounds.get('idle');
-    if (idleAudio) {
-      idleAudio.pause();
-      idleAudio.currentTime = 0;
-    }
-    this.isIdlePlaying = false;
-  }
-
-  /**
    * Cleanup resources
-   * Call this when component unmounts
    */
   cleanup() {
     if (this.idleTimeout) {
@@ -211,7 +167,7 @@ class AudioManager {
       audio.src = '';
     });
     this.loadingSounds.clear();
-    
+
     if (this.audioContext) {
       this.audioContext.close();
       this.audioContext = null;
@@ -219,8 +175,7 @@ class AudioManager {
   }
 
   /**
-   * Preload all sounds (optional)
-   * Call this after user interaction to preload all sounds
+   * Preload all sounds (optional, call after user interaction)
    */
   async preloadAllSounds() {
     const promises = Object.keys(SOUND_PATHS).map(type =>
@@ -232,6 +187,5 @@ class AudioManager {
 
 /**
  * Singleton instance
- * Exported for use throughout the application
  */
 export const audioManager = new AudioManager();

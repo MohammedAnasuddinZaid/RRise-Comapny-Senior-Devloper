@@ -76,50 +76,52 @@ export async function loadHabits(userId: string): Promise<any[]> {
 
     if (!habits || habits.length === 0) return [];
 
-    // For each habit, get today's completion status
+    // ── Batched log fetch: one query for all habits instead of N queries ──
     const today = new Date().toISOString().split('T')[0];
     const todayStart = new Date(today).toISOString();
-    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
-    
-    const habitsWithStatus = await Promise.all(
-      habits.map(async (habit: any) => {
-        const { data: logs } = await supabase
-          .from('habit_logs')
-          .select('*')
-          .eq('habit_id', habit.id)
-          .gte('completed_at', todayStart)
-          .lte('completed_at', todayEnd)
-          .order('completed_at', { ascending: false });
+    const todayEnd   = new Date(today + 'T23:59:59.999Z').toISOString();
+    const habitIds   = habits.map((h: any) => h.id);
 
-        const completedToday = logs && logs.length > 0;
-        
-        // Calculate streak from logs (simplified)
-        const { count: streakCount } = await supabase
-          .from('habit_logs')
-          .select('*', { count: 'exact', head: false })
-          .eq('habit_id', habit.id);
+    // Single query: all today's logs for this user's habits
+    const { data: todayLogs } = await supabase
+      .from('habit_logs')
+      .select('habit_id')
+      .in('habit_id', habitIds)
+      .gte('completed_at', todayStart)
+      .lte('completed_at', todayEnd);
 
-        // Parse icon from description JSON (stored there because 'icon' column doesn't exist)
-        let icon = 'brain'; // default
-        try {
-          if (habit.description) {
-            const parsed = JSON.parse(habit.description);
-            if (parsed.icon) icon = parsed.icon;
-          }
-        } catch {
-          // description is plain text, not JSON — keep default icon
+    // Single query: total log counts per habit (for streak approximation)
+    const { data: allLogs } = await supabase
+      .from('habit_logs')
+      .select('habit_id')
+      .in('habit_id', habitIds);
+
+    // Build lookup maps in memory — O(N) instead of O(N) DB round-trips
+    const completedTodaySet = new Set((todayLogs || []).map((l: any) => l.habit_id));
+    const streakMap: Record<string, number> = {};
+    for (const log of (allLogs || [])) {
+      streakMap[log.habit_id] = (streakMap[log.habit_id] || 0) + 1;
+    }
+
+    return habits.map((habit: any) => {
+      // Parse icon from description JSON
+      let icon = 'brain';
+      try {
+        if (habit.description) {
+          const parsed = JSON.parse(habit.description);
+          if (parsed.icon) icon = parsed.icon;
         }
+      } catch {
+        // plain text description — keep default
+      }
 
-        return {
-          ...habit,
-          completed: completedToday || false,
-          streak: streakCount || 0,
-          icon,
-        };
-      })
-    );
-
-    return habitsWithStatus;
+      return {
+        ...habit,
+        completed: completedTodaySet.has(habit.id),
+        streak:    streakMap[habit.id] || 0,
+        icon,
+      };
+    });
   } catch (error) {
     console.error('Error loading habits:', error);
     return [];
@@ -153,44 +155,40 @@ export async function loadTasks(userId: string): Promise<any[]> {
 
     if (!tasks || tasks.length === 0) return [];
 
-    // For each task, get today's completion status
+    // ── Batched log fetch: one query for all tasks instead of N queries ──
     const today = new Date().toISOString().split('T')[0];
     const todayStart = new Date(today).toISOString();
-    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
-    
-    const tasksWithStatus = await Promise.all(
-      tasks.map(async (task: any) => {
-        const { data: logs } = await supabase
-          .from('task_logs')
-          .select('*')
-          .eq('task_id', task.id)
-          .gte('completed_at', todayStart)
-          .lte('completed_at', todayEnd)
-          .order('completed_at', { ascending: false });
+    const todayEnd   = new Date(today + 'T23:59:59.999Z').toISOString();
+    const taskIds    = tasks.map((t: any) => t.id);
 
-        const completedToday = logs && logs.length > 0;
+    const { data: todayLogs } = await supabase
+      .from('task_logs')
+      .select('task_id')
+      .in('task_id', taskIds)
+      .gte('completed_at', todayStart)
+      .lte('completed_at', todayEnd);
 
-        // Parse dueTime from description JSON (stored there to preserve time component)
-        // because 'due_date' is a DATE column that only stores the date portion
-        let dueTime = task.due_date || new Date().toISOString();
-        try {
-          if (task.description) {
-            const parsed = JSON.parse(task.description);
-            if (parsed.dueTime) dueTime = parsed.dueTime;
-          }
-        } catch {
-          // description is plain text, not JSON — keep due_date fallback
+    const completedTodaySet = new Set((todayLogs || []).map((l: any) => l.task_id));
+
+    return tasks.map((task: any) => {
+      // Parse dueTime from description JSON (stored there to preserve time component)
+      // because 'due_date' is a DATE column that only stores the date portion
+      let dueTime = task.due_date || new Date().toISOString();
+      try {
+        if (task.description) {
+          const parsed = JSON.parse(task.description);
+          if (parsed.dueTime) dueTime = parsed.dueTime;
         }
+      } catch {
+        // plain text description — keep due_date fallback
+      }
 
-        return {
-          ...task,
-          completed: completedToday || task.status === 'completed',
-          dueTime,
-        };
-      })
-    );
-
-    return tasksWithStatus;
+      return {
+        ...task,
+        completed: completedTodaySet.has(task.id) || task.status === 'completed',
+        dueTime,
+      };
+    });
   } catch (error) {
     console.error('Error loading tasks:', error);
     return [];
@@ -1613,4 +1611,45 @@ export async function loadActivityHistory(userId: string): Promise<{
   }
 }
 
+/**
+ * Update arbitrary metadata stored in the user's profile.
+ * Merges the provided partial metadata with existing metadata so callers
+ * only need to supply the keys they want to change.
+ *
+ * @param userId   - The user's ID
+ * @param metadata - Partial metadata object to merge
+ * @returns Success status
+ */
+export async function updateProfileMetadata(
+  userId: string,
+  metadata: Record<string, unknown>
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
 
+  const supabase = createClientComponentClient();
+  if (!supabase) return { success: false, error: 'Supabase not configured' };
+
+  try {
+    // Fetch existing metadata first so we can deep-merge
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('metadata')
+      .eq('id', userId)
+      .single();
+
+    const merged = { ...(existing?.metadata || {}), ...metadata };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ metadata: merged })
+      .eq('id', userId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to update profile metadata',
+    };
+  }
+}

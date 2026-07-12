@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Sparkles, Play, ChevronDown, Lock, ArrowRight, MessageSquare, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft, Send, Sparkles, Play, ChevronDown, Lock, ArrowRight,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
@@ -22,577 +24,325 @@ import { hasActiveAIKey } from "../../../lib/byok";
 import { loadUserProfile } from "../../../lib/dataLoader";
 import { getPlanBadgeColor, getPlanDisplayName, isAIEnabled, isFeatureAvailable } from "../../../lib/planLogic";
 import { createClientComponentClient } from "@/lib/supabase";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { useChatContext } from "../../../contexts/ChatContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const supabase = createClientComponentClient();
+    if (!supabase) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Chat page ────────────────────────────────────────────────────────────────
 export default function ChatPage() {
   const { theme } = useTheme();
   const { user } = useRequireAuth();
   const router = useRouter();
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; plans?: Template[]; followUpQuestions?: string[] }>>([]);
-  const [input, setInput] = useState("");
-  const [suggestedPlans, setSuggestedPlans] = useState<Template[]>([]);
+
+  // Context shared with sidebar conversation list
+  const {
+    selectedConversationId,
+    setSelectedConversationId,
+    triggerRefresh,
+  } = useChatContext();
+
+  const [messages, setMessages] = useState<
+    Array<{ role: "user" | "assistant"; content: string; plans?: Template[]; followUpQuestions?: string[] }>
+  >([]);
+  const [input, setInput]         = useState("");
   const [startingPlan, setStartingPlan] = useState<string | null>(null);
-  const [selectedAPI, setSelectedAPI] = useState<'free' | 'byok' | 'pro'>('free');
+  const [selectedAPI, setSelectedAPI] = useState<"free" | "byok" | "pro">("free");
   const [showAPIDropdown, setShowAPIDropdown] = useState(false);
-  const [hasBYOK, setHasBYOK] = useState(false);
+  const [hasBYOK, setHasBYOK]     = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showBYOKPopup, setShowBYOKPopup] = useState(false);
-  const [byokDebug, setByokDebug] = useState<{ mode: string; provider: string; model: string; status: string; lastError: string }>({
-    mode: 'free',
-    provider: 'none',
-    model: 'none',
-    status: 'idle',
-    lastError: 'none'
-  });
-  
-  // Chat history state
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [showConversationList, setShowConversationList] = useState(false);
-  const [loadingConversations, setLoadingConversations] = useState(false);
 
-  // Load user profile and set default API mode
+  // track the "active" conversation id locally too (mirrors context)
+  const activeConvIdRef = useRef<string | null>(selectedConversationId);
+  activeConvIdRef.current = selectedConversationId;
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // ── scroll to bottom ──
   useEffect(() => {
-    async function loadProfileAndKeys() {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ── load profile & keys ──
+  useEffect(() => {
+    async function init() {
       if (!user) return;
-      
       const profile = await loadUserProfile(user.id);
       setUserProfile(profile);
-      
-      const hasOpenAI = await hasActiveAIKey(user.id, 'openai');
-      const hasGemini = await hasActiveAIKey(user.id, 'gemini');
-      const hasAnthropic = await hasActiveAIKey(user.id, 'anthropic');
-      const hasOpenRouter = await hasActiveAIKey(user.id, 'openrouter');
-      const keysAvailable = hasOpenAI || hasGemini || hasAnthropic || hasOpenRouter;
-      
-      setHasBYOK(keysAvailable);
-      
-      // Always default to free mode
-      setSelectedAPI('free');
-      
-      // Show BYOK popup if keys are available
-      if (keysAvailable) {
+      const hasOAI  = await hasActiveAIKey(user.id, "openai");
+      const hasGem  = await hasActiveAIKey(user.id, "gemini");
+      const hasAnt  = await hasActiveAIKey(user.id, "anthropic");
+      const hasOR   = await hasActiveAIKey(user.id, "openrouter");
+      const keysOK  = hasOAI || hasGem || hasAnt || hasOR;
+      setHasBYOK(keysOK);
+      setSelectedAPI("free");
+      if (keysOK) {
         setShowBYOKPopup(true);
         setTimeout(() => setShowBYOKPopup(false), 3000);
       }
-      
-      // Load conversations
-      loadConversations();
     }
-    loadProfileAndKeys();
+    init();
   }, [user]);
 
-  // Load conversations
-  const loadConversations = async () => {
-    if (!user) return;
-    setLoadingConversations(true);
-    try {
-      const supabase = createClientComponentClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      if (!token) return;
-      
-      const res = await fetch('/api/chat/conversations', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setConversations(data.conversations || []);
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setLoadingConversations(false);
+  // ── load messages when sidebar selects a conversation ──
+  useEffect(() => {
+    if (!selectedConversationId) {
+      setMessages([]);
+      return;
     }
-  };
-
-  // Create new conversation
-  const createNewConversation = async () => {
-    if (!user) return;
-    try {
-      const supabase = createClientComponentClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
+    (async () => {
+      const token = await getAuthToken();
       if (!token) return;
-      
-      const res = await fetch('/api/chat/conversations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title: 'New Conversation' })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentConversationId(data.conversation.id);
-        setMessages([]);
-        loadConversations();
-      }
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-    }
-  };
-
-  // Load messages for a conversation
-  const loadConversationMessages = async (conversationId: string) => {
-    if (!user) return;
-    try {
-      const supabase = createClientComponentClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      if (!token) return;
-      
-      const res = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/chat/messages?conversation_id=${selectedConversationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
-        setCurrentConversationId(conversationId);
-        setShowConversationList(false);
       }
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    }
-  };
+    })();
+  }, [selectedConversationId]);
 
-  // Save message to conversation
-  const saveMessageToConversation = async (role: 'user' | 'assistant', content: string) => {
-    if (!user || !currentConversationId) {
-      // If no conversation, create one first
-      await createNewConversation();
-      return;
-    }
-    
+  // ── get / create conversation id ──
+  const getOrCreateConvId = useCallback(async (firstMsg: string): Promise<string | null> => {
+    if (activeConvIdRef.current) return activeConvIdRef.current;
+    if (!user) return null;
     try {
-      const supabase = createClientComponentClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      if (!token) return;
-      
-      await fetch('/api/chat/messages', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          conversation_id: currentConversationId,
-          role,
-          content
-        })
+      const token = await getAuthToken();
+      if (!token) return null;
+      const title = firstMsg.trim().substring(0, 30) || "New Conversation";
+      const res = await fetch("/api/chat/conversations", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
       });
-      loadConversations(); // Refresh to update timestamps
-    } catch (error) {
-      console.error('Error saving message:', error);
-    }
-  };
+      if (res.ok) {
+        const data = await res.json();
+        const id = data.conversation.id;
+        setSelectedConversationId(id);
+        triggerRefresh(); // refresh sidebar list
+        return id;
+      }
+    } catch (_) {}
+    return null;
+  }, [user, setSelectedConversationId, triggerRefresh]);
 
-  // Handle starting a plan from plan suggestion
+  // ── save message ──
+  const saveMsg = useCallback(async (convId: string, role: "user" | "assistant", content: string) => {
+    if (!convId) return;
+    const token = await getAuthToken();
+    if (!token) return;
+    await fetch("/api/chat/messages", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: convId, role, content }),
+    });
+    triggerRefresh();
+  }, [triggerRefresh]);
+
+  // ── start plan ──
   const handleStartPlan = async (plan: Template) => {
     if (!user) return;
-
     setStartingPlan(plan.id);
     try {
-      // Create habits from plan
-      if (plan.habits && plan.habits.length > 0) {
-        for (const habit of plan.habits) {
-          await createHabit(user.id, habit.title, habit.icon || 'brain');
+      if (plan.habits?.length) {
+        for (const h of plan.habits) await createHabit(user.id, h.title, h.icon || "brain");
+      }
+      if (plan.tasks?.length) {
+        for (const t of plan.tasks) {
+          const due = t.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await createTask(user.id, t.title, due);
         }
       }
-
-      // Create tasks from plan
-      if (plan.tasks && plan.tasks.length > 0) {
-        for (const task of plan.tasks) {
-          const dueTime = task.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-          await createTask(user.id, task.title, dueTime);
-        }
-      }
-
-      // Store selected plan in memory
-      await saveMemory(user.id, 'template_history', {
-        planId: plan.id,
-        planTitle: plan.title,
-        planCategory: plan.category,
+      await saveMemory(user.id, "template_history", {
+        planId: plan.id, planTitle: plan.title, planCategory: plan.category,
         startedAt: new Date().toISOString(),
       });
-
-      audioManager.play('success');
-      
-      // Small delay to ensure data is saved before redirect
-      setTimeout(() => {
-        router.push('/app/dashboard');
-      }, 500);
-    } catch (error) {
-      console.error('Error starting plan:', error);
-      alert('Failed to start plan. Please try again.');
+      audioManager.play("success");
+      setTimeout(() => router.push("/app/dashboard"), 500);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start plan. Please try again.");
     } finally {
       setStartingPlan(null);
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  // ── send message ──
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
-      audioManager.play('click');
-      
-      // Crisis detection - check BEFORE safety check
-      const crisisKeywords = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'end my life', 'want to die', 'no reason to live', 'better off dead'];
-      const lowerInput = input.toLowerCase();
-      
-      if (crisisKeywords.some(keyword => lowerInput.includes(keyword))) {
-        setMessages([...messages, { role: 'user', content: input }]);
-        setInput("");
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: `I'm concerned about what you're sharing. If you're thinking about hurting yourself, please reach out for help immediately:
+    if (!input.trim()) return;
+    audioManager.play("click");
 
-🆘 **Crisis Resources:**
-- **National Suicide Prevention Lifeline:** Call or text 988 (US)
-- **Crisis Text Line:** Text HOME to 741741
-- **International:** Find helplines at findahelpline.com
+    // Crisis detection
+    const crisis = ["suicide","kill myself","hurt myself","self harm","end my life","want to die","no reason to live","better off dead"];
+    if (crisis.some((k) => input.toLowerCase().includes(k))) {
+      setMessages((p) => [...p, { role: "user", content: input }]);
+      setInput("");
+      setTimeout(() => setMessages((p) => [...p, {
+        role: "assistant",
+        content: `I'm concerned about what you're sharing. If you're thinking about hurting yourself, please reach out:\n\n🆘 **Crisis Resources:**\n- **National Suicide Prevention Lifeline:** Call or text 988 (US)\n- **Crisis Text Line:** Text HOME to 741741\n- **International:** findahelpline.com\n\nYou are not alone. Your life matters.`,
+      }]), 500);
+      return;
+    }
 
-You are not alone, and there are people who want to help. Please consider reaching out to a trusted adult, mental health professional, or the crisis lines above. Your life matters.
+    if (selectedAPI === "byok" && !hasBYOK) {
+      setMessages((p) => [...p, { role: "user", content: input }]);
+      setInput("");
+      setTimeout(() => setMessages((p) => [...p, { role: "assistant", content: "To use BYOK mode, please add your API keys in Settings." }]), 500);
+      return;
+    }
 
-If you're in immediate danger, please call emergency services (911 in the US).`,
-          }]);
-        }, 500);
+    if (!user) {
+      setMessages((p) => [...p, { role: "user", content: input }]);
+      setInput("");
+      setTimeout(() => setMessages((p) => [...p, { role: "assistant", content: "Please sign in to use the AI companion features." }]), 1000);
+      return;
+    }
+
+    const safetyCheck = await performSafetyCheck(user.id, input);
+    if (!safetyCheck.isSafe) {
+      logSafetyViolation(user.id, "input_safety", safetyCheck.reason || "Unknown");
+      setMessages((p) => [...p, { role: "user", content: input }]);
+      setTimeout(() => setMessages((p) => [...p, { role: "assistant", content: safetyCheck.reason || "Message blocked by safety guidelines." }]), 500);
+      setInput("");
+      return;
+    }
+
+    const sanitized = safetyCheck.sanitizedInput || input;
+    setMessages((p) => [...p, { role: "user", content: sanitized }]);
+    setInput("");
+
+    const convId = await getOrCreateConvId(sanitized);
+    if (convId) await saveMsg(convId, "user", sanitized);
+
+    try {
+      const aiResponse = await generateAIResponse(user.id, sanitized, selectedAPI);
+      const filtered   = filterAIResponse(aiResponse.response);
+
+      if (!filtered.isSafe) {
+        logSafetyViolation(user.id, "output_safety", filtered.reason || "Unknown");
+        setTimeout(() => setMessages((p) => [...p, { role: "assistant", content: filtered.reason || "Response blocked by safety guidelines." }]), 1000);
         return;
       }
-      
-      if (selectedAPI === 'byok' && !hasBYOK) {
-        // BYOK mode requires API keys
-        setMessages([...messages, { role: 'user', content: input }]);
-        setInput("");
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: "To use BYOK mode, please add your API keys in Settings. For now, you can use FREE mode for plans.",
-          }]);
-        }, 500);
-        return;
-      }
-      
-      // Perform safety check
-      if (user) {
-        const safetyCheck = await performSafetyCheck(user.id, input);
-        
-        if (!safetyCheck.isSafe) {
-          // Log safety violation
-          logSafetyViolation(user.id, 'input_safety', safetyCheck.reason || 'Unknown');
-          
-          // Show error message to user
-          setMessages([...messages, { role: 'user', content: input }]);
-          setTimeout(() => {
-            setMessages(prev => [...prev, { 
-              role: 'assistant', 
-              content: safetyCheck.reason || "I couldn't process that message due to safety guidelines.",
-            }]);
-          }, 500);
-          setInput("");
-          return;
-        }
-        
-        // Use sanitized input
-        const sanitizedInput = safetyCheck.sanitizedInput || input;
-        
-        setMessages([...messages, { role: 'user', content: sanitizedInput }]);
-        setInput("");
-        
-        // Save user message to conversation
-        await saveMessageToConversation('user', sanitizedInput);
-        
-        // Update debug state
-        setByokDebug(prev => ({ ...prev, mode: selectedAPI, status: 'calling', lastError: 'none' }));
-        
-        // Use AI mode to generate response
-        const aiResponse = await generateAIResponse(user.id, sanitizedInput, selectedAPI);
-        
-        // Filter AI response for safety
-        const filteredResponse = filterAIResponse(aiResponse.response);
-        
-        if (!filteredResponse.isSafe) {
-          logSafetyViolation(user.id, 'output_safety', filteredResponse.reason || 'Unknown');
-          setByokDebug(prev => ({ ...prev, status: 'blocked', lastError: 'safety_filter' }));
-          setTimeout(() => {
-            setMessages(prev => [...prev, { 
-              role: 'assistant', 
-              content: "I couldn't generate a response due to safety guidelines. Please try rephrasing your request.",
-            }]);
-          }, 1000);
-          return;
-        }
-        
-        const followUpQuestions = getFollowUpQuestions(aiResponse.category);
-        
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: filteredResponse.filteredResponse || aiResponse.response,
-            plans: aiResponse.templates,
-            followUpQuestions,
-          }]);
-          setSuggestedPlans(aiResponse.templates || []);
-          
-          // Save assistant message to conversation
-          saveMessageToConversation('assistant', filteredResponse.filteredResponse || aiResponse.response);
-        }, 1000);
-      } else {
-        // Fallback for non-authenticated users
-        setMessages([...messages, { role: 'user', content: input }]);
-        setInput("");
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            role: 'assistant', 
-            content: "Please sign in to use the AI companion features.",
-          }]);
-        }, 1000);
-      }
+
+      const followUps = getFollowUpQuestions(aiResponse.category);
+      const reply     = filtered.filteredResponse || aiResponse.response;
+
+      setTimeout(() => {
+        setMessages((p) => [...p, { role: "assistant", content: reply, plans: aiResponse.templates, followUpQuestions: followUps }]);
+        if (convId) saveMsg(convId, "assistant", reply);
+      }, 1000);
+    } catch (error: any) {
+      console.error(error);
+      const errorMsg = error?.message || "Failed to generate AI response. Please check your connection or try again later.";
+      setTimeout(() => {
+        setMessages((p) => [...p, { role: "assistant", content: `⚠️ **Error**: ${errorMsg}` }]);
+        if (convId) saveMsg(convId, "assistant", `⚠️ **Error**: ${errorMsg}`);
+      }, 500);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
+  // ── render ───────────────────────────────────────────────────────────────
+  const isDark = theme === "dark";
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#030303]' : 'bg-white'} text-foreground relative overflow-hidden`}>
-      {/* Background Effects */}
-      <div className={`absolute top-[-20%] left-[30%] w-[600px] h-[600px] ${theme === 'dark' ? 'bg-primary/5' : 'bg-primary/10'} rounded-full blur-[150px] pointer-events-none`} />
-      <div className={`absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] ${theme === 'dark' ? 'bg-primary/3' : 'bg-primary/5'} rounded-full blur-[130px] pointer-events-none`} />
+    <div className={`min-h-screen ${isDark ? "bg-[#030303]" : "bg-white"} text-foreground relative overflow-hidden flex flex-col`}>
+      {/* 
+        Performance-optimised background: 
+        replaced heavy blur-[150px] with a static radial-gradient painted once by the GPU.
+        Visually identical but no per-frame blur compositing cost.
+      */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isDark
+            ? "radial-gradient(ellipse 60% 50% at 60% -10%, rgba(0,229,117,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 110% 80%, rgba(0,229,117,0.03) 0%, transparent 70%)"
+            : "radial-gradient(ellipse 60% 50% at 60% -10%, rgba(0,200,83,0.10) 0%, transparent 70%)",
+        }}
+      />
 
       {/* Header */}
-      <header className={`flex items-center justify-between p-6 md:px-12 backdrop-blur-xl ${theme === 'dark' ? 'bg-black/30 border-white/5' : 'bg-white/70 border-green-500/20'} border-b fixed top-0 w-full z-40`}>
+      <header
+        className={`flex items-center justify-between p-4 md:px-8 backdrop-blur-xl ${isDark ? "bg-black/30 border-white/5" : "bg-white/70 border-green-500/20"} border-b sticky top-0 z-40`}
+      >
         <div className="flex items-center gap-4">
           <Link href="/app/dashboard">
-            <Button variant="glass" size="icon" className={`border-white/5 hover:border-primary/30 ${theme === 'light' ? 'border-green-500/30 hover:border-green-500' : ''}`}>
+            <Button variant="glass" size="icon" className={`border-white/5 hover:border-primary/30 ${!isDark ? "border-green-500/30 hover:border-green-500" : ""}`}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
-          <h1 className="font-playfair text-2xl font-bold">AI Companion</h1>
-          {userProfile?.plan && userProfile.plan !== 'free' && (
+          <h1 className="font-playfair text-xl md:text-2xl font-bold">AI Companion</h1>
+          {userProfile?.plan && userProfile.plan !== "free" && (
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${getPlanBadgeColor(userProfile.plan)}`}>
               <Sparkles className="w-3.5 h-3.5" />
               <span className="text-xs font-semibold uppercase">{getPlanDisplayName(userProfile.plan)}</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          {/* Conversation History Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowConversationList(!showConversationList)}
-            className="relative"
-          >
-            <MessageSquare className="w-5 h-5" />
-            {conversations.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                {conversations.length}
-              </span>
-            )}
-          </Button>
-          
-          {/* API Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowAPIDropdown(!showAPIDropdown)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                selectedAPI === 'free' 
-                  ? 'bg-white/5 border border-white/10 text-muted-foreground'
-                  : 'bg-primary/10 border border-primary/20 text-primary'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>
-                {selectedAPI === 'free' ? 'FREE MODE' : selectedAPI === 'byok' ? 'BYOK MODE' : 'PRO MODE'}
-              </span>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-            {showAPIDropdown && (
-              <div className={`absolute right-0 top-full mt-2 w-48 rounded-xl border shadow-xl z-50 ${
-                theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'
-              }`}>
-                <div className="p-2 space-y-1">
-                  <button
-                    onClick={() => { setSelectedAPI('free'); setShowAPIDropdown(false); }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      selectedAPI === 'free' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                    }`}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>FREE MODE</span>
-                  </button>
-                  {hasBYOK && (
-                    <button
-                      onClick={() => { setSelectedAPI('byok'); setShowAPIDropdown(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedAPI === 'byok' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                      }`}
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>BYOK MODE</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { 
-                      if (userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') {
-                        setSelectedAPI('pro'); 
-                      } else {
-                        setShowUpgradePrompt(true);
-                      }
-                      setShowAPIDropdown(false); 
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      selectedAPI === 'pro' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-white/5'
-                    } ${!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>PRO MODE</span>
-                    {!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') && <Lock className="w-3 h-3 ml-auto" />}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${selectedAPI === 'free' ? 'bg-green-500' : 'bg-primary'}`} />
-            <span className="text-sm text-muted-foreground">Online</span>
+            <div className={`w-2 h-2 rounded-full ${selectedAPI === "free" ? "bg-green-500" : "bg-primary"}`} />
+            <span className="text-sm text-muted-foreground hidden sm:block">Online</span>
           </div>
         </div>
       </header>
 
-      {/* Conversation Sidebar */}
-      {showConversationList && (
-        <motion.div
-          initial={{ x: -300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -300, opacity: 0 }}
-          className="fixed left-0 top-0 h-full w-80 bg-background border-r border-border z-40 p-4 overflow-y-auto"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Conversations</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowConversationList(false)}
-            >
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          <Button
-            onClick={createNewConversation}
-            className="w-full mb-4"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Conversation
-          </Button>
-          
-          {loadingConversations ? (
-            <div className="text-center text-muted-foreground py-8">Loading...</div>
-          ) : conversations.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">No conversations yet</div>
-          ) : (
-            <div className="space-y-2">
-              {conversations.map((conv: any) => (
-                <div
-                  key={conv.id}
-                  onClick={() => loadConversationMessages(conv.id)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    currentConversationId === conv.id
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <div className="font-medium text-sm mb-1 truncate">{conv.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(conv.updated_at).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* BYOK Popup */}
+      {/* BYOK popup */}
       {showBYOKPopup && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
           className="fixed top-20 left-1/2 -translate-x-1/2 z-50"
           onClick={() => setShowBYOKPopup(false)}
         >
           <div className="bg-primary/20 border border-primary/30 backdrop-blur-xl rounded-xl px-4 py-2 text-sm text-primary shadow-lg">
-            You can switch to BYOK mode in settings
+            You can switch to BYOK mode using the selector above
           </div>
         </motion.div>
       )}
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col pt-24 pb-8 px-4 md:px-12 max-w-4xl mx-auto w-full">
-        {/* Chat Messages */}
-        <div className="flex-1 space-y-6 mb-8 overflow-y-auto">
+      {/* Main content */}
+      <main className="flex-1 flex flex-col px-4 md:px-8 max-w-4xl mx-auto w-full pb-6">
+        {/* Messages */}
+        <div className="flex-1 space-y-6 pt-6 mb-4 overflow-y-auto">
           {messages.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-full text-center space-y-6 py-20"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center text-center space-y-6 py-20"
             >
-              <div className="relative">
-                <LottieAnimation animationData={greenParrot} loop={true} className="w-32 h-32" />
-              </div>
+              <LottieAnimation animationData={greenParrot} loop className="w-32 h-32" />
               <div>
-                <motion.h2 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="font-playfair text-3xl font-bold mb-2"
-                >
-                  Start a conversation
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-muted-foreground max-w-md"
-                >
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="inline-block"
-                  >
-                    What are we focusing on today?
-                  </motion.span>
-                </motion.p>
+                <h2 className="font-playfair text-3xl font-bold mb-2">Start a conversation</h2>
+                <p className="text-muted-foreground max-w-md">What are we focusing on today?</p>
               </div>
             </motion.div>
           ) : (
-            messages.map((message, index) => (
+            messages.map((msg, i) => (
               <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                key={i}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.05, 0.3) }}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] p-4 rounded-2xl ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-white/5 border border-white/10 text-foreground'
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : `${isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"} text-foreground`
                   }`}
                 >
                   <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -600,61 +350,54 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
                       remarkPlugins={[remarkGfm]}
                       components={{
                         strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                        em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
-                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                        li: ({ children }) => <li className="text-sm">{children}</li>,
-                        h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                        h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                        h3: ({ children }) => <h3 className="text-sm font-bold mb-2">{children}</h3>,
-                        code: ({ node, inline, children, ...props }: any) => 
-                          inline 
+                        em:     ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
+                        p:      ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul:     ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                        ol:     ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                        li:     ({ children }) => <li className="text-sm">{children}</li>,
+                        h1:     ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                        h2:     ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                        h3:     ({ children }) => <h3 className="text-sm font-bold mb-2">{children}</h3>,
+                        code: ({ node, inline, children, ...props }: any) =>
+                          inline
                             ? <code className="bg-primary/10 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>{children}</code>
                             : <code className="block bg-primary/10 p-3 rounded text-xs font-mono overflow-x-auto" {...props}>{children}</code>,
                       }}
                     >
-                      {message.content}
+                      {msg.content}
                     </ReactMarkdown>
                   </div>
-                  {message.plans && message.plans.length > 0 && (
+
+                  {/* Plan cards */}
+                  {msg.plans && msg.plans.length > 0 && (
                     <div className="mt-4 space-y-2">
-                      {message.plans.map((plan: Template, tIndex: number) => (
-                        <div
-                          key={tIndex}
-                          className="p-4 bg-primary/10 border border-primary/20 rounded-xl"
-                        >
+                      {msg.plans.map((plan, pi) => (
+                        <div key={pi} className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
                           <div className="flex items-center justify-between mb-2">
                             <div className="font-medium text-sm text-primary">{plan.title}</div>
                             <div className="text-xs text-muted-foreground">{plan.category} • {plan.difficulty}</div>
                           </div>
                           <div className="text-xs text-muted-foreground mb-3">{plan.description}</div>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              audioManager.play('click');
-                              handleStartPlan(plan);
-                            }}
-                            disabled={startingPlan === plan.id}
-                            className="w-full"
-                          >
+                          <Button size="sm" onClick={() => { audioManager.play("click"); handleStartPlan(plan); }} disabled={startingPlan === plan.id} className="w-full">
                             <Play className="w-4 h-4 mr-2" />
-                            {startingPlan === plan.id ? "Starting..." : "Start Plan"}
+                            {startingPlan === plan.id ? "Starting…" : "Start Plan"}
                           </Button>
                         </div>
                       ))}
                     </div>
                   )}
-                  {message.followUpQuestions && message.followUpQuestions.length > 0 && (
+
+                  {/* Follow-up questions */}
+                  {msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
                     <div className="mt-4 space-y-2">
                       <div className="text-xs text-muted-foreground mb-2">Suggested questions:</div>
-                      {message.followUpQuestions.map((question, qIndex) => (
+                      {msg.followUpQuestions.map((q, qi) => (
                         <button
-                          key={qIndex}
-                          onClick={() => setInput(question)}
+                          key={qi}
+                          onClick={() => setInput(q)}
                           className="block w-full text-left p-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors"
                         >
-                          {question}
+                          {q}
                         </button>
                       ))}
                     </div>
@@ -663,121 +406,101 @@ If you're in immediate danger, please call emergency services (911 in the US).`,
               </motion.div>
             ))
           )}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative"
-        >
-          <form onSubmit={handleSendMessage} className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-all duration-500 opacity-50" />
-            <div className={`relative ${theme === 'dark' ? 'bg-black/40 border-white/10' : 'bg-white/80 border-green-500/20'} backdrop-blur-xl border rounded-2xl p-2 flex items-center shadow-2xl`}>
-              <input
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Type your message..."
-                className="flex-1 bg-transparent border-none outline-none text-foreground px-6 py-4 text-lg placeholder:text-muted-foreground/60"
-              />
-              {/* AI Mode Switcher */}
-              <div className="flex items-center gap-1 mr-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAPIDropdown(!showAPIDropdown)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    selectedAPI === 'free' 
-                      ? 'bg-green-500/20 text-green-500 border border-green-500/30'
-                      : selectedAPI === 'byok'
-                      ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30'
-                      : 'bg-purple-500/20 text-purple-500 border border-purple-500/30'
-                  }`}
-                >
-                  {selectedAPI === 'free' ? 'FREE' : selectedAPI === 'byok' ? 'BYOK' : 'PRO'}
-                </button>
-                {showAPIDropdown && (
-                  <div className={`absolute bottom-full right-0 mb-2 w-40 rounded-xl border shadow-xl z-50 ${
-                    theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'
-                  }`}>
-                    <div className="p-2 space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedAPI('free'); setShowAPIDropdown(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                          selectedAPI === 'free' ? 'bg-green-500/20 text-green-500' : 'text-muted-foreground hover:bg-white/5'
-                        }`}
-                      >
-                        <span>FREE</span>
-                      </button>
-                      {hasBYOK && (
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedAPI('byok'); setShowAPIDropdown(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                            selectedAPI === 'byok' ? 'bg-blue-500/20 text-blue-500' : 'text-muted-foreground hover:bg-white/5'
-                          }`}
-                        >
-                          <span>BYOK</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => { 
-                          if (userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') {
-                            setSelectedAPI('pro'); 
-                          } else {
-                            setShowUpgradePrompt(true);
-                          }
-                          setShowAPIDropdown(false); 
-                        }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                          selectedAPI === 'pro' ? 'bg-purple-500/20 text-purple-500' : 'text-muted-foreground hover:bg-white/5'
-                        } ${!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <span>PRO</span>
-                        {!(userProfile?.plan === 'pro' || userProfile?.plan === 'ultra') && <Lock className="w-3 h-3 ml-auto" />}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+        {/* Input area — replaced heavy backdrop-blur + blur-xl glow with a crisp border+gradient approach */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
+          {/* Ambient glow: CSS box-shadow instead of blur-xl div (much cheaper) */}
+          <form
+            onSubmit={handleSend}
+            className={`relative flex items-center rounded-2xl border p-2 shadow-[0_0_30px_rgba(0,229,117,0.08)] ${
+              isDark ? "bg-black/60 border-white/10" : "bg-white/90 border-green-500/20"
+            }`}
+          >
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message…"
+              className="flex-1 bg-transparent border-none outline-none text-foreground px-4 py-3 text-base placeholder:text-muted-foreground/60"
+            />
+
+            {/* Mode chip */}
+            <div className="relative mr-2">
               <button
-                type="submit"
-                className="bg-primary text-primary-foreground p-3 rounded-xl hover:bg-primary/90 transition-colors mr-1"
+                type="button"
+                onClick={() => setShowAPIDropdown(!showAPIDropdown)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 ${
+                  selectedAPI === "free"
+                    ? "bg-green-500/15 text-green-500 border border-green-500/30 hover:bg-green-500/25"
+                    : selectedAPI === "byok"
+                    ? "bg-blue-500/15 text-blue-500 border border-blue-500/30 hover:bg-blue-500/25"
+                    : "bg-purple-500/15 text-purple-500 border border-purple-500/30 hover:bg-purple-500/25"
+                }`}
               >
-                <Send className="w-6 h-6" />
+                {selectedAPI.toUpperCase()}
+                <ChevronDown className="w-3 h-3 ml-1" />
               </button>
+
+              {showAPIDropdown && (
+                <div className={`absolute bottom-full right-0 mb-2 w-44 rounded-xl border shadow-xl z-50 overflow-hidden ${isDark ? "bg-black/90 border-white/10" : "bg-white/90 border-green-500/20"} backdrop-blur-xl`}>
+                  <div className="p-1.5 space-y-0.5">
+                    {[
+                      { key: "free", label: "FREE MODE", color: "green" },
+                      ...(hasBYOK ? [{ key: "byok", label: "BYOK MODE", color: "blue" }] : []),
+                      { key: "pro",  label: "PRO MODE",  color: "purple" },
+                    ].map((opt) => {
+                      const locked = opt.key === "pro" && !(userProfile?.plan === "pro" || userProfile?.plan === "ultra");
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => {
+                            if (locked) { setShowUpgradePrompt(true); }
+                            else { setSelectedAPI(opt.key as any); }
+                            setShowAPIDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                            selectedAPI === opt.key ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                          } ${locked ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          <span>{opt.label}</span>
+                          {locked && <Lock className="w-3 h-3 ml-auto" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
+
+            <button
+              type="submit"
+              className="bg-primary text-primary-foreground p-3 rounded-xl hover:bg-primary/90 active:scale-95 transition-all mr-1"
+            >
+              <Send className="w-5 h-5" />
+            </button>
           </form>
         </motion.div>
       </main>
 
-      {/* Upgrade Prompt Modal */}
+      {/* Upgrade modal */}
       {showUpgradePrompt && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className={`max-w-md w-full mx-4 ${theme === 'dark' ? 'bg-black/90 border-white/10' : 'bg-white/90 border-green-500/20'} backdrop-blur-xl`}>
+          <Card className={`max-w-md w-full mx-4 ${isDark ? "bg-black/90 border-white/10" : "bg-white/90 border-green-500/20"} backdrop-blur-xl`}>
             <CardContent className="p-8 text-center">
               <Lock className="w-12 h-12 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
-              <p className="text-muted-foreground mb-6">
-                AI-powered chat is available on Pro and Ultra plans. Upgrade to unlock advanced AI features and BYOK support.
-              </p>
+              <p className="text-muted-foreground mb-6">AI-powered chat is available on Pro and Ultra plans.</p>
               <div className="space-y-3">
                 <Link href="/pricing">
                   <Button className="w-full">
-                    View Plans
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    View Plans <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
-                <Button
-                  variant="glass"
-                  className="w-full"
-                  onClick={() => {
-                    setShowUpgradePrompt(false);
-                    setSelectedAPI('free');
-                  }}
-                >
+                <Button variant="glass" className="w-full" onClick={() => { setShowUpgradePrompt(false); setSelectedAPI("free"); }}>
                   Use Free Plan
                 </Button>
               </div>

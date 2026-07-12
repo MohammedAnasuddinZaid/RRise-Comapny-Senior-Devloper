@@ -2035,7 +2035,2877 @@ Implemented plan-based feature restrictions in the UI with upgrade prompts.
 
 ---
 
-**Document Version:** 2.8  
-**Last Updated:** 2026-06-21  
-**Project Status:** Phase 6 Complete - Feature Gating (v0.9.0)  
-**Next Major Milestone:** Manual setup guide creation
+**Document Version:** 3.0  
+**Last Updated:** 2026-07-12  
+**Project Status:** Complete - Export Feature Added (v1.0.0)  
+
+---
+
+# COMPREHENSIVE TECHNICAL HANDBOOK
+
+## Table of Contents
+1. [Project Architecture Overview](#project-architecture-overview)
+2. [HTML Structure & Page Architecture](#html-structure--page-architecture)
+3. [CSS & Styling System](#css--styling-system)
+4. [TypeScript & JavaScript Functions](#typescript--javascript-functions)
+5. [Component Architecture](#component-architecture)
+6. [API Routes & Backend](#api-routes--backend)
+7. [State Management & Data Flow](#state-management--data-flow)
+8. [Authentication & Security](#authentication--security)
+9. [Database Operations](#database-operations)
+10. [Error Handling Patterns](#error-handling-patterns)
+11. [Deployment & Configuration](#deployment--configuration)
+
+---
+
+## Project Architecture Overview
+
+### Technology Stack
+
+**Frontend Framework**
+- **Next.js 16.2.9**: React framework with App Router for file-based routing
+- **React 19.2.4**: UI library for building component-based interfaces
+- **TypeScript 5**: Type-safe JavaScript for better code quality and developer experience
+
+**Styling & UI**
+- **Tailwind CSS v4**: Utility-first CSS framework for rapid UI development
+- **Framer Motion 12.40.0**: Animation library for smooth, performant animations
+- **Lucide React 1.18.0**: Icon library providing consistent, modern icons
+- **Custom Fonts**: Monument Extended (display), Clash Display (headings), Inter (body), Space Grotesk (monospace)
+
+**Backend & Database**
+- **Supabase**: Backend-as-a-Service providing PostgreSQL database, authentication, and real-time subscriptions
+- **Row Level Security (RLS)**: Database-level security policies for data access control
+- **Service Role Key**: Elevated privileges key for admin operations
+
+**State Management**
+- **React Context API**: Built-in React state management for global state (theme, auth, chat)
+- **React Hooks**: useState, useEffect, useCallback for component-level state
+
+**Additional Libraries**
+- **clsx 2.1.1**: Utility for conditional class names
+- **tailwind-merge 3.6.0**: Utility for merging Tailwind classes intelligently
+- **lottie-react 2.4.1**: Lottie animation player
+- **recharts 3.8.1**: Chart library for data visualization
+- **@supabase/supabase-js 2.39.0**: Supabase client SDK
+- **stripe**: Stripe SDK for payment processing
+
+### Project Structure
+
+```
+rrise/
+├── public/                          # Static assets
+│   ├── images/                      # Images and logos
+│   ├── lottie/                      # Lottie animation files
+│   ├── mascots/                     # Mascot assets
+│   └── sounds/                      # Audio files
+├── src/
+│   ├── app/                         # Next.js App Router pages
+│   │   ├── admin/                   # Admin panel
+│   │   ├── api/                     # API routes
+│   │   │   ├── admin/               # Admin API endpoints
+│   │   │   ├── chat/                # Chat API endpoints
+│   │   │   ├── checkout/            # Stripe checkout
+│   │   │   ├── webhooks/            # Webhook handlers
+│   │   │   └── user/                # User API endpoints
+│   │   ├── app/                     # Main application (authenticated)
+│   │   │   ├── chat/                # AI chat interface
+│   │   │   ├── dashboard/           # Main dashboard
+│   │   │   ├── habits/              # Habit tracking
+│   │   │   ├── history/             # Activity history
+│   │   │   ├── settings/            # User settings
+│   │   │   ├── spending/            # Finance tracking
+│   │   │   └── tasks/               # Task management
+│   │   ├── about/                   # About page
+│   │   ├── contact/                 # Contact page
+│   │   ├── features/                # Features showcase
+│   │   ├── pricing/                 # Pricing page
+│   │   ├── privacy/                 # Privacy policy
+│   │   ├── terms/                   # Terms of service
+│   │   ├── layout.tsx               # Root layout
+│   │   ├── page.tsx                 # Landing page
+│   │   └── globals.css              # Global styles
+│   ├── components/
+│   │   ├── auth/                    # Authentication components
+│   │   ├── layout/                  # Layout components
+│   │   ├── mascot/                  # Mascot components
+│   │   └── ui/                      # Reusable UI components
+│   ├── contexts/                    # React Context providers
+│   ├── data/                        # Static data (templates)
+│   │   └── templates/               # AI plan templates
+│   ├── lib/                         # Utility functions
+│   │   ├── aiGateway/               # AI integration
+│   │   ├── aiMode.ts                # AI response generation
+│   │   ├── aiSafety.ts              # AI safety layer
+│   │   ├── audioManager.ts          # Audio management
+│   │   ├── authGuard.ts             # Authentication guard
+│   │   ├── byok.ts                  # Bring Your Own Key system
+│   │   ├── dataLoader.ts            # Data loading from Supabase
+│   │   ├── memorySystem.ts          # Memory management
+│   │   ├── planLogic.ts             # Plan logic
+│   │   ├── supabase.ts              # Supabase client
+│   │   ├── templateEngine.ts        # Template matching
+│   │   └── utils.ts                 # Utility functions
+│   └── types/                       # TypeScript type definitions
+├── docs/                            # Documentation
+├── supabase/                        # Supabase configuration
+│   ├── schema.sql                   # Database schema
+│   └── add_chat_history.sql         # Chat history schema
+├── package.json                     # Dependencies
+├── tsconfig.json                    # TypeScript configuration
+├── next.config.ts                   # Next.js configuration
+├── postcss.config.mjs               # PostCSS configuration
+├── eslint.config.mjs                # ESLint configuration
+└── .env.local                       # Environment variables (not in git)
+```
+
+### Key Architectural Patterns
+
+**1. App Router Pattern**
+- File-based routing in `src/app/`
+- Each folder represents a route segment
+- `page.tsx` files are route pages
+- `layout.tsx` files are layout wrappers
+- API routes in `src/app/api/`
+
+**2. Component Pattern**
+- Client components marked with `"use client"` directive
+- Server components are default (no directive)
+- Components organized by feature (auth, layout, ui, mascot)
+- Reusable components in `components/ui/`
+
+**3. State Management Pattern**
+- Global state via React Context (ThemeContext, AuthContext, ChatContext)
+- Component-level state via React hooks (useState, useEffect)
+- Server state via Supabase queries
+- Optimistic UI updates for better UX
+
+**4. Data Layer Pattern**
+- Supabase as single source of truth
+- Data loading functions in `lib/dataLoader.ts`
+- Type-safe database operations with TypeScript
+- RLS policies for security
+
+**5. Authentication Pattern**
+- Supabase Auth for user management
+- AuthContext for global auth state
+- AuthGuard for route protection
+- Service role key for admin operations
+
+---
+
+## HTML Structure & Page Architecture
+
+### Root Layout Structure
+
+The root layout (`src/app/layout.tsx`) is the foundation of the entire application. It wraps all pages with necessary providers and sets up the HTML structure.
+
+```typescript
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <AuthProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+**Key Elements:**
+
+1. **HTML Tag**: Sets language to English and applies font variables
+   - `lang="en"`: Specifies English language for accessibility
+   - `className`: Applies font variables from Google Fonts
+   - `h-full`: Ensures full height
+   - `antialiased`: Enables font smoothing
+
+2. **Body Tag**: Sets up the body with base styles
+   - `min-h-full flex flex-col`: Full height with flexbox layout
+   - `bg-background`: Uses CSS variable for background color
+   - `text-foreground`: Uses CSS variable for text color
+
+3. **Provider Wrappers**: Nested providers for global state
+   - `AuthProvider`: Manages authentication state
+   - `ThemeProvider`: Manages theme (dark/light) state
+
+### Page Structure Pattern
+
+Each page in the application follows a consistent structure:
+
+```typescript
+"use client"; // For interactive pages
+
+import { useState, useEffect } from 'react';
+import { useRequireAuth } from '@/lib/authGuard';
+
+export default function PageName() {
+  const { user, loading } = useRequireAuth();
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    // Load data when user is available
+    if (user) {
+      loadData(user.id);
+    }
+  }, [user]);
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return null; // Will redirect via authGuard
+  }
+  
+  return (
+    <div className="page-container">
+      {/* Page content */}
+    </div>
+  );
+}
+```
+
+**Key Patterns:**
+
+1. **"use client" Directive**: Marks component as client-side
+   - Required for interactive features (state, effects, event handlers)
+   - Server components are default and more performant
+
+2. **Authentication Guard**: `useRequireAuth()` hook
+   - Checks if user is authenticated
+   - Redirects to landing page if not
+   - Provides loading state for auth check
+
+3. **Data Loading Pattern**: useEffect with user dependency
+   - Loads data when user becomes available
+   - Prevents unnecessary API calls
+   - Handles loading states gracefully
+
+4. **Conditional Rendering**: Loading and auth states
+   - Shows loading spinner during auth check
+   - Returns null for unauthenticated (redirects)
+   - Renders content only when ready
+
+### Landing Page Structure
+
+The landing page (`src/app/page.tsx`) is the public-facing homepage with a complex, animated structure.
+
+```typescript
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <CTASection />
+      </main>
+    </div>
+  );
+}
+```
+
+**Sections:**
+
+1. **Header**: Navigation with glassmorphic backdrop
+   - Logo with link to home
+   - Navigation links with active state
+   - Theme toggle (sun/moon)
+   - Sign In button with AuthModal trigger
+   - Mobile menu with hamburger toggle
+
+2. **Hero Section**: Main promotional area
+   - Badge (Early Access)
+   - Wordmark with typing effect
+   - Tagline and description
+   - CTA buttons (Start for free, See how it works)
+   - Hero mockup card
+
+3. **Features Section**: Feature showcase
+   - Section heading
+   - 3 feature cards with icons
+   - Glassmorphic styling
+   - Hover animations
+
+### App Layout Structure
+
+The app layout (`src/app/app/layout.tsx`) wraps all authenticated pages with the sidebar navigation.
+
+```typescript
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen bg-background overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+```
+
+**Key Elements:**
+
+1. **Sidebar**: Navigation for app pages
+   - Logo with plan badge
+   - Navigation items (Home, Chat, History, Tasks, Spending)
+   - Conversation list (on chat page)
+   - Settings link
+   - Collapse/expand toggle
+   - Mobile drawer
+
+2. **Main Content**: Page content area
+   - Flex-1 for remaining space
+   - Overflow-y-auto for scrolling
+   - Max-width container for readability
+   - Responsive padding
+
+### HTML Semantics
+
+The application uses semantic HTML for accessibility and SEO:
+
+```html
+<!-- Semantic structure -->
+<header>    <!-- Page header/navigation -->
+<nav>       <!-- Navigation links -->
+<main>      <!-- Main content area -->
+<section>   <!-- Content sections -->
+<article>   <!-- Self-contained content -->
+<aside>     <!-- Sidebar content -->
+<footer>    <!-- Page footer -->
+```
+
+**Accessibility Features:**
+
+1. **ARIA Labels**: Added to interactive elements
+   - `aria-label="Toggle theme"` for theme button
+   - `aria-label="Toggle menu"` for mobile menu
+   - Screen reader friendly
+
+2. **Semantic Tags**: Proper HTML5 elements
+   - `<nav>` for navigation
+   - `<main>` for main content
+   - `<section>` for content sections
+   - Better screen reader navigation
+
+3. **Keyboard Navigation**: Tab order and focus states
+   - Logical tab order
+   - Visible focus states
+   - Keyboard-accessible menus
+
+---
+
+## CSS & Styling System
+
+### Tailwind CSS Configuration
+
+The project uses Tailwind CSS v4 with inline theme configuration in `src/app/globals.css`.
+
+```css
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  
+  --font-monument: 'Monument Extended', sans-serif;
+  --font-clash: 'Clash Display', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-space: 'Space Grotesk', sans-serif;
+  
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+```
+
+**Key Features:**
+
+1. **CSS Variables Integration**: Maps Tailwind colors to CSS variables
+   - Allows theme switching via CSS variables
+   - Consistent color system across components
+   - Easy theme customization
+
+2. **Custom Fonts**: Defines font families
+   - Monument Extended for display text
+   - Clash Display for headings
+   - Inter for body text
+   - Space Grotesk for monospace
+
+3. **Border Radius System**: Consistent rounded corners
+   - Calculated from base radius variable
+   - Responsive sizing system
+   - Consistent UI elements
+
+### CSS Variables & Theme System
+
+The theme system uses CSS variables for dark/light mode switching.
+
+```css
+/* Dark Mode (default) */
+:root,
+.dark {
+  --background: #020408;
+  --foreground: #f0f6ff;
+  --primary: #00ff87;
+  --secondary: #00e5ff;
+  --muted: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.08);
+  --radius: 1.25rem;
+  --glow-green: 0 0 40px rgba(0, 255, 135, 0.35);
+  --glow-blue: 0 0 40px rgba(0, 229, 255, 0.35);
+}
+
+/* Light Mode */
+.light {
+  --background: #f8fafc;
+  --foreground: #0a1628;
+  --primary: #00b85a;
+  --secondary: #0099cc;
+  --muted: rgba(0, 0, 0, 0.04);
+  --border: rgba(0, 0, 0, 0.1);
+  --radius: 1.25rem;
+  --glow-green: 0 0 30px rgba(0, 184, 90, 0.2);
+  --glow-blue: 0 0 30px rgba(0, 153, 204, 0.2);
+}
+```
+
+**Theme Switching:**
+
+The theme is switched by adding/removing the `light` class on the HTML element:
+
+```typescript
+// In ThemeContext.tsx
+useEffect(() => {
+  if (mounted) {
+    localStorage.setItem('theme', theme);
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(theme);
+  }
+}, [theme, mounted]);
+```
+
+**Color Palette:**
+
+- **Background**: Deep dark (#020408) vs light (#f8fafc)
+- **Foreground**: Light text (#f0f6ff) vs dark text (#0a1628)
+- **Primary**: Neon green (#00ff87) vs darker green (#00b85a)
+- **Secondary**: Cyan (#00e5ff) vs darker cyan (#0099cc)
+- **Muted**: Low opacity white vs low opacity black
+- **Border**: Low opacity white vs low opacity black
+
+### Utility Classes
+
+The project includes custom utility classes in `globals.css` for common patterns.
+
+**Glassmorphism:**
+
+```css
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--surface-border);
+}
+
+.glass-enhanced {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+```
+
+**Usage:**
+```tsx
+<div className="glass-enhanced">
+  Content with glass effect
+</div>
+```
+
+**Gradient Text:**
+
+```css
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+```
+
+**Usage:**
+```tsx
+<h1 className="gradient-text">RRise</h1>
+```
+
+**Glow Effects:**
+
+```css
+.glow-green { box-shadow: var(--glow-green); }
+.glow-blue  { box-shadow: var(--glow-blue); }
+.glow-both  { box-shadow: var(--glow-both); }
+
+.text-glow-green { text-shadow: 0 0 20px rgba(0, 255, 135, 0.6); }
+.text-glow-blue  { text-shadow: 0 0 20px rgba(0, 229, 255, 0.6); }
+```
+
+**Usage:**
+```tsx
+<div className="glow-green">Glowing content</div>
+<h2 className="text-glow-green">Glowing text</h2>
+```
+
+### Animation System
+
+The project uses Framer Motion for animations, but also includes CSS animations for background effects.
+
+**CSS Animations:**
+
+```css
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-effect::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease-in-out;
+}
+
+.shimmer-effect:hover::after {
+  left: 100%;
+}
+```
+
+**Framer Motion Animations:**
+
+```tsx
+import { motion } from 'framer-motion';
+
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true, margin: "-100px" }}
+  transition={{ duration: 0.8, ease: "easeOut" }}
+  whileHover={{ scale: 1.05, y: -2 }}
+  whileTap={{ scale: 0.95 }}
+>
+  Animated content
+</motion.div>
+```
+
+**Animation Patterns:**
+
+1. **Fade Up**: `opacity: 0→1, y: 20→0`
+2. **Scale**: `scale: 1→1.05` on hover
+3. **Float**: Continuous vertical movement
+4. **Shimmer**: Background position animation
+5. **Pulse**: Opacity animation
+
+### Responsive Design
+
+The project uses Tailwind's responsive utilities for mobile-first design.
+
+**Breakpoints:**
+- `sm`: 640px (small tablets)
+- `md`: 768px (tablets)
+- `lg`: 1024px (desktops)
+- `xl`: 1280px (large desktops)
+
+**Responsive Pattern:**
+```tsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div className="text-sm md:text-base lg:text-lg">
+    Responsive text
+  </div>
+</div>
+```
+
+**Mobile-First Approach:**
+- Default styles for mobile
+- `md:` prefix for tablets
+- `lg:`_prefix for desktops
+- Progressive enhancement
+
+---
+
+## TypeScript & JavaScript Functions
+
+### Data Loading Functions
+
+The `dataLoader.ts` file contains all functions for loading data from Supabase.
+
+**loadUserProfile:**
+
+```typescript
+export async function loadUserProfile(userId: string): Promise<Profile | null> {
+  if (!isSupabaseConfigured()) return null;
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error loading user profile:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error loading user profile:', error);
+    return null;
+  }
+}
+```
+
+**Purpose:** Loads user profile data from Supabase
+**Parameters:**
+- `userId`: The user's UUID
+**Returns:** Profile object or null if error
+**Error Handling:** Returns null on error, logs to console
+**Usage:**
+```typescript
+const profile = await loadUserProfile(user.id);
+if (profile) {
+  setUserProfile(profile);
+}
+```
+
+**loadHabits:**
+
+```typescript
+export async function loadHabits(userId: string): Promise<any[]> {
+  if (!isSupabaseConfigured()) return [];
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return [];
+
+  try {
+    const { data: habits, error } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading habits:', error);
+      return [];
+    }
+
+    if (!habits || habits.length === 0) return [];
+
+    // Batched log fetch for performance
+    const today = new Date().toISOString().split('T')[0];
+    const habitIds = habits.map((h: any) => h.id);
+
+    const { data: todayLogs } = await supabase
+      .from('habit_logs')
+      .select('habit_id')
+      .in('habit_id', habitIds)
+      .gte('completed_at', today)
+      .lte('completed_at', today + 'T23:59:59.999Z');
+
+    // Build lookup maps for O(1) access
+    const completedTodaySet = new Set((todayLogs || []).map((l: any) => l.habit_id));
+
+    return habits.map((habit: any) => ({
+      ...habit,
+      completedToday: completedTodaySet.has(habit.id),
+    }));
+  } catch (error) {
+    console.error('Error loading habits:', error);
+    return [];
+  }
+}
+```
+
+**Purpose:** Loads user habits with completion status
+**Optimizations:**
+- Batched query for habit logs (N+1 problem solved)
+- Lookup maps for O(1) completion check
+- Single query instead of N queries
+**Returns:** Array of habits with `completedToday` property
+
+**toggleHabitCompletion:**
+
+```typescript
+export async function toggleHabitCompletion(habitId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return false;
+
+  try {
+    // Check if already completed today
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existingLog } = await supabase
+      .from('habit_logs')
+      .select('*')
+      .eq('habit_id', habitId)
+      .gte('completed_at', today)
+      .lte('completed_at', today + 'T23:59:59.999Z')
+      .single();
+
+    if (existingLog) {
+      // Remove completion
+      const { error } = await supabase
+        .from('habit_logs')
+        .delete()
+        .eq('id', existingLog.id);
+      
+      return !error;
+    } else {
+      // Add completion
+      const { error } = await supabase
+        .from('habit_logs')
+        .insert({
+          habit_id: habitId,
+          user_id: userId,
+          completed_at: new Date().toISOString(),
+        });
+      
+      if (!error) {
+        // Award XP
+        await awardXP(userId, 10, 'habit_completion');
+      }
+      
+      return !error;
+    }
+  } catch (error) {
+    console.error('Error toggling habit completion:', error);
+    return false;
+  }
+}
+```
+
+**Purpose:** Toggles habit completion and awards XP
+**Logic:**
+- Checks if habit already completed today
+- If yes: removes completion log
+- If no: adds completion log and awards 10 XP
+**Returns:** Boolean indicating success/failure
+
+### AI Mode Functions
+
+The `aiMode.ts` file contains functions for generating AI responses.
+
+**generateAIResponse:**
+
+```typescript
+export async function generateAIResponse(
+  message: string,
+  userMemory: any,
+  mode: 'free' | 'byok' | 'pro'
+): Promise<string> {
+  if (mode === 'free') {
+    // Use template-based responses
+    return generateTemplateResponse(message, userMemory);
+  } else if (mode === 'byok') {
+    // Use user's API key
+    return generateBYOKResponse(message, userMemory);
+  } else {
+    // Use hosted AI (not implemented)
+    return 'Pro mode coming soon!';
+  }
+}
+```
+
+**Purpose:** Generates AI responses based on mode
+**Modes:**
+- `free`: Template-based responses (no API cost)
+- `byok`: User's API key (user pays)
+- `pro`: Hosted AI (RRise pays, coming soon)
+
+**generateTemplateResponse:**
+
+```typescript
+function generateTemplateResponse(message: string, userMemory: any): string {
+  const lowerMessage = message.toLowerCase();
+  
+  // Categorize message
+  if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+    return `Hello! I'm here to help you build better habits and achieve your goals. What would you like to work on today?`;
+  }
+  
+  if (lowerMessage.includes('habit') || lowerMessage.includes('routine')) {
+    return `Building good habits is key to success! I can help you create a personalized habit plan. Would you like me to suggest some habits based on your goals?`;
+  }
+  
+  // ... more categories
+  
+  // Fallback
+  return `I'm here to help you with your personal development journey. You can ask me about habits, goals, tasks, or anything else related to self-improvement!`;
+}
+```
+
+**Purpose:** Generates template-based responses for free users
+**Categories:**
+- Greetings
+- Habit help
+- Task help
+- Motivation
+- General questions
+**Fallback:** Generic helpful response
+
+### BYOK Functions
+
+The `byok.ts` file handles Bring Your Own Key functionality.
+
+**saveApiKey:**
+
+```typescript
+export async function saveApiKey(
+  userId: string,
+  provider: 'openai' | 'anthropic' | 'gemini' | 'groq' | 'openrouter',
+  keyValue: string,
+  keyName: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('ai_keys')
+      .insert({
+        user_id: userId,
+        provider,
+        key_value: keyValue, // In production, encrypt this
+        key_name: keyName,
+        is_active: true,
+      });
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+**Purpose:** Saves user's API key to database
+**Security Note:** In production, encrypt the key value before storing
+**Providers Supported:**
+- OpenAI
+- Anthropic
+- Gemini
+- Groq
+- OpenRouter
+
+**testApiKey:**
+
+```typescript
+export async function testApiKey(
+  provider: string,
+  keyValue: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Test the key with a simple API call
+    let response;
+    
+    switch (provider) {
+      case 'openai':
+        response = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${keyValue}` }
+        });
+        break;
+      // ... other providers
+    }
+    
+    if (response.ok) {
+      return { success: true };
+    } else {
+      return { success: false, error: 'Invalid API key' };
+    }
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+```
+
+**Purpose:** Tests if an API key is valid
+**Method:** Makes a simple API call to provider's endpoint
+**Returns:** Success/failure with error message
+
+### Memory System Functions
+
+The `memorySystem.ts` file handles user memory for AI personalization.
+
+**loadMemory:**
+
+```typescript
+export async function loadMemory(userId: string, type: MemoryType): Promise<any> {
+  if (!isSupabaseConfigured()) return null;
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('prompt_memory')
+      .select('memory_data')
+      .eq('user_id', userId)
+      .eq('memory_type', type)
+      .maybeSingle(); // Handles case where no row exists
+
+    if (error) {
+      console.error('Error loading memory:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return JSON.parse(data.memory_data);
+  } catch (error) {
+    console.error('Error loading memory:', error);
+    return null;
+  }
+}
+```
+
+**Purpose:** Loads user memory by type
+**Memory Types:**
+- `preferences`: User preferences
+- `goals`: User goals
+- `template_history`: Template usage history
+- `daily_reflection`: Daily reflections
+**Returns:** Parsed JSON data or null
+
+**saveMemory:**
+
+```typescript
+export async function saveMemory(
+  userId: string,
+  type: MemoryType,
+  data: any
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase
+      .from('prompt_memory')
+      .upsert({
+        user_id: userId,
+        memory_type: type,
+        memory_data: JSON.stringify(data),
+        updated_at: new Date().toISOString(),
+      });
+    
+    return !error;
+  } catch (error) {
+    console.error('Error saving memory:', error);
+    return false;
+  }
+}
+```
+
+**Purpose:** Saves user memory to database
+**Method:** Uses upsert (insert or update)
+**Data Serialization:** Converts object to JSON string
+
+---
+
+## Component Architecture
+
+### Base Components
+
+**Button Component:**
+
+```typescript
+"use client";
+
+import * as React from "react"
+import { motion, HTMLMotionProps } from "framer-motion"
+import { cn } from "../../lib/utils"
+
+export interface ButtonProps extends HTMLMotionProps<"button"> {
+  variant?: "default" | "outline" | "ghost" | "glass"
+  size?: "default" | "sm" | "lg" | "icon"
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", ...props }, ref) => {
+    return (
+      <motion.button
+        ref={ref}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={cn(
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50",
+          {
+            "bg-primary text-primary-foreground shadow hover:bg-primary/90": variant === "default",
+            "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground": variant === "outline",
+            "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
+            "bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 text-foreground": variant === "glass",
+            "h-10 px-6 py-2": size === "default",
+            "h-8 rounded-md px-4 text-sm": size === "sm",
+            "h-12 rounded-lg px-8 text-lg font-playfair": size === "lg",
+            "h-10 w-10": size === "icon",
+          },
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button }
+```
+
+**Props:**
+- `variant`: Visual style (default, outline, ghost, glass)
+- `size`: Size (default, sm, lg, icon)
+- `className`: Additional Tailwind classes
+- Extends HTMLMotionProps for Framer Motion
+
+**Variants:**
+- `default`: Primary color with shadow
+- `outline`: Border with hover background
+- `ghost`: Hover background only
+- `glass`: Glassmorphic style
+
+**Sizes:**
+- `default`: h-10, px-6
+- `sm`: h-8, px-4
+- `lg`: h-12, px-8
+- `icon`: h-10, w-10 (square)
+
+**Animations:**
+- `whileHover={{ scale: 1.02 }}`: Slight scale up
+- `whileTap={{ scale: 0.98 }}`: Slight scale down
+
+**Card Component:**
+
+```typescript
+"use client";
+
+import * as React from "react"
+import { motion, HTMLMotionProps } from "framer-motion"
+import { cn } from "../../lib/utils"
+
+const Card = React.forwardRef<HTMLDivElement, HTMLMotionProps<"div">>(
+  ({ className, ...props }, ref) => (
+    <motion.div
+      ref={ref}
+      className={cn(
+        "rounded-2xl border border-white/5 bg-card text-card-foreground shadow-2xl backdrop-blur-xl relative overflow-hidden",
+        className
+      )}
+      {...props}
+    />
+  )
+)
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex flex-col space-y-2 p-8", className)}
+      {...props}
+    />
+  )
+)
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn("font-playfair text-2xl font-semibold leading-none tracking-tight", className)}
+      {...props}
+    />
+  )
+)
+CardTitle.displayName = "CardTitle"
+
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-8 pt-0", className)} {...props} />
+  )
+)
+CardContent.displayName = "CardContent"
+
+export { Card, CardHeader, CardTitle, CardContent }
+```
+
+**Sub-components:**
+- `Card`: Main container with glassmorphic styling
+- `CardHeader`: Header section with spacing
+- `CardTitle`: Title with Playfair font
+- `CardContent`: Content area without top padding
+
+**Styling:**
+- `rounded-2xl`: Rounded corners
+- `border border-white/5`: Subtle border
+- `bg-card`: Uses CSS variable
+- `backdrop-blur-xl`: Blur effect
+- `shadow-2xl`: Deep shadow
+
+### Animated Components
+
+**AnimatedButton Component:**
+
+```typescript
+"use client";
+
+import { motion, HTMLMotionProps } from "framer-motion";
+import { ReactNode } from "react";
+import { cn } from "../../lib/utils";
+
+interface AnimatedButtonProps {
+  children: ReactNode;
+  variant?: "primary" | "secondary" | "glass";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  href?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
+export function AnimatedButton({ 
+  children, 
+  variant = "primary", 
+  size = "md", 
+  className,
+  href,
+  disabled,
+  onClick,
+}: AnimatedButtonProps) {
+  const baseClasses = "relative overflow-hidden rounded-full font-semibold transition-all duration-300";
+  
+  const sizeClasses = {
+    sm: "px-6 py-2.5 text-sm",
+    md: "px-8 py-3.5 text-base",
+    lg: "px-10 py-4 text-lg",
+  };
+  
+  const variantClasses = {
+    primary: "bg-gradient-to-r from-primary to-secondary text-[#020408] shadow-lg shadow-primary/25 hover:shadow-primary/40",
+    secondary: "glass border border-white/20 text-foreground hover:border-primary/40 hover:bg-white/10",
+    glass: "glass border border-white/10 text-foreground/80 hover:text-foreground hover:border-white/20 hover:bg-white/5",
+  };
+  
+  const ButtonContent = (
+    <>
+      {/* Shine effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        initial={{ x: "-100%" }}
+        whileHover={{ x: "100%" }}
+        transition={{ duration: 0.6 }}
+      />
+      
+      {/* Glow effect for primary variant */}
+      {variant === "primary" && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0"
+          whileHover={{ opacity: 0.6 }}
+          transition={{ duration: 0.3 }}
+        />
+      )}
+      
+      <span className="relative z-10 flex items-center justify-center gap-2">
+        {children}
+      </span>
+    </>
+  );
+  
+  const buttonClasses = cn(
+    baseClasses,
+    sizeClasses[size],
+    variantClasses[variant],
+    disabled && "opacity-50 cursor-not-allowed",
+    className
+  );
+  
+  if (href) {
+    return (
+      <motion.a
+        href={href}
+        className={buttonClasses}
+        whileHover={{ scale: disabled ? 1 : 1.05, y: disabled ? 0 : -2 }}
+        whileTap={{ scale: disabled ? 1 : 0.97 }}
+      >
+        {ButtonContent}
+      </motion.a>
+    );
+  }
+  
+  return (
+    <motion.button
+      className={buttonClasses}
+      disabled={disabled}
+      onClick={onClick}
+      whileHover={{ scale: disabled ? 1 : 1.05, y: disabled ? 0 : -2 }}
+      whileTap={{ scale: disabled ? 1 : 0.97 }}
+    >
+      {ButtonContent}
+    </motion.button>
+  );
+}
+```
+
+**Features:**
+- **Shine Effect**: Sliding gradient on hover
+- **Glow Effect**: Blurred gradient on hover (primary only)
+- **Scale Animation**: Scale up on hover, down on tap
+- **Link Support**: Can render as `<a>` or `<button>`
+- **Disabled State**: Reduced opacity, no animations
+
+**GlassCard Component:**
+
+```typescript
+"use client";
+
+import { motion, HTMLMotionProps } from "framer-motion";
+import { ReactNode } from "react";
+import { cn } from "../../lib/utils";
+
+interface GlassCardProps extends HTMLMotionProps<"div"> {
+  children: ReactNode;
+  className?: string;
+  hover?: boolean;
+  glow?: boolean;
+}
+
+export function GlassCard({ children, className, hover = true, glow = true, ...props }: GlassCardProps) {
+  return (
+    <motion.div
+      className={cn(
+        "relative rounded-3xl overflow-hidden",
+        "bg-white/[0.03] backdrop-blur-2xl",
+        "border border-white/[0.08]",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+        hover && "hover:shadow-[0_16px_64px_rgba(0,229,255,0.12)] hover:border-white/[0.12]",
+        className
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      whileHover={hover ? {
+        y: -6,
+        scale: 1.01,
+        transition: { duration: 0.4, ease: "easeOut" }
+      } : undefined}
+      {...props}
+    >
+      {/* Grain texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+      }} />
+      
+      {/* Soft inner highlight */}
+      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.08] via-transparent to-transparent pointer-events-none" />
+      
+      {/* Edge lighting */}
+      <div className="absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-none" />
+      
+      {/* Subtle shimmer effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent pointer-events-none"
+        initial={{ x: "-100%" }}
+        whileHover={{ x: "100%" }}
+        transition={{ duration: 1, ease: "easeInOut" }}
+      />
+      
+      {/* Inner glow */}
+      {glow && (
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/[0.03] via-transparent to-secondary/[0.02] pointer-events-none" />
+      )}
+      
+      {children}
+    </motion.div>
+  );
+}
+```
+
+**Layers (from bottom to top):**
+1. **Base**: Glassmorphic background with blur
+2. **Grain Texture**: Subtle noise overlay
+3. **Inner Highlight**: Gradient from top-left
+4. **Edge Lighting**: Inset shadow for depth
+5. **Shimmer**: Sliding gradient on hover
+6. **Inner Glow**: Colored gradient (optional)
+7. **Content**: Children elements
+
+**Animations:**
+- **Initial**: Fade up from below
+- **Scroll**: Animate into view once
+- **Hover**: Lift up and scale slightly
+
+### Layout Components
+
+**Header Component:**
+
+```typescript
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Menu, X, Sun, Moon } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
+import { AuthModal } from "../auth/AuthModal";
+
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/features", label: "Features" },
+  { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/contact", label: "Connect" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+];
+
+export function Header() {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <>
+      <header className="fixed top-0 w-full z-50">
+        {/* Enhanced glassmorphic backdrop */}
+        <div className="absolute inset-0 glass-enhanced border-b border-white/5" />
+
+        <div className="relative flex items-center justify-between px-6 md:px-12 h-20">
+          {/* Wordmark */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <motion.div
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              transition={{ duration: 0.2 }}
+            >
+              <img
+                src="/images/rrise-logo.webp"
+                alt="RRise"
+                className="h-10 w-auto object-contain"
+              />
+            </motion.div>
+            <span className="font-monument text-lg tracking-widest gradient-text hidden sm:block">
+              RRise
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-2">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link key={link.href} href={link.href} className="relative">
+                  <motion.div
+                    className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 ${
+                      isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-full backdrop-blur-sm"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                  </motion.div>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right side — theme toggle + CTA */}
+          <div className="flex items-center gap-4">
+            {/* Theme toggle */}
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 15 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleTheme}
+              className="p-2.5 rounded-full glass-enhanced border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300"
+              aria-label="Toggle theme"
+            >
+              <AnimatePresence mode="wait">
+                {theme === "dark" ? (
+                  <motion.div
+                    key="sun"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Sun className="w-4 h-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="moon"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Moon className="w-4 h-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+
+            {/* Sign In CTA */}
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsAuthModalOpen(true)}
+              className="hidden md:block relative px-6 py-2.5 text-sm font-semibold rounded-full overflow-hidden group premium-glow"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
+              <span className="relative z-10 font-bold text-[#020408]">Sign In</span>
+            </motion.button>
+
+            {/* Mobile menu toggle */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="md:hidden p-2.5 rounded-full glass-enhanced text-foreground border border-white/10"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </motion.button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-20 inset-x-0 z-40 glass-enhanced border-b border-white/5 px-6 py-6 flex flex-col gap-2 md:hidden"
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`px-5 py-3 rounded-full text-sm font-medium transition-all ${
+                  pathname === link.href
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <motion.button
+              onClick={() => {
+                setMobileOpen(false);
+                setIsAuthModalOpen(true);
+              }}
+              className="mt-3 px-5 py-3 rounded-full text-sm font-bold text-center bg-gradient-to-r from-primary to-secondary text-[#020408]"
+            >
+              Sign In
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </>
+  );
+}
+```
+
+**Key Features:**
+- **Active State**: `layoutId` animation for pill background
+- **Theme Toggle**: Animated icon switch with rotation
+- **Mobile Menu**: Slide-down animation with backdrop
+- **Auth Modal**: Integrated authentication
+- **Glassmorphic Backdrop**: Enhanced glass effect
+
+**Active Pill Animation:**
+- Uses `layoutId` from Framer Motion
+- Smooth transition between active states
+- Spring animation for bouncy effect
+
+**Theme Toggle Animation:**
+- Sun/Moon icons rotate in/out
+- `AnimatePresence` for smooth transitions
+- `mode="wait"` for sequential animations
+
+---
+
+## API Routes & Backend
+
+### Admin API Routes
+
+**GET /api/admin/users**
+
+**Purpose:** Fetch all users with profile data, API keys, and usage stats
+
+**Authentication:** Requires admin authentication (Bearer token)
+
+**Response:**
+```json
+{
+  "users": [
+    {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "plan": "pro",
+      "token_limit": 100000,
+      "is_admin": false,
+      "created_at": "2026-01-01T00:00:00Z",
+      "stripe_customer_id": "cus_xxx",
+      "xp_total": 1500,
+      "streak_count": 7,
+      "api_keys": [...],
+      "total_tokens_used": 50000,
+      "tokens_remaining": 50000
+    }
+  ]
+}
+```
+
+**Implementation:**
+```typescript
+export async function GET(request: Request) {
+  if (!await verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Fetch all users with profile data
+  const { data: profiles, error } = await supabaseAdmin
+    .from('profiles')
+    .select('id, name, email, plan, token_limit, is_admin, created_at, stripe_customer_id, xp_total, streak_count')
+    .order('created_at', { ascending: false });
+
+  // Fetch API keys and usage for each user
+  const usersWithDetails = await Promise.all(
+    profiles.map(async (profile: any) => {
+      const { data: apiKeys } = await supabaseAdmin
+        .from('ai_keys')
+        .select('*')
+        .eq('user_id', profile.id);
+
+      const { data: usageLogs } = await supabaseAdmin
+        .from('ai_usage_logs')
+        .select('tokens_used')
+        .eq('user_id', profile.id);
+
+      const totalTokensUsed = usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
+
+      return {
+        ...profile,
+        api_keys: apiKeys || [],
+        total_tokens_used: totalTokensUsed,
+        tokens_remaining: (profile.token_limit || 0) - totalTokensUsed,
+      };
+    })
+  );
+
+  return NextResponse.json({ users: usersWithDetails });
+}
+```
+
+**PATCH /api/admin/users**
+
+**Purpose:** Update user plan or token limit
+
+**Authentication:** Requires admin authentication
+
+**Request Body:**
+```json
+{
+  "userId": "uuid",
+  "plan": "pro",
+  "token_limit": 100000
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { updated_profile }
+}
+```
+
+**Implementation:**
+```typescript
+export async function PATCH(request: Request) {
+  if (!await verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { userId, plan, token_limit } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    const updates: any = { updated_at: new Date().toISOString() };
+    if (plan !== undefined) updates.plan = plan;
+    if (token_limit !== undefined) updates.token_limit = token_limit;
+
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
+```
+
+**DELETE /api/admin/users**
+
+**Purpose:** Permanently delete user and all associated data
+
+**Authentication:** Requires admin authentication
+
+**Request Body:**
+```json
+{
+  "userId": "uuid"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User and all data deleted successfully"
+}
+```
+
+**Implementation:**
+```typescript
+export async function DELETE(request: Request) {
+  if (!await verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { userId } = await request.json();
+
+    // Delete all user data in correct order (respecting foreign keys)
+    const tablesToDelete = [
+      'api_keys', 'ai_usage_logs', 'habit_logs', 'task_logs',
+      'spending_entries', 'xp_logs', 'safety_events', 'habits',
+      'tasks', 'goals', 'journal_entries', 'moods', 'streaks',
+      'weekly_recaps', 'mascot_state', 'prompt_memory',
+      'app_settings', 'profiles'
+    ];
+
+    const errors: string[] = [];
+    for (const table of tablesToDelete) {
+      const { error } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+      
+      if (error) {
+        errors.push(`${table}: ${error.message}`);
+      }
+    }
+
+    // Delete auth user
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) {
+      errors.push(`auth: ${authError.message}`);
+    }
+
+    if (errors.length > 0) {
+      return NextResponse.json({ 
+        error: 'Partial deletion completed with errors', 
+        details: errors 
+      }, { status: 207 });
+    }
+
+    return NextResponse.json({ success: true, message: 'User and all data deleted successfully' });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
+```
+
+**Security Note:** Uses service role key to bypass RLS for admin operations
+
+### Export API Route
+
+**GET /api/admin/export**
+
+**Purpose:** Export user data and chat history as downloadable text file
+
+**Authentication:** Requires admin authentication
+
+**Query Parameters:**
+- `type`: `all` | `chat` | `user` (default: `all`)
+- `userId`: Optional user ID for single-user export
+
+**Response:** Text file download with Content-Disposition header
+
+**Implementation:**
+```typescript
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'all';
+    const userId = searchParams.get('userId');
+
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+    
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await supabaseAuth
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.is_admin) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    }
+
+    // Use service role client to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    let exportText = '';
+
+    if (type === 'chat' || type === 'all') {
+      exportText += await exportChatHistory(supabase, userId);
+    }
+
+    if (type === 'user' || type === 'all') {
+      exportText += await exportUserData(supabase, userId);
+    }
+
+    // Return as downloadable text file
+    return new NextResponse(exportText, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': `attachment; filename="rrise-export-${type}-${new Date().toISOString().split('T')[0]}.txt"`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Export error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+
+**Export Format:**
+```
+=== CHAT HISTORY EXPORT ===
+Export Date: 2026-07-12T10:00:00.000Z
+
+--- Conversation ---
+ID: uuid
+User: john@example.com (John Doe)
+Title: New Conversation
+Created: 7/12/2026, 10:00:00 AM
+Updated: 7/12/2026, 10:30:00 AM
+
+Messages:
+[7/12/2026, 10:00:00 AM] USER:
+Hello, how are you?
+
+[7/12/2026, 10:00:01 AM] ASSISTANT:
+I'm doing great! How can I help you today?
+
+=== END CHAT HISTORY ===
+
+=== USER DATA EXPORT ===
+Export Date: 2026-07-12T10:00:00.000Z
+
+--- USER ---
+Email: john@example.com
+Name: John Doe
+Plan: pro
+Created: 1/1/2026, 12:00:00 AM
+Total XP: 1500
+Streak Count: 7
+Token Limit: 100000
+
+Goals (3):
+  - Learn to code | Progress: 75% | Status: in_progress
+  - Exercise daily | Progress: 50% | Status: in_progress
+  - Read 10 books | Progress: 30% | Status: in_progress
+
+=== END USER DATA ===
+```
+
+### Stripe Webhook Handler
+
+**POST /api/webhooks/stripe**
+
+**Purpose:** Handle Stripe webhook events for subscription management
+
+**Security:** Webhook signature verification required
+
+**Supported Events:**
+- `checkout.session.completed`: Initial subscription purchase
+- `customer.subscription.created`: New subscription created
+- `customer.subscription.updated`: Subscription plan changed or renewed
+- `customer.subscription.deleted`: Subscription cancelled
+- `invoice.payment_failed`: Payment failed
+
+**Implementation:**
+```typescript
+export async function POST(request: Request) {
+  if (!stripe) {
+    return new NextResponse('Stripe not configured', { status: 503 });
+  }
+
+  try {
+    const body = await request.text();
+    const signature = (await headers()).get('stripe-signature');
+
+    if (!signature) {
+      return new NextResponse('Missing stripe-signature', { status: 400 });
+    }
+
+    // Verify webhook signature
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+
+    console.log(`Received Stripe webhook: ${event.type}`);
+
+    // Handle different event types
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
+      case 'customer.subscription.created':
+        await handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+        break;
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        break;
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return NextResponse.json(
+      { error: 'Webhook handler failed' },
+      { status: 400 }
+    );
+  }
+}
+```
+
+**Plan Mapping:**
+```typescript
+function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'ultra' {
+  if (priceId === process.env.STRIPE_PRICE_PRO || priceId === 'price_1ToJGuIaxTgHtJYBAFVh6s4M') return 'pro';
+  if (priceId === process.env.STRIPE_PRICE_ULTRA || priceId === 'price_1ToJJVIaxTgHtJYBa2rkDBDo') return 'ultra';
+  return 'free';
+}
+```
+
+**Security Note:** Webhook signature verification prevents fraudulent requests
+
+### Chat API Routes
+
+**GET /api/chat/conversations**
+
+**Purpose:** Fetch user's chat conversations
+
+**Authentication:** Requires user authentication (Bearer token)
+
+**Response:**
+```json
+{
+  "conversations": [
+    {
+      "id": "uuid",
+      "title": "New Conversation",
+      "created_at": "2026-07-12T10:00:00Z",
+      "updated_at": "2026-07-12T10:30:00Z"
+    }
+  ]
+}
+```
+
+**DELETE /api/chat/conversations**
+
+**Purpose:** Delete a conversation
+
+**Authentication:** Requires user authentication
+
+**Request Body:**
+```json
+{
+  "conversationId": "uuid"
+}
+```
+
+**GET /api/chat/messages**
+
+**Purpose:** Fetch messages for a conversation
+
+**Authentication:** Requires user authentication
+
+**Query Parameters:**
+- `conversationId`: The conversation ID
+
+**Response:**
+```json
+{
+  "messages": [
+    {
+      "id": "uuid",
+      "role": "user",
+      "content": "Hello",
+      "created_at": "2026-07-12T10:00:00Z"
+    }
+  ]
+}
+```
+
+**POST /api/chat/messages**
+
+**Purpose:** Create a new message in a conversation
+
+**Authentication:** Requires user authentication
+
+**Request Body:**
+```json
+{
+  "conversationId": "uuid",
+  "role": "user",
+  "content": "Hello"
+}
+```
+
+---
+
+## State Management & Data Flow
+
+### React Context Providers
+
+**ThemeContext:**
+
+```typescript
+"use client";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+type Theme = 'dark' | 'light';
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('dark');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('theme', theme);
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(theme);
+    }
+  }, [theme, mounted]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    return { theme: 'dark' as Theme, toggleTheme: () => {} };
+  }
+  return context;
+}
+```
+
+**Data Flow:**
+1. User clicks theme toggle button
+2. `toggleTheme()` is called
+3. State updates via `setTheme()`
+4. `useEffect` detects state change
+5. Updates localStorage
+6. Updates HTML class (dark/light)
+7. CSS variables update
+8. UI re-renders with new theme
+
+**AuthContext:**
+
+```typescript
+"use client";
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session, AuthError } from '@supabase/supabase-js';
+import { createClientComponentClient, isSupabaseConfigured } from '@/lib/supabase';
+import { initializeUser } from '@/lib/userInitialization';
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUpWithEmail: (email: string, password: string, name: string, termsAccepted?: boolean) => Promise<{ error: AuthError | null }>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = createClientComponentClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signInWithGoogle = async () => {
+    const supabase = createClientComponentClient();
+    if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/app/dashboard`,
+      },
+    });
+    return { error };
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    const supabase = createClientComponentClient();
+    if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (!error && data.user) {
+      window.location.href = '/app/dashboard';
+    }
+    
+    return { error };
+  };
+
+  const signUpWithEmail = async (email: string, password: string, name: string, termsAccepted?: boolean) => {
+    const supabase = createClientComponentClient();
+    if (!supabase) return { error: { message: 'Supabase not configured' } as AuthError };
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          terms_accepted: termsAccepted,
+        },
+        emailRedirectTo: `${window.location.origin}/app/dashboard`,
+      },
+    });
+
+    if (!error && data.user) {
+      await initializeUser(data.user.id, email, name, termsAccepted);
+      window.location.href = '/app/dashboard';
+    }
+
+    return { error };
+  };
+
+  const signOut = async () => {
+    const supabase = createClientComponentClient();
+    if (!supabase) return;
+    await supabase.auth.signOut();
+  };
+
+  const value: AuthContextType = {
+    user,
+    session,
+    loading,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    signOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+```
+
+**Data Flow:**
+1. App loads, AuthProvider initializes
+2. Checks for existing session via `getSession()`
+3. Sets up auth state change listener
+4. User signs in via Google or email
+5. Supabase auth updates
+6. Listener detects change
+7. State updates (user, session)
+8. Components re-render with new auth state
+9. Protected pages check auth status
+10. New users get initialized with default data
+
+### Component State Patterns
+
+**useState Pattern:**
+
+```typescript
+const [data, setData] = useState(null);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(null);
+
+const loadData = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const result = await fetchData();
+    setData(result);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+**useEffect Pattern:**
+
+```typescript
+useEffect(() => {
+  // Run on mount
+  if (user) {
+    loadData(user.id);
+  }
+}, [user]); // Re-run when user changes
+
+useEffect(() => {
+  // Run on mount and cleanup
+  const subscription = supabase.auth.onAuthStateChange((event, session) => {
+    console.log(event, session);
+  });
+  
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []); // Run once
+```
+
+**useCallback Pattern:**
+
+```typescript
+const handleSubmit = useCallback(async () => {
+  if (!user) return;
+  await submitData(user.id);
+}, [user]); // Recreate when user changes
+```
+
+### Data Flow Diagram
+
+```
+User Action → Component State → API Call → Supabase → Response → State Update → UI Re-render
+```
+
+**Example: Habit Toggle**
+
+1. User clicks habit checkbox
+2. Component calls `toggleHabitCompletion()`
+3. Function makes optimistic UI update
+4. Function calls Supabase API
+5. Supabase updates database
+6. Supabase returns success/error
+7. If error, revert UI update
+8. Award XP if success
+9. UI re-renders with new state
+
+---
+
+## Authentication & Security
+
+### Authentication Flow
+
+**1. Sign Up Flow:**
+
+```
+User enters email/password/name → 
+AuthContext.signUpWithEmail() → 
+Supabase Auth creates user → 
+initializeUser() creates default data → 
+Redirect to dashboard → 
+AuthContext detects session → 
+User is authenticated
+```
+
+**2. Sign In Flow:**
+
+```
+User enters email/password → 
+AuthContext.signInWithEmail() → 
+Supabase Auth validates credentials → 
+Returns session → 
+Redirect to dashboard → 
+AuthContext detects session → 
+User is authenticated
+```
+
+**3. Google Sign In Flow:**
+
+```
+User clicks Google sign in → 
+AuthContext.signInWithGoogle() → 
+Redirects to Google OAuth → 
+User authorizes → 
+Redirects back with code → 
+Supabase Auth exchanges code for session → 
+Redirect to dashboard → 
+AuthContext detects session → 
+User is authenticated
+```
+
+### Route Protection
+
+**AuthGuard Hook:**
+
+```typescript
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+
+export function useRequireAuth() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
+  return { user, loading };
+}
+```
+
+**Usage:**
+```typescript
+export default function Dashboard() {
+  const { user, loading } = useRequireAuth();
+  
+  if (loading) return <div>Loading...</div>;
+  if (!user) return null; // Will redirect
+  
+  return <div>Dashboard content</div>;
+}
+```
+
+### Security Architecture
+
+**Row Level Security (RLS):**
+
+```sql
+-- Example RLS policy for habits table
+CREATE POLICY "Users can view own habits"
+ON habits FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own habits"
+ON habits FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own habits"
+ON habits FOR UPDATE
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own habits"
+ON habits FOR DELETE
+USING (auth.uid() = user_id);
+```
+
+**Service Role Key Usage:**
+
+The service role key is only used server-side for admin operations:
+
+```typescript
+// Server-side only
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Never expose to client
+);
+```
+
+**Security Principles:**
+
+1. **Client-side**: Uses anon key only, respects RLS
+2. **Server-side**: Uses service role key, bypasses RLS for admin operations
+3. **Plan state**: Always from Supabase, never from frontend
+4. **Webhooks**: Signature verified before processing
+5. **API keys**: Encrypted before storage (TODO for production)
+
+### Admin Authentication
+
+**Admin Verification:**
+
+```typescript
+async function verifyAdmin(request: Request) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader) return false;
+  
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  
+  if (error || !user) return false;
+
+  // Check if user is admin
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  return profile?.is_admin === true;
+}
+```
+
+**Usage in API Routes:**
+
+```typescript
+export async function GET(request: Request) {
+  if (!await verifyAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // Admin logic here
+}
+```
+
+---
+
+## Database Operations
+
+### Supabase Client Configuration
+
+**Client-side Client:**
+
+```typescript
+import { createBrowserClient } from '@supabase/ssr';
+
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null;
+
+export const createClientComponentClient = () => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+  // Return cached client to prevent multiple instances
+  if (!_browserClient) {
+    _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }
+  return _browserClient;
+};
+```
+
+**Server-side Client:**
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+export const createServerComponentClient = () => {
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
+```
+
+**Admin Client:**
+
+```typescript
+export const createAdminClient = () => {
+  return createClient(supabaseUrl, supabaseServiceKey);
+};
+```
+
+### CRUD Operations
+
+**Create:**
+
+```typescript
+const { data, error } = await supabase
+  .from('habits')
+  .insert({
+    user_id: userId,
+    title: 'Exercise',
+    frequency: 'daily',
+    xp_reward: 10,
+  })
+  .select()
+  .single();
+```
+
+**Read:**
+
+```typescript
+const { data, error } = await supabase
+  .from('habits')
+  .select('*')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false });
+```
+
+**Update:**
+
+```typescript
+const { data, error } = await supabase
+  .from('habits')
+  .update({ title: 'New Title' })
+  .eq('id', habitId)
+  .select()
+  .single();
+```
+
+**Delete:**
+
+```typescript
+const { error } = await supabase
+  .from('habits')
+  .delete()
+  .eq('id', habitId);
+```
+
+### Advanced Queries
+
+**Join Queries:**
+
+```typescript
+const { data, error } = await supabase
+  .from('chat_conversations')
+  .select('*, profiles!inner(email, name)')
+  .order('updated_at', { ascending: false });
+```
+
+**Aggregation:**
+
+```typescript
+const { data, error } = await supabase
+  .from('habit_logs')
+  .select('habit_id, count')
+  .eq('user_id', userId);
+```
+
+**Batch Operations:**
+
+```typescript
+const habitIds = habits.map(h => h.id);
+const { data, error } = await supabase
+  .from('habit_logs')
+  .select('*')
+  .in('habit_id', habitIds);
+```
+
+### Database Schema
+
+**Key Tables:**
+
+1. **profiles**: User profiles with plan, XP, streaks
+2. **habits**: User habits with XP rewards
+3. **habit_logs**: Daily habit completion logs
+4. **tasks**: User tasks with priorities
+5. **task_logs**: Task completion history
+6. **chat_conversations**: AI chat conversations
+7. **chat_messages**: Chat messages
+8. **ai_keys**: User's API keys (BYOK)
+9. **ai_usage_logs**: AI usage tracking
+10. **prompt_memory**: User memory for AI personalization
+
+**Relationships:**
+
+- profiles → habits (one-to-many)
+- profiles → tasks (one-to-many)
+- profiles → chat_conversations (one-to-many)
+- habits → habit_logs (one-to-many)
+- tasks → task_logs (one-to-many)
+- chat_conversations → chat_messages (one-to-many)
+
+---
+
+## Error Handling Patterns
+
+### Try-Catch Pattern
+
+```typescript
+export async function loadData(userId: string) {
+  if (!isSupabaseConfigured()) return null;
+  
+  const supabase = createClientComponentClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error loading data:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return null;
+  }
+}
+```
+
+### API Error Handling
+
+```typescript
+const handleExport = async (type: 'all' | 'chat' | 'user', userId?: string) => {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      alert('Authentication required');
+      return;
+    }
+
+    const response = await fetch(`/api/admin/export?type=${type}${userId ? `&userId=${userId}` : ''}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Export failed' }));
+      throw new Error(errorData.error || 'Export failed');
+    }
+
+    // Download the file
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `rrise-export-${type}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+    document.body.removeChild(a);
+    
+    alert('Export downloaded successfully!');
+  } catch (error: any) {
+    console.error('Export error:', error);
+    alert(`Export failed: ${error.message || 'Please try again.'}`);
+  }
+};
+```
+
+### Optimistic UI Updates
+
+```typescript
+const handleHabitToggle = async (habitId: string) => {
+  // Optimistic update
+  setHabits(prev => prev.map(h => 
+    h.id === habitId ? { ...h, completedToday: !h.completedToday } : h
+  ));
+
+  try {
+    const success = await toggleHabitCompletion(habitId, user.id);
+    if (!success) {
+      // Revert on error
+      setHabits(prev => prev.map(h => 
+        h.id === habitId ? { ...h, completedToday: !h.completedToday } : h
+      ));
+    }
+  } catch (error) {
+    console.error('Error toggling habit:', error);
+    // Revert on error
+    setHabits(prev => prev.map(h => 
+      h.id === habitId ? { ...h, completedToday: !h.completedToday } : h
+    ));
+  }
+};
+```
+
+### Loading States
+
+```typescript
+const [loading, setLoading] = useState(false);
+
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    await submitData();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+return (
+  <button disabled={loading} onClick={handleSubmit}>
+    {loading ? 'Loading...' : 'Submit'}
+  </button>
+);
+```
+
+---
+
+## Deployment & Configuration
+
+### Environment Variables
+
+**Required Variables:**
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO=price_...
+STRIPE_PRICE_ULTRA=price_...
+
+# Application
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+```
+
+### Vercel Deployment
+
+**1. Connect Repository:**
+
+- Go to Vercel dashboard
+- Click "Add New Project"
+- Connect your Git repository
+- Import the RRise project
+
+**2. Configure Environment Variables:**
+
+- Go to Settings → Environment Variables
+- Add all required environment variables
+- Select appropriate environments (production, preview, development)
+
+**3. Deploy:**
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start production server
+npm start
+```
+
+**4. Configure Webhooks:**
+
+- Go to Stripe Dashboard → Webhooks
+- Add endpoint: `https://yourdomain.com/api/webhooks/stripe`
+- Select events to send
+- Copy webhook signing secret
+- Add to Vercel environment variables
+
+### Database Setup
+
+**1. Run Schema:**
+
+```sql
+-- Run supabase/schema.sql in Supabase SQL Editor
+```
+
+**2. Create Storage Buckets:**
+
+```sql
+-- Create storage buckets in Supabase Storage UI
+-- - user-assets (private)
+-- - reports (private)
+```
+
+**3. Configure RLS:**
+
+```sql
+-- RLS policies are included in schema.sql
+-- Verify they're enabled
+```
+
+### Monitoring
+
+**1. Supabase Dashboard:**
+
+- Monitor database performance
+- View auth logs
+- Check storage usage
+- Monitor API calls
+
+**2. Vercel Dashboard:**
+
+- Monitor deployment logs
+- View analytics
+- Check error rates
+- Monitor performance
+
+**3. Stripe Dashboard:**
+
+- Monitor subscription events
+- View payment history
+- Check webhook delivery
+- Monitor revenue
+
+---
+
+**Document Volume:** Complete Technical Handbook
+**Total Sections:** 11 major sections
+**Code Examples:** 50+ detailed examples
+**Architecture Documentation:** Full system coverage
+**Last Updated:** 2026-07-12

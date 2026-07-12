@@ -160,7 +160,7 @@ export default function HomePage() {
                   transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <img
-                    src="/images/Logo.png"
+                    src="/images/Logo.webp"
                     alt="RRise Logo"
                     className="w-full h-full object-contain"
                   />

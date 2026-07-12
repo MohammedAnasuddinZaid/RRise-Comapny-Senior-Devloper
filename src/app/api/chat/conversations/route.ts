@@ -12,7 +12,9 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
@@ -44,7 +46,9 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
@@ -68,6 +72,52 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ conversation });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const { conversationId } = await request.json();
+
+    if (!conversationId) {
+      return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
+    }
+
+    // Delete conversation (messages should cascade delete if database schema has cascade foreign keys, or we can delete them manually)
+    // First delete messages
+    await supabase
+      .from('chat_messages')
+      .delete()
+      .eq('conversation_id', conversationId);
+
+    const { error } = await supabase
+      .from('chat_conversations')
+      .delete()
+      .eq('id', conversationId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
