@@ -58,11 +58,10 @@ export default function ChatPage() {
   >([]);
   const [input, setInput]         = useState("");
   const [startingPlan, setStartingPlan] = useState<string | null>(null);
-  const [selectedAPI, setSelectedAPI] = useState<"free" | "byok" | "pro">("free");
+  const [selectedAPI, setSelectedAPI] = useState<"free" | "byok">("free");
   const [showAPIDropdown, setShowAPIDropdown] = useState(false);
   const [hasBYOK, setHasBYOK]     = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showBYOKPopup, setShowBYOKPopup] = useState(false);
 
   // track the "active" conversation id locally too (mirrors context)
@@ -449,25 +448,21 @@ export default function ChatPage() {
                     {[
                       { key: "free", label: "FREE MODE", color: "green" },
                       ...(hasBYOK ? [{ key: "byok", label: "BYOK MODE", color: "blue" }] : []),
-                      { key: "pro",  label: "PRO MODE",  color: "purple" },
                     ].map((opt) => {
-                      const locked = opt.key === "pro" && !(userProfile?.plan === "pro" || userProfile?.plan === "ultra");
                       return (
                         <button
                           key={opt.key}
                           type="button"
                           onClick={() => {
-                            if (locked) { setShowUpgradePrompt(true); }
-                            else { setSelectedAPI(opt.key as any); }
+                            setSelectedAPI(opt.key as any);
                             setShowAPIDropdown(false);
                           }}
                           className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedAPI === opt.key ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                          } ${locked ? "opacity-50 cursor-not-allowed" : ""}`}
+                          }`}
                         >
                           <Sparkles className="w-4 h-4" />
                           <span>{opt.label}</span>
-                          {locked && <Lock className="w-3 h-3 ml-auto" />}
                         </button>
                       );
                     })}
@@ -485,29 +480,6 @@ export default function ChatPage() {
           </form>
         </motion.div>
       </main>
-
-      {/* Upgrade modal */}
-      {showUpgradePrompt && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className={`max-w-md w-full mx-4 ${isDark ? "bg-black/90 border-white/10" : "bg-white/90 border-green-500/20"} backdrop-blur-xl`}>
-            <CardContent className="p-8 text-center">
-              <Lock className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
-              <p className="text-muted-foreground mb-6">AI-powered chat is available on Pro and Ultra plans.</p>
-              <div className="space-y-3">
-                <Link href="/pricing">
-                  <Button className="w-full">
-                    View Plans <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Button variant="glass" className="w-full" onClick={() => { setShowUpgradePrompt(false); setSelectedAPI("free"); }}>
-                  Use Free Plan
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

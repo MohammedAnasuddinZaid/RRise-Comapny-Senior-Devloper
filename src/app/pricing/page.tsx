@@ -20,19 +20,8 @@ function usePricingSettings() {
   useEffect(() => {
     async function fetchPrices() {
       try {
-        // Fetch from new content management system
-        const [proRes, ultraRes] = await Promise.all([
-          fetch('/api/content?key=pro_price'),
-          fetch('/api/content?key=ultra_price')
-        ]);
-
-        const proData = proRes.ok ? await proRes.json() : null;
-        const ultraData = ultraRes.ok ? await ultraRes.json() : null;
-
-        setPrices({
-          pro: proData?.content || DEFAULT_PRICES.pro,
-          ultra: ultraData?.content || DEFAULT_PRICES.ultra,
-        });
+        // Use default prices directly to avoid content management system issues
+        setPrices(DEFAULT_PRICES);
       } catch (e) {
         // silently fall back to defaults
       } finally {
