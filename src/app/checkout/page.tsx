@@ -93,21 +93,37 @@ function CheckoutContent() {
     setError(null);
 
     try {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setError("You need to be logged in to complete checkout. Redirecting to login...");
+        setTimeout(() => {
+          router.push("/login?redirect=/checkout?plan=" + planId);
+        }, 1500);
+        setIsProcessing(false);
+        return;
+      }
+
       const response = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ plan: planId }),
+        credentials: 'include',
       });
 
       const data = await response.json();
 
-      if (data.url) {
+      if (response.ok && data.url) {
         window.location.href = data.url;
       } else {
         setError(data.error || "Failed to start checkout. Please try again.");
         setIsProcessing(false);
       }
     } catch (err) {
+      console.error('Checkout error:', err);
       setError("Network error. Please check your connection and try again.");
       setIsProcessing(false);
     }

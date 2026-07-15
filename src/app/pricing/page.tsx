@@ -20,8 +20,18 @@ function usePricingSettings() {
   useEffect(() => {
     async function fetchPrices() {
       try {
-        // Use default prices directly to avoid content management system issues
-        setPrices(DEFAULT_PRICES);
+        // Fetch from system_settings table (same as checkout page)
+        const response = await fetch('/api/admin/settings');
+        if (response.ok) {
+          const data = await response.json();
+          const settings = data.settings || [];
+          const priceMap = { ...DEFAULT_PRICES };
+          settings.forEach((setting: any) => {
+            if (setting.key === 'stripe_pro_price') priceMap.pro = setting.value;
+            if (setting.key === 'stripe_ultra_price') priceMap.ultra = setting.value;
+          });
+          setPrices(priceMap);
+        }
       } catch (e) {
         // silently fall back to defaults
       } finally {
