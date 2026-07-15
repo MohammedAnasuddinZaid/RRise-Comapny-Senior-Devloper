@@ -30,20 +30,41 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 
 /**
- * Get Stripe price ID for a plan
- * In production, these should be configured in Stripe Dashboard
+ * Get Stripe price ID for a plan from system_settings
+ * Falls back to environment variables or default values
  */
-function getPriceIdForPlan(plan: 'pro' | 'ultra'): string {
-  // Use exact price IDs provided
+async function getPriceIdForPlan(plan: 'pro' | 'ultra', supabase: any): Promise<string> {
+  try {
+    // Try to fetch from system_settings table first
+    const { data: settings } = await supabase
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['stripe_pro_price', 'stripe_ultra_price']);
+    
+    if (settings && settings.length > 0) {
+      const priceMap: Record<string, string> = {};
+      settings.forEach((setting: any) => {
+        priceMap[setting.key] = setting.value;
+      });
+      
+      const priceId = priceMap[plan === 'pro' ? 'stripe_pro_price' : 'stripe_ultra_price'];
+      if (priceId) {
+        console.log(`Using price ID from system_settings for ${plan}:`, priceId);
+        return priceId;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching price from system_settings:', error);
+  }
+  
+  // Fallback to environment variables
   const priceIds: Record<string, string> = {
     pro: process.env.STRIPE_PRICE_PRO || 'price_1ToJGuIaxTgHtJYBAFVh6s4M',
     ultra: process.env.STRIPE_PRICE_ULTRA || 'price_1ToJJVIaxTgHtJYBa2rkDBDo',
   };
   
   const priceId = priceIds[plan];
-  console.log(`Price ID for ${plan}:`, priceId);
-  console.log('Environment STRIPE_PRICE_PRO:', process.env.STRIPE_PRICE_PRO);
-  console.log('Environment STRIPE_PRICE_ULTRA:', process.env.STRIPE_PRICE_ULTRA);
+  console.log(`Using fallback price ID for ${plan}:`, priceId);
   
   return priceId;
 }
@@ -147,8 +168,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get price ID for the plan
-    const priceId = getPriceIdForPlan(plan);
+    // Get price ID for the plan from system_settings
+    const priceId = await getPriceIdForPlan(plan, supabase);
     console.log('Creating checkout session with price ID:', priceId);
     console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
 

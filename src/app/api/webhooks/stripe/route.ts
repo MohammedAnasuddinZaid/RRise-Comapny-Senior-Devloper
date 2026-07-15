@@ -41,8 +41,30 @@ const supabase = createClient(
 
 /**
  * Map Stripe price ID to plan type
+ * Checks system_settings table first, then falls back to environment variables
  */
-function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'ultra' {
+async function getPlanFromPriceId(priceId: string): Promise<'free' | 'pro' | 'ultra'> {
+  try {
+    // Try to fetch from system_settings table first
+    const { data: settings } = await supabase
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['stripe_pro_price', 'stripe_ultra_price']);
+    
+    if (settings && settings.length > 0) {
+      const priceMap: Record<string, string> = {};
+      settings.forEach((setting: any) => {
+        priceMap[setting.key] = setting.value;
+      });
+      
+      if (priceId === priceMap['stripe_pro_price']) return 'pro';
+      if (priceId === priceMap['stripe_ultra_price']) return 'ultra';
+    }
+  } catch (error) {
+    console.error('Error fetching price from system_settings:', error);
+  }
+  
+  // Fallback to environment variables
   if (priceId === process.env.STRIPE_PRICE_PRO || priceId === 'price_1ToJGuIaxTgHtJYBAFVh6s4M') return 'pro';
   if (priceId === process.env.STRIPE_PRICE_ULTRA || priceId === 'price_1ToJJVIaxTgHtJYBa2rkDBDo') return 'ultra';
   return 'free';
@@ -63,7 +85,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return;
   }
 
-  const plan = getPlanFromPriceId(priceId);
+  const plan = await getPlanFromPriceId(priceId);
   
   // Update user plan in Supabase
   const { error } = await supabase
@@ -100,7 +122,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   const priceId = subscription.items.data[0].price.id;
-  const plan = getPlanFromPriceId(priceId);
+  const plan = await getPlanFromPriceId(priceId);
   
   // Update user plan in Supabase
   const { error } = await supabase
@@ -141,7 +163,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   const priceId = subscription.items.data[0].price.id;
-  const plan = getPlanFromPriceId(priceId);
+  const plan = await getPlanFromPriceId(priceId);
   
   // Update user plan in Supabase
   const { error } = await supabase
@@ -247,11 +269,32 @@ export async function POST(request: Request) {
       return new NextResponse('Missing stripe-signature', { status: 400 });
     }
 
+    // Get webhook secret from system_settings or environment
+    let webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    try {
+      const { data: settings } = await supabase
+        .from('system_settings')
+        .select('key, value')
+        .eq('key', 'stripe_webhook_secret')
+        .single();
+      
+      if (settings?.value) {
+        webhookSecret = settings.value;
+        console.log('Using webhook secret from system_settings');
+      }
+    } catch (error) {
+      console.error('Error fetching webhook secret from system_settings:', error);
+    }
+
+    if (!webhookSecret) {
+      return new NextResponse('Webhook secret not configured', { status: 500 });
+    }
+
     // Verify webhook signature
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
 
     console.log(`Received Stripe webhook: ${event.type}`);
