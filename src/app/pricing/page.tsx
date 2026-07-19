@@ -3,15 +3,10 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Header } from "../../components/layout/Header";
-import { Check } from "lucide-react";
+import { GradientBackground } from "../../components/ui/GradientBackground";
 import Link from "next/link";
-import { createClientComponentClient } from "@/lib/supabase";
 
-// Default prices — overridden by content management system
-const DEFAULT_PRICES = {
-  pro: "20",
-  ultra: "40",
-};
+const DEFAULT_PRICES = { pro: "20", ultra: "40" };
 
 function usePricingSettings() {
   const [prices, setPrices] = useState(DEFAULT_PRICES);
@@ -20,7 +15,6 @@ function usePricingSettings() {
   useEffect(() => {
     async function fetchPrices() {
       try {
-        // Fetch from system_settings table (same as checkout page)
         const response = await fetch('/api/admin/settings');
         if (response.ok) {
           const data = await response.json();
@@ -33,7 +27,6 @@ function usePricingSettings() {
           setPrices(priceMap);
         }
       } catch (e) {
-        // silently fall back to defaults
       } finally {
         setLoading(false);
       }
@@ -44,211 +37,34 @@ function usePricingSettings() {
   return { prices, loading };
 }
 
-function PricingCard({
-  plan,
-  index,
-  priceOverride,
-  ctaHref,
-}: {
-  plan: any;
-  index: number;
-  priceOverride?: string;
-  ctaHref: string;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const displayPrice = priceOverride ? `$${priceOverride}` : plan.price;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: index * 0.15 }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      className="flip-card h-auto min-h-[520px]"
-    >
-      <motion.div
-        animate={{ y: hovered ? -8 : 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className={`relative p-8 rounded-3xl bg-gradient-to-br ${plan.color} border ${plan.border} backdrop-blur-xl h-full flex flex-col transition-all duration-500`}
-        style={{
-          boxShadow: hovered
-            ? `0 24px 80px ${plan.hoverGlow}`
-            : `0 8px 40px ${plan.glow}`,
-        }}
-      >
-        {/* Hover shimmer */}
-        {hovered && (
-          <motion.div
-            className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-              animate={{ x: ["-100%", "200%"] }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-          </motion.div>
-        )}
-
-        {/* Badge */}
-        {plan.badge && (
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-            <div
-              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#020408] ${
-                plan.id === "pro"
-                  ? "bg-gradient-to-r from-primary to-secondary"
-                  : "bg-gradient-to-r from-secondary to-primary"
-              }`}
-            >
-              {plan.badge}
-            </div>
-          </div>
-        )}
-
-        {/* Plan name */}
-        <div className="mb-6 mt-2">
-          <p
-            className="font-monument text-xs tracking-widest text-muted-foreground uppercase mb-3"
-            style={{ fontFamily: "'Monument Extended', sans-serif" }}
-          >
-            {plan.name}
-          </p>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span
-              className={`font-space text-5xl font-bold ${plan.accentColor}`}
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              {displayPrice}
-            </span>
-            <span className="font-inter text-sm text-muted-foreground">/{plan.period}</span>
-          </div>
-          <p className="font-inter text-sm text-muted-foreground">{plan.tagline}</p>
-        </div>
-
-        {/* Divider */}
-        <div
-          className={`h-px w-full mb-6 ${
-            plan.id === "ultra"
-              ? "bg-gradient-to-r from-transparent via-secondary/40 to-transparent"
-              : "bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-          }`}
-        />
-
-        {/* Features */}
-        <ul className="space-y-3 flex-1 mb-8">
-          {plan.features.map((feat: string) => (
-            <li key={feat} className="flex items-center gap-3">
-              <div
-                className={`w-5 h-5 rounded-full ${plan.dotColor} bg-opacity-20 border ${
-                  plan.id === "ultra" ? "border-secondary/40" : "border-primary/40"
-                } flex items-center justify-center flex-shrink-0`}
-              >
-                <Check
-                  className={`w-3 h-3 ${plan.accentColor}`}
-                  strokeWidth={3}
-                />
-              </div>
-              <span className="font-inter text-sm text-foreground/80 capitalize">{feat}</span>
-            </li>
-          ))}
-        </ul>
-
-        {/* CTA */}
-        <Link href={ctaHref}>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className={`w-full py-3.5 rounded-xl font-clash font-semibold text-sm transition-all duration-300 ${
-              plan.ctaVariant === "glass"
-                ? "glass border border-white/10 hover:border-primary/30 text-foreground"
-                : plan.ctaVariant === "gradient"
-                ? "bg-gradient-to-r from-primary to-secondary text-[#020408]"
-                : "bg-gradient-to-r from-secondary to-primary text-[#020408]"
-            }`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            {plan.ctaLabel}
-          </motion.button>
-        </Link>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 const PLAN_DEFS = [
   {
     id: "free",
-    name: "rrise free",
+    name: "RRise Free",
     price: "$0",
     period: "forever",
     tagline: "Everything you need to start",
-    color: "from-white/[0.06] to-white/[0.02]",
-    border: "border-white/8",
-    glow: "rgba(0,255,135,0.05)",
-    hoverGlow: "rgba(0,255,135,0.15)",
-    badge: null,
-    ctaLabel: "Get started free",
-    ctaVariant: "glass" as const,
-    features: [
-      "goals",
-      "habits",
-      "tasks",
-      "dashboards",
-      "streaks",
-      "mascot",
-      "Free & BYOK chat usage",
-    ],
-    accentColor: "text-primary",
-    dotColor: "bg-primary",
+    features: ["goals", "habits", "tasks", "dashboards", "streaks", "mascot", "Free & BYOK chat usage"],
+    accent: "text-white",
   },
   {
     id: "pro",
-    name: "rrise pro",
+    name: "RRise Pro",
     price: "$20",
     period: "per month",
     tagline: "For those serious about growth",
-    color: "from-primary/15 to-secondary/10",
-    border: "border-primary/30",
-    glow: "rgba(0,255,135,0.12)",
-    hoverGlow: "rgba(0,255,135,0.28)",
     badge: "Most Popular",
-    ctaLabel: "Start pro",
-    ctaVariant: "gradient" as const,
-    features: [
-      "Discord community",
-      "monthly ai insights",
-      "Experts recommendations",
-      "Human generated plans",
-      "advanced analytics",
-      "better support",
-    ],
-    accentColor: "text-primary",
-    dotColor: "bg-primary",
+    features: ["Discord community", "monthly ai insights", "Experts recommendations", "Human generated plans", "advanced analytics", "better support"],
+    accent: "text-primary",
   },
   {
     id: "ultra",
-    name: "rrise ultra",
+    name: "RRise Ultra",
     price: "$40",
     period: "per month",
     tagline: "The full system, plus human touch",
-    color: "from-secondary/15 to-primary/10",
-    border: "border-secondary/30",
-    glow: "rgba(0,229,255,0.10)",
-    hoverGlow: "rgba(0,229,255,0.25)",
-    badge: "Most Complete",
-    ctaLabel: "Go ultra",
-    ctaVariant: "gradient-blue" as const,
-    features: [
-      "everything in pro",
-      "human accountability",
-      "accountability check-ins",
-      "personalised feedback",
-      "future community access",
-    ],
-    accentColor: "text-secondary",
-    dotColor: "bg-secondary",
+    features: ["everything in pro", "human accountability", "accountability check-ins", "personalised feedback", "future community access"],
+    accent: "text-white",
   },
 ];
 
@@ -257,12 +73,6 @@ export default function PricingPage() {
 
   function getCtaHref(planId: string): string {
     if (planId === "free") return "/app/dashboard";
-    if (planId === "pro") {
-      return "/checkout?plan=pro";
-    }
-    if (planId === "ultra") {
-      return "/checkout?plan=ultra";
-    }
     return "/checkout?plan=" + planId;
   }
 
@@ -273,63 +83,84 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
-      {/* Ambient */}
-      <div className="dark:block hidden absolute top-[-5%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-primary/5 blur-[200px] pointer-events-none" />
-      <div className="dark:block hidden absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full bg-secondary/4 blur-[160px] pointer-events-none" />
-
+    <div className="relative min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
+      <GradientBackground />
       <Header />
 
-      <main className="relative z-10 px-6 md:px-12 pt-32 pb-24 max-w-6xl mx-auto">
-        {/* Heading */}
+      <main className="relative z-10 px-6 md:px-12 pt-32 pb-32 max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="mb-24 mt-12 border-b border-white/10 pb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs font-space text-primary tracking-widest uppercase mb-6">
-            Simple pricing
+          <div className="inline-flex items-center gap-2 text-xs font-space text-white/50 tracking-widest uppercase mb-8">
+            <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> Simple Pricing
           </div>
-          <h1
-            className="font-clash text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Choose your level
+          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-white">
+            Choose your
+            <br />
+            <span className="text-white/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">Level.</span>
           </h1>
-          <p className="font-inter text-lg text-muted-foreground max-w-xl mx-auto">
-            Start free, scale as you grow. No surprise charges, no lock-in.
-          </p>
         </motion.div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-start mb-20">
-          {PLAN_DEFS.map((plan, i) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              index={i}
-              priceOverride={getPriceOverride(plan.id)}
-              ctaHref={getCtaHref(plan.id)}
-            />
-          ))}
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-white/10 mb-32">
+          {PLAN_DEFS.map((plan, i) => {
+            const displayPrice = getPriceOverride(plan.id) ? `$${getPriceOverride(plan.id)}` : plan.price;
+            return (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: i * 0.15 }}
+                className={`p-10 border-b md:border-b-0 md:border-r border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md transition-colors hover:bg-white/[0.02] flex flex-col ${i === PLAN_DEFS.length - 1 ? 'md:border-r-0' : ''}`}
+              >
+                {plan.badge && (
+                  <div className="text-primary font-space text-xs tracking-widest uppercase mb-4 border border-primary/20 px-3 py-1 inline-block self-start">
+                    {plan.badge}
+                  </div>
+                )}
+                {!plan.badge && <div className="h-[28px] mb-4"></div>}
+                
+                <h3 className="font-monument text-2xl uppercase tracking-widest text-white/50 mb-4">{plan.name}</h3>
+                
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className={`font-monument text-5xl ${plan.accent}`}>{displayPrice}</span>
+                </div>
+                <span className="font-space text-sm tracking-widest uppercase text-white/40 mb-8">{plan.period}</span>
+                
+                <p className="font-inter text-white/60 mb-8">{plan.tagline}</p>
+
+                <div className="h-px w-full bg-white/10 mb-8"></div>
+
+                <ul className="space-y-4 mb-12 flex-1">
+                  {plan.features.map(feat => (
+                    <li key={feat} className="flex items-center gap-3 text-sm font-space tracking-widest uppercase text-white/80">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0"></span>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href={getCtaHref(plan.id)} className={`block text-center w-full px-8 py-4 font-space text-sm tracking-widest uppercase transition-colors ${plan.id === 'pro' ? 'bg-primary text-black hover:bg-white' : 'border border-white/20 text-white hover:bg-white hover:text-black'}`}>
+                  Select {plan.name}
+                </Link>
+              </motion.div>
+            )
+          })}
         </div>
 
-        {/* FAQ */}
+        {/* FAQ Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="max-w-2xl mx-auto"
+          className="border-t border-white/10 pt-16 max-w-4xl mx-auto"
         >
-          <h2
-            className="font-clash text-3xl font-semibold text-center text-foreground mb-10"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Common questions
-          </h2>
-          <div className="space-y-4">
+          <h2 className="font-monument text-3xl md:text-4xl text-white mb-12">Common Questions.</h2>
+          <div className="space-y-0 border border-white/10">
             {[
               {
                 q: "Can I change plans anytime?",
@@ -348,22 +179,15 @@ export default function PricingPage() {
                 a: "The Free plan is available forever. Pro and Ultra plans include a 14-day money-back guarantee.",
               },
             ].map((faq, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl glass border border-white/8 hover:border-primary/15 transition-all duration-300"
+                className={`p-8 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-white/10 last:border-b-0 hover:bg-white/[0.02] transition-colors`}
               >
-                <h3
-                  className="font-clash text-sm font-semibold text-foreground mb-2"
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
+                <h3 className="font-space text-lg text-white mb-4 tracking-widest uppercase">
                   {faq.q}
                 </h3>
-                <p className="font-inter text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </motion.div>
+                <p className="font-inter text-white/60 leading-relaxed">{faq.a}</p>
+              </div>
             ))}
           </div>
         </motion.div>

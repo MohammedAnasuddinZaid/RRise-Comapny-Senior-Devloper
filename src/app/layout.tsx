@@ -3,6 +3,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { AuthProvider } from "../contexts/AuthContext";
+import { CustomCursor } from "../components/ui/CustomCursor";
+import { CinematicLoader } from "../components/ui/CinematicLoader";
 
 const inter = Inter({
   variable: "--font-inter-next",
@@ -39,6 +41,8 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <CinematicLoader />
+        <CustomCursor />
         <AuthProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </AuthProvider>

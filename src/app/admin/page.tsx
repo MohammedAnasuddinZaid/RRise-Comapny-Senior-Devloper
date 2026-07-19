@@ -472,7 +472,7 @@ export default function AdminDashboard() {
   if (loadingData) return <div>Loading admin data...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-inter">
       <div className="space-y-8 pb-12 max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="space-y-4">

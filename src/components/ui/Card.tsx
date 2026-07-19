@@ -9,7 +9,7 @@ const Card = React.forwardRef<HTMLDivElement, HTMLMotionProps<"div">>(
     <motion.div
       ref={ref}
       className={cn(
-        "rounded-2xl border border-white/5 bg-card text-card-foreground shadow-2xl backdrop-blur-xl relative overflow-hidden",
+        "rounded-none border border-white/10 bg-[#0a0a0a]/80 text-white backdrop-blur-md relative overflow-hidden transition-colors hover:bg-white/[0.02]",
         className
       )}
       {...props}
@@ -33,7 +33,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn("font-playfair text-2xl font-semibold leading-none tracking-tight", className)}
+      className={cn("font-monument text-lg font-normal uppercase tracking-widest text-white/80", className)}
       {...props}
     />
   )

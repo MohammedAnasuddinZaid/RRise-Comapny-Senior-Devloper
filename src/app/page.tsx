@@ -3,240 +3,188 @@
 import { motion } from "framer-motion";
 import { Header } from "../components/layout/Header";
 import { GradientBackground } from "../components/ui/GradientBackground";
-import { GlassCard } from "../components/ui/GlassCard";
-import { AnimatedButton } from "../components/ui/AnimatedButton";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Target, BarChart3, RefreshCw } from "lucide-react";
 import { AuthModal } from "../components/auth/AuthModal";
 
-function TypingWordmark({ text }: { text: string }) {
-  const [displayed, setDisplayed] = useState("");
-  const [idx, setIdx] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    if (idx < text.length) {
-      const t = setTimeout(() => {
-        setDisplayed((p) => p + text[idx]);
-        setIdx((i) => i + 1);
-      }, isMobile ? 80 : 120); // Faster typing on mobile
-      return () => clearTimeout(t);
-    }
-  }, [idx, text, isMobile]);
-
+// Scrolling Marquee Component
+const Marquee = () => {
   return (
-    <span>
-      {displayed}
-      {idx < text.length && (
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
-          className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 align-middle"
-        />
-      )}
-    </span>
+    <div className="relative flex overflow-hidden bg-primary text-primary-foreground py-3 border-y border-primary/20 rotate-[-1deg] w-[110%] -ml-[5%] shadow-xl z-20">
+      <motion.div
+        className="flex whitespace-nowrap gap-10 font-monument text-sm md:text-base tracking-widest uppercase items-center"
+        animate={{ x: [0, -1036] }}
+        transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+      >
+        {/* Repeat content for infinite scroll effect */}
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="flex items-center gap-10">
+            <span>Goal Tracking</span>
+            <span>✦</span>
+            <span>Habit Building</span>
+            <span>✦</span>
+            <span>Analytics Dashboard</span>
+            <span>✦</span>
+            <span>Next.js & React</span>
+            <span>✦</span>
+          </div>
+        ))}
+      </motion.div>
+    </div>
   );
-}
+};
 
 const FEATURES = [
   {
-    icon: <Target className="w-8 h-8" />,
+    num: "01",
     title: "Goal Tracking",
     description: "Set ambitious goals and break them down into actionable steps with smart progress tracking.",
+    stack: "PRODUCTIVITY / HABITS"
   },
   {
-    icon: <BarChart3 className="w-8 h-8" />,
+    num: "02",
     title: "Analytics Dashboard",
     description: "Visualize your growth with beautiful charts and insights that keep you motivated.",
+    stack: "DATA / CHARTS"
   },
   {
-    icon: <RefreshCw className="w-8 h-8" />,
+    num: "03",
     title: "Habit Building",
     description: "Build lasting habits with streaks, reminders, and personalized coaching.",
+    stack: "AI / COACHING"
   },
 ];
 
 export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      {/* Premium animated background */}
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-white">
+      {/* 3D Particle Sphere Background */}
       <GradientBackground />
 
       <Header />
 
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 pt-28 pb-24 text-center">
+      <main className="relative z-10 w-full min-h-screen">
+        
         {/* Hero Section */}
-        <div className="max-w-5xl mx-auto">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: isMobile ? 0.6 : 1, ease: [0.25, 0.1, 0.25, 1] }}
-            className="mb-12"
-          >
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass-enhanced border border-primary/20 text-xs font-space text-primary tracking-widest uppercase">
-              <motion.div
-                className="w-2 h-2 rounded-full bg-primary"
-                animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
-                transition={{ duration: isMobile ? 4 : 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-              Now in Early Access , Join the waitlist
-            </div>
-          </motion.div>
-
-          {/* Hero wordmark */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: isMobile ? 0.8 : 1.2, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-            className="mb-10"
-          >
-            <h1
-              className="font-monument text-5xl md:text-7xl lg:text-9xl tracking-widest leading-none gradient-text"
-              style={{ fontFamily: "'Monument Extended', sans-serif", letterSpacing: "0.08em" }}
+        <div className="flex flex-col justify-center min-h-[90vh] px-6 md:px-12 lg:px-24">
+          <div className="max-w-[1400px] mx-auto w-full pt-32 relative">
+            
+            {/* Top labels */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ delay: 0.2 }}
+              className="flex justify-between items-end border-b border-white/10 pb-6 mb-8 uppercase text-xs tracking-widest text-white/50 font-space"
             >
-              <TypingWordmark text="RRise" />
-            </h1>
-          </motion.div>
-
-          {/* Tagline */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: isMobile ? 0.8 : 1.2, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="mb-8"
-          >
-            <h2
-              className="font-clash text-xl md:text-3xl lg:text-5xl text-foreground/90 font-light tracking-wide"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              Rise. Build. Become.
-            </h2>
-          </motion.div>
-
-          {/* Subline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: isMobile ? 0.8 : 1.2, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="font-inter text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-16"
-          >
-            The premium personal development workspace that bridges the gap between knowing what to do , and actually doing it.
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: isMobile ? 0.8 : 1.2, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-16 md:mb-24"
-          >
-            <AnimatedButton 
-              variant="primary" 
-              size="lg" 
-              onClick={() => setIsAuthModalOpen(true)}
-            >
-              Start for free
-            </AnimatedButton>
-            <AnimatedButton variant="secondary" size="lg" href="/features">
-              See how it works →
-            </AnimatedButton>
-          </motion.div>
-
-          {/* Hero Mockup Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: isMobile ? 1 : 1.5, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-            className="perspective-container"
-          >
-            <GlassCard className="p-6 md:p-10 lg:p-16 layered-card float-animation">
-              <div className="flex flex-col items-center gap-6 md:gap-8">
-                <motion.div
-                  className="w-20 h-20 md:w-28 md:h-36 lg:w-36 lg:h-36 relative"
-                  whileHover={{ scale: 1.08, rotate: 3 }}
-                  transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-                >
-                  <img
-                    src="/images/Logo.webp"
-                    alt="RRise Logo"
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-2xl opacity-50" />
-                </motion.div>
-                <div className="text-center">
-                  <h3 className="font-clash text-xl md:text-2xl lg:text-3xl font-semibold text-foreground mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    Your Personal Growth Hub
-                  </h3>
-                  <p className="font-inter text-sm md:text-base muted-foreground max-w-md leading-relaxed">
-                    Track goals, build habits, and visualize your progress , all in one beautiful, intuitive workspace.
-                  </p>
-                </div>
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-primary rounded-full"></div> AVAILABLE Q3 '26</span>
+                <span className="hidden md:inline">PERSONAL DEVELOPMENT STUDIO — EST. 2026</span>
               </div>
-            </GlassCard>
-          </motion.div>
+              <div className="hidden md:block">SCROLL / WHEEL</div>
+            </motion.div>
+
+            {/* Giant Typograhpy */}
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
+              className="relative z-10"
+            >
+              <h1 className="font-monument text-[12vw] md:text-[10vw] leading-[0.85] tracking-tighter uppercase">
+                RRise
+                <br />
+                <span className="text-white/40 italic font-clash font-light text-[10vw] md:text-[8vw] tracking-normal">Studio.</span>
+              </h1>
+            </motion.div>
+
+            {/* Subtext and CTA */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="mt-12 md:mt-24 grid grid-cols-1 md:grid-cols-2 gap-8 items-end"
+            >
+              <p className="font-inter text-lg md:text-xl text-white/70 max-w-md leading-relaxed">
+                We build personal development hubs, clean goal trackers, and visual analytics that actually stand out. <span className="bg-white/10 px-1">Built for doers</span>, zero corporate fluff.
+              </p>
+              <div className="flex gap-4 md:justify-end">
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="bg-white text-black font-space px-8 py-4 text-sm tracking-widest uppercase hover:bg-primary hover:text-black transition-colors"
+                >
+                  Start for free →
+                </button>
+                <Link href="/features" className="border border-white/20 text-white font-space px-8 py-4 text-sm tracking-widest uppercase hover:bg-white/10 transition-colors">
+                  Features
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.7 }}
+              className="mt-24 pb-12 flex flex-wrap gap-16 border-b border-white/10"
+            >
+              <div>
+                <div className="font-monument text-4xl mb-2">10K+</div>
+                <div className="text-white/40 font-space text-xs tracking-widest">USERS</div>
+              </div>
+              <div>
+                <div className="font-monument text-4xl mb-2">TOP 10</div>
+                <div className="text-white/40 font-space text-xs tracking-widest">PRODUCT OF DAY</div>
+              </div>
+              <div>
+                <div className="font-monument text-4xl mb-2">Since 2026</div>
+                <div className="text-white/40 font-space text-xs tracking-widest">SHIPPING NON-STOP</div>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Features Section */}
-        <div className="max-w-6xl mx-auto mt-20 md:mt-40 px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: isMobile ? 0.6 : 1, ease: [0.25, 0.1, 0.25, 1] }}
-            className="text-center mb-12 md:mb-20"
-          >
-            <h2 className="font-clash text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              Everything you need to grow
-            </h2>
-            <p className="font-inter text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Powerful tools designed to help you achieve your personal development goals.
-            </p>
-          </motion.div>
+        {/* Marquee Break */}
+        <div className="py-20">
+          <Marquee />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {FEATURES.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+        {/* Features List Section (AceZen style works list) */}
+        <div className="max-w-[1400px] mx-auto w-full px-6 md:px-12 lg:px-24 pb-32">
+          <h2 className="font-monument text-5xl md:text-7xl mb-16 tracking-tight">Features.</h2>
+          
+          <div className="flex flex-col">
+            {FEATURES.map((feature, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: isMobile ? 0.6 : 1, delay: isMobile ? 0 : index * 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="group relative border-t border-white/10 py-12 md:py-16 hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center gap-8 cursor-pointer"
               >
-                <GlassCard className="p-6 md:p-10 h-full layered-card">
-                  <div className="mb-6 text-primary">{feature.icon}</div>
-                  <h3 className="font-clash text-lg md:text-xl font-semibold text-foreground mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {feature.title}
-                  </h3>
-                  <p className="font-inter text-sm md:text-base text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </GlassCard>
+                <div className="text-primary font-space text-sm tracking-widest md:w-16 shrink-0">{feature.num}</div>
+                <div className="flex-1">
+                  <h3 className="font-monument text-3xl md:text-5xl mb-4 group-hover:text-primary transition-colors">{feature.title}</h3>
+                  <div className="text-white/50 font-space text-xs tracking-widest uppercase">{feature.stack}</div>
+                </div>
+                <div className="md:w-1/3 text-white/60 font-inter leading-relaxed">
+                  {feature.description}
+                </div>
+                
+                {/* Hover circle indicator */}
+                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-primary/30 items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:scale-110 pointer-events-none">
+                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                </div>
               </motion.div>
             ))}
+            <div className="border-t border-white/10 w-full"></div>
           </div>
         </div>
       </main>
 
-      {/* Auth Modal */}
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );

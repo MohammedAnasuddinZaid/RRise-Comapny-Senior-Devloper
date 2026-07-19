@@ -201,19 +201,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   whileTap={{ scale: 0.98 }}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    "relative flex items-center rounded-xl px-3 py-3 text-[15px] font-medium transition-all duration-300",
-                    collapsed ? "justify-center" : "gap-4 px-4",
+                    "relative flex items-center rounded-none px-3 py-4 text-sm font-space uppercase tracking-widest transition-all duration-300 border-b border-white/5",
+                    collapsed ? "justify-center" : "gap-4 px-6",
                     isActive
-                      ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(0,255,135,0.05)]"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                      ? "bg-primary text-black"
+                      : "text-white/50 hover:bg-white/[0.02] hover:text-white"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-black" : "text-white/50")} />
                   {!collapsed && item.label}
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active"
-                      className="absolute -left-3 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(0,255,135,0.8)]"
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-black"
                     />
                   )}
                 </motion.div>
@@ -234,11 +234,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div
             title={collapsed ? "Settings" : undefined}
             className={cn(
-              "flex items-center rounded-xl px-3 py-3 text-[15px] font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors",
-              collapsed ? "justify-center" : "gap-4 px-4"
+              "flex items-center rounded-none px-6 py-4 text-sm font-space uppercase tracking-widest text-white/50 hover:bg-white/[0.02] hover:text-white transition-colors border-t border-white/5",
+              collapsed ? "justify-center" : "gap-4"
             )}
           >
-            <Settings className="h-5 w-5 flex-shrink-0" />
+            <Settings className="h-4 w-4 flex-shrink-0" />
             {!collapsed && "Settings"}
           </div>
         </Link>
@@ -247,11 +247,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-lora">
+    <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden font-inter">
       {/* ── Desktop Sidebar ── */}
       <aside
         className={cn(
-          "hidden md:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-md z-10 relative transition-all duration-300",
+          "hidden md:flex flex-col border-r border-white/10 bg-[#050505] z-10 relative transition-all duration-300",
           sidebarCollapsed ? "w-[72px] p-4" : "w-64 p-6"
         )}
       >
