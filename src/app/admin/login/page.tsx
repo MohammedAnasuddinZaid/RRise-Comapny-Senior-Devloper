@@ -49,7 +49,7 @@ export default function AdminLoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10"
       >
-        <Card className="bg-white/5 border-white/10 p-8 shadow-2xl">
+        <Card className="bg-white/5 border-border p-8 shadow-2xl">
           <CardHeader className="pb-6 text-center">
             <Shield className="w-12 h-12 text-primary mx-auto mb-4" />
             <CardTitle className="text-3xl font-bold tracking-tight">Admin Terminal</CardTitle>
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@rrise.com"
                     required
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-white/10 focus:border-primary/50 focus:outline-none transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary/50 focus:outline-none transition-all text-sm"
                   />
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function AdminLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-white/10 focus:border-primary/50 focus:outline-none transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary/50 focus:outline-none transition-all text-sm"
                   />
                 </div>
               </div>

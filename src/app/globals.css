@@ -2,6 +2,9 @@
 @import url('https://fonts.cdnfonts.com/css/monument-extended');
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jim+Nightshade&family=Yellowtail&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Updock&family=Send+Flowers&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&family=Short+Stack&display=swap');
 
 @import "tailwindcss";
 
@@ -25,6 +28,12 @@
   --font-clash: 'Clash Display', sans-serif;
   --font-inter: 'Inter', sans-serif;
   --font-space: 'Space Grotesk', sans-serif;
+  --font-jim: 'Jim Nightshade', cursive;
+  --font-yellowtail: 'Yellowtail', cursive;
+  --font-updock: 'Updock', cursive;
+  --font-sendflowers: 'Send Flowers', cursive;
+  --font-shadows: 'Shadows Into Light', cursive;
+  --font-shortstack: 'Short Stack', cursive;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -34,7 +43,8 @@
 
 /* ─── Dark Mode (default) ────────────────────────────────────────────── */
 :root,
-.dark {
+.dark,
+.theme-default {
   --background: #020408;
   --foreground: #f0f6ff;
   --card: rgba(255, 255, 255, 0.03);
@@ -55,6 +65,8 @@
   --surface: rgba(255, 255, 255, 0.04);
   --surface-hover: rgba(255, 255, 255, 0.07);
   --surface-border: rgba(255, 255, 255, 0.08);
+  --font-heading: 'Clash Display', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 /* ─── Light Mode ─────────────────────────────────────────────────────── */
@@ -79,6 +91,122 @@
   --surface: rgba(255, 255, 255, 0.8);
   --surface-hover: rgba(255, 255, 255, 0.95);
   --surface-border: rgba(0, 0, 0, 0.1);
+  --font-heading: 'Clash Display', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ─── Sky Theme (Blue & White, Cloudy) ─────────────────────────────────── */
+.theme-sky {
+  --background: #e8f4fc;
+  --foreground: #000000;
+  --card: rgba(255, 255, 255, 0.6);
+  --card-foreground: #000000;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #60a5fa;
+  --secondary-foreground: #ffffff;
+  --muted: #dbeafe;
+  --muted-foreground: #333333;
+  --accent: #bfdbfe;
+  --accent-foreground: #000000;
+  --border: rgba(147, 197, 253, 0.5);
+  --radius: 2rem;
+  --glow-green: none;
+  --glow-blue: none;
+  --glow-both: none;
+  --surface: rgba(240, 249, 255, 0.6);
+  --surface-hover: rgba(255, 255, 255, 0.8);
+  --surface-border: rgba(147, 197, 253, 0.5);
+  --font-heading: 'Jim Nightshade', cursive;
+  --font-body: 'Yellowtail', cursive;
+}
+
+.theme-sky body {
+  background-color: #e8f4fc;
+}
+
+/* ─── Diva Theme (Pink & Light Pink, Grainy) ───────────────────────────── */
+.theme-diva {
+  --background: #fff0f5;
+  --foreground: #000000;
+  --card: rgba(255, 255, 255, 0.6);
+  --card-foreground: #000000;
+  --primary: #ec4899;
+  --primary-foreground: #ffffff;
+  --secondary: #f472b6;
+  --secondary-foreground: #ffffff;
+  --muted: #fce7f3;
+  --muted-foreground: #333333;
+  --accent: #fbcfe8;
+  --accent-foreground: #000000;
+  --border: rgba(249, 168, 212, 0.5);
+  --radius: 2.5rem;
+  --glow-green: none;
+  --glow-blue: none;
+  --glow-both: none;
+  --surface: rgba(253, 242, 248, 0.6);
+  --surface-hover: rgba(255, 255, 255, 0.8);
+  --surface-border: rgba(249, 168, 212, 0.5);
+  --font-heading: 'Updock', cursive;
+  --font-body: 'Send Flowers', cursive;
+}
+
+.theme-diva body {
+  background-color: #fff0f5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E") !important;
+}
+
+.theme-sky body {
+  background-image: none !important;
+}
+
+.theme-sky .glass-enhanced,
+.theme-diva .glass-enhanced {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.theme-sky .premium-glow,
+.theme-diva .premium-glow {
+  box-shadow: none;
+}
+
+.theme-sky .text-glow-green,
+.theme-sky .text-glow-blue,
+.theme-diva .text-glow-green,
+.theme-diva .text-glow-blue {
+  text-shadow: none;
+}
+
+/* ─── Manga Theme (Black & White, Glow) ───────────────────────────────── */
+.theme-manga {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #cccccc;
+  --secondary-foreground: #000000;
+  --muted: #1a1a1a;
+  --muted-foreground: #999999;
+  --accent: #333333;
+  --accent-foreground: #ffffff;
+  --border: #ffffff;
+  --radius: 0.5rem;
+  --glow-green: 0 0 20px rgba(255, 255, 255, 0.8);
+  --glow-blue: 0 0 20px rgba(255, 255, 255, 0.8);
+  --glow-both: 0 0 30px rgba(255, 255, 255, 1);
+  --surface: #000000;
+  --surface-hover: #111111;
+  --surface-border: #ffffff;
+  --font-heading: 'Shadows Into Light', cursive;
+  --font-body: 'Short Stack', cursive;
+}
+
+.theme-manga body {
+  background-image: none !important;
 }
 
 /* ─── Base Styles ────────────────────────────────────────────────────── */
@@ -93,34 +221,77 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body), 'Inter', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Disable transitions for low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Performance optimizations for low-end devices */
+@media (max-width: 768px) {
+  .glass-enhanced {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .glass, .glass-green, .glass-blue {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  /* Disable heavy effects on mobile */
+  .noise-overlay::before {
+    display: none;
+  }
+  
+  .shimmer-effect::after {
+    display: none;
+  }
 }
 
 .dark body {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 255, 135, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0, 229, 255, 0.05) 0%, transparent 60%);
-  background-attachment: fixed;
+  background-image: none !important;
 }
 
 .light body {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 184, 90, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0, 153, 204, 0.03) 0%, transparent 60%);
-  background-attachment: fixed;
+  background-image: none !important;
 }
 
 /* ─── Typography Helpers ─────────────────────────────────────────────── */
 .font-monument { font-family: 'Monument Extended', sans-serif !important; }
 .font-clash    { font-family: 'Clash Display', sans-serif !important; }
-.font-inter    { font-family: 'Inter', sans-serif !important; }
-.font-space    { font-family: 'Space Grotesk', sans-serif !important; }
+.font-inter    { font-family: var(--font-body), 'Inter', sans-serif !important; }
+.font-space    { font-family: var(--font-heading), 'Space Grotesk', sans-serif !important; }
+.font-jim      { font-family: 'Jim Nightshade', cursive !important; }
+.font-yellowtail { font-family: 'Yellowtail', cursive !important; }
+.font-updock   { font-family: 'Updock', cursive !important; }
+.font-sendflowers { font-family: 'Send Flowers', cursive !important; }
+.font-shadows  { font-family: 'Shadows Into Light', cursive !important; }
+.font-shortstack { font-family: 'Short Stack', cursive !important; }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Clash Display', sans-serif;
+  font-family: var(--font-heading), 'Clash Display', sans-serif;
+}
+
+body {
+  font-family: var(--font-body), 'Inter', sans-serif;
 }
 
 /* ─── Neon Gradient Text ─────────────────────────────────────────────── */
@@ -407,3 +578,14 @@ h1, h2, h3, h4, h5, h6 {
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
 .stagger-5 { animation-delay: 0.5s; }
+
+
+/* Hide number input spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}

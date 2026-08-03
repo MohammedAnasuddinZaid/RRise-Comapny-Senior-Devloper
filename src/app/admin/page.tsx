@@ -472,12 +472,12 @@ export default function AdminDashboard() {
   if (loadingData) return <div>Loading admin data...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-inter">
+    <div className="min-h-screen bg-[#0a0a0a] text-foreground font-inter">
       <div className="space-y-8 pb-12 max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="space-y-4">
           <div className="space-y-2">
-            <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight bg- text-primary">
               Admin Dashboard
             </h1>
             <p className="text-muted-foreground text-lg">Monitor user activity, plans, and system performance.</p>
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:border-blue-500/40 transition-all duration-300">
+          <Card className="bg- border-blue-500/20 hover:border-blue-500/40 transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-blue-500 flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+          <Card className="bg- border-green-500/20 hover:border-green-500/40 transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-green-500 flex items-center gap-2">
                 <Zap className="w-4 h-4" />
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
+          <Card className="bg- border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-purple-500 flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300">
+          <Card className="bg- border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-yellow-500 flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
@@ -832,7 +832,7 @@ export default function AdminDashboard() {
 
       {/* Manage User Modal */}
       {showUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-background flex items-center justify-center z-50 p-4">
           <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -849,7 +849,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* User Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg- rounded-lg border border-primary/20">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-primary">{selectedUser.xp_total || 0}</p>
                   <p className="text-xs text-muted-foreground">Total XP</p>
@@ -903,7 +903,7 @@ export default function AdminDashboard() {
                       key={plan} 
                       variant={selectedUser.plan === plan ? 'default' : 'outline'} 
                       onClick={() => handleUpdateUser(selectedUser.id, { plan })}
-                      className={selectedUser.plan === plan ? 'bg-gradient-to-r from-primary to-secondary' : ''}
+                      className={selectedUser.plan === plan ? 'bg-' : ''}
                     >
                       {plan.charAt(0).toUpperCase() + plan.slice(1)}
                     </Button>
@@ -1056,7 +1056,7 @@ export default function AdminDashboard() {
 
       {/* Content Editor Modal */}
       {showContentEditor && editingContent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-background flex items-center justify-center z-50 p-4">
           <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">

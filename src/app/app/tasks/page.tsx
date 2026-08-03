@@ -140,7 +140,7 @@ export default function TasksPage() {
       </div>
 
       {/* Task Creation Form */}
-      <Card className="bg-white/5 border-white/10">
+      <Card className="bg-white/5 border-border">
         <CardContent className="p-8">
           <form onSubmit={handleAddTask} className="flex gap-4">
             <input
@@ -148,7 +148,7 @@ export default function TasksPage() {
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="What task needs your attention today?"
-              className="flex-1 bg-black/20 border border-white/10 rounded-xl px-6 py-4 text-base placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
+              className="flex-1 bg-background border border-border rounded-xl px-6 py-4 text-base placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
             />
             <Button type="submit" className="rounded-xl h-full py-4 px-6">
               <Plus className="w-5 h-5 mr-2" /> Add Task
@@ -158,8 +158,8 @@ export default function TasksPage() {
       </Card>
 
       {/* Tasks List */}
-      <Card className="bg-white/5 border-white/10">
-        <CardHeader className="border-b border-white/5 pb-6">
+      <Card className="bg-white/5 border-border">
+        <CardHeader className="border-b border-border pb-6">
           <CardTitle className="text-xl flex items-center justify-between">
             <span>Tasks</span>
             <span className="text-sm font-sans font-normal text-muted-foreground">
@@ -185,7 +185,7 @@ export default function TasksPage() {
                         type="text"
                         value={editTaskTitle}
                         onChange={(e) => setEditTaskTitle(e.target.value)}
-                        className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-base outline-none focus:border-primary/50 transition-colors"
+                        className="flex-1 bg-background border border-border rounded-xl px-4 py-2 text-base outline-none focus:border-primary/50 transition-colors"
                       />
                       <div className="flex gap-2">
                         <button

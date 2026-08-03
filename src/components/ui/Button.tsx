@@ -20,9 +20,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center whitespace-nowrap rounded-none font-space uppercase tracking-widest text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50",
           {
             "bg-primary text-black hover:bg-white": variant === "default",
-            "border border-white/20 bg-transparent text-white hover:bg-white hover:text-black": variant === "outline",
-            "hover:bg-white/10 text-white": variant === "ghost",
-            "bg-black/50 border border-white/10 backdrop-blur-md hover:bg-white hover:text-black text-white": variant === "glass",
+            "border border-border bg-transparent text-foreground hover:bg-white hover:text-black": variant === "outline",
+            "hover:bg-white/10 text-foreground": variant === "ghost",
+            "bg-background border border-border backdrop-blur-md hover:bg-white hover:text-black text-foreground": variant === "glass",
             "h-12 px-8 py-3": size === "default",
             "h-10 px-6 text-xs": size === "sm",
             "h-16 px-12 text-base": size === "lg",

@@ -118,16 +118,16 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#030303]' : 'bg-white'} text-foreground relative overflow-hidden`}>
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       {/* Background Effects */}
-      <div className={`absolute top-[-20%] left-[30%] w-[600px] h-[600px] ${theme === 'dark' ? 'bg-primary/5' : 'bg-primary/10'} rounded-full blur-[150px] pointer-events-none`} />
-      <div className={`absolute bottom-[20%] right=[-10%] w-[500px] h-[500px] ${theme === 'dark' ? 'bg-primary/3' : 'bg-primary/5'} rounded-full blur-[130px] pointer-events-none`} />
+      <div className="absolute top-[-20%] left-[30%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right=[-10%] w-[500px] h-[500px] bg-primary/3 rounded-full blur-[130px] pointer-events-none" />
 
       {/* Header */}
-      <header className={`flex items-center justify-between p-6 md:px-12 backdrop-blur-xl ${theme === 'dark' ? 'bg-black/30 border-white/5' : 'bg-white/70 border-green-500/20'} border-b fixed top-0 w-full z-40`}>
+      <header className="flex items-center justify-between p-6 md:px-12 backdrop-blur-xl bg-card border-border border-b fixed top-0 w-full z-40">
         <div className="flex items-center gap-4">
           <Link href="/app/dashboard">
-            <Button variant="glass" size="icon" className={`border-white/5 hover:border-primary/30 ${theme === 'light' ? 'border-green-500/30 hover:border-green-500' : ''}`}>
+            <Button variant="glass" size="icon" className="border-border hover:border-primary/30">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
@@ -146,7 +146,7 @@ export default function HistoryPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+            className="p-6 rounded-2xl border bg-card border-border"
           >
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="w-5 h-5 text-green-500" />
@@ -158,7 +158,7 @@ export default function HistoryPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+            className="p-6 rounded-2xl border bg-card border-border"
           >
             <div className="flex items-center gap-3 mb-2">
               <Activity className="w-5 h-5 text-blue-500" />
@@ -170,7 +170,7 @@ export default function HistoryPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+            className="p-6 rounded-2xl border bg-card border-border"
           >
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -182,7 +182,7 @@ export default function HistoryPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+            className="p-6 rounded-2xl border bg-card border-border"
           >
             <div className="flex items-center gap-3 mb-2">
               <Wallet className="w-5 h-5 text-yellow-500" />
@@ -197,7 +197,7 @@ export default function HistoryPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'} mb-8`}
+          className="p-6 rounded-2xl border bg-card border-border mb-8"
         >
           <h3 className="font-playfair text-xl font-bold mb-4">Weekly Activity Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -208,12 +208,12 @@ export default function HistoryPage() {
                   <stop offset="95%" stopColor="#00e575" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,200,83,0.1)'} />
-              <XAxis dataKey="date" stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
-              <YAxis stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip 
-                contentStyle={{ backgroundColor: theme === 'dark' ? '#070709' : '#ffffff', borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,200,83,0.2)', borderRadius: '12px' }}
-                itemStyle={{ color: theme === 'dark' ? '#00e575' : '#00c853' }}
+                contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: '12px' }}
+                itemStyle={{ color: "var(--primary)" }}
               />
               <Area type="monotone" dataKey="total" stroke="#00e575" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
             </AreaChart>
@@ -225,17 +225,17 @@ export default function HistoryPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-green-500/20'}`}
+          className="p-6 rounded-2xl border bg-card border-border"
         >
           <h3 className="font-playfair text-xl font-bold mb-4">Habits vs Tasks</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,200,83,0.1)'} />
-              <XAxis dataKey="date" stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
-              <YAxis stroke={theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,200,83,0.5)'} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip 
-                contentStyle={{ backgroundColor: theme === 'dark' ? '#070709' : '#ffffff', borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,200,83,0.2)', borderRadius: '12px' }}
-                itemStyle={{ color: theme === 'dark' ? '#00e575' : '#00c853' }}
+                contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: '12px' }}
+                itemStyle={{ color: "var(--primary)" }}
               />
               <Bar dataKey="habits" fill="#22c55e" name="Habits" />
               <Bar dataKey="tasks" fill="#3b82f6" name="Tasks" />

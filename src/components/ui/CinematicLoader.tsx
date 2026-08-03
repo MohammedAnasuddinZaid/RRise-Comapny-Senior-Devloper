@@ -27,7 +27,7 @@ export function CinematicLoader() {
             {[...Array(25)].map((_, i) => (
               <motion.div
                 key={i}
-                className="bg-[#050505] border border-white/5"
+                className="bg-[#050505] border border-border"
                 initial={{ scaleY: 1 }}
                 exit={{ scaleY: 0 }}
                 style={{ originY: Math.random() > 0.5 ? 0 : 1 }}
@@ -48,7 +48,7 @@ export function CinematicLoader() {
               exit={{ scale: 1.1, opacity: 0, filter: "blur(20px)" }}
               transition={{ duration: 1, ease: "easeInOut" }}
             >
-              <h1 className="font-monument text-3xl md:text-5xl text-white tracking-[0.2em] uppercase">
+              <h1 className="font-monument text-3xl md:text-5xl text-foreground tracking-[0.2em] uppercase">
                 RRise
               </h1>
             </motion.div>

@@ -1,0 +1,24 @@
+This was the original design of mine, but now it made it so awful that they added these dirty grids, dirty gradients, and other stuff. So we have to fix all these things and restore the original potential of the default design. I wanted to add actually three new themes, Manga, Diva, and Sky Blue, with specific qualifications. And like a Sky Blue theme, we have such-qualification, but instead it maintained a dark theme, and it made a very messy and dirty look. We don't want any dark, black color or dark color or any gradient in Sky or Diva theme. Manga and the default theme will have the black and current theme. But it made it so awful. Also, I added this Pomodoro timer thing which reveals the specific paintings over the time using the stroke, transparent stroke PNG. So have a look into that as well. dont create implementation plan
+right now its just dark theme and blacks, although google fonts have been succesfully installed but it lacks major design polish and upgrade dotn use gradients
+
+add option to change theme and add "Sky" (blue & white, cloudy semi transparent blue cards,google fonts like:Jim Nightshade & Yellowtail,smooth borders,
+
+ "DIVA💅🏼 "( Pink & light pinkish white,with grainy texture in background and cards;use google fonts like:Updock (for big text) & Send Flowers(for small texts ),smoother border),
+
+"Manga"(black and white with extra glow white glow around cards and use google fonts:Shadows Into Light(big texts) & Short Stack( small texts),
+
+"Default"(Current one only)
+
+
+
+while being consistent with the existing design is 
+
+
+
+and make sure these things are smartly set and updated smoothly from dashboards to other pages, texts,cards,icons etc such that texts are visible it looks beautiful without any error or glitches while keeping the web app optimized for both mobile as well desktop and also for low end devices
+
+
+
+the option to changes theme will be like drop list that can be found in the landing page, dashboard screen & settings make sure that works and is consistest with the design
+
+dont mess with anything else

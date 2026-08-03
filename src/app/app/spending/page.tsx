@@ -108,7 +108,7 @@ export default function SpendingPage() {
 
       {/* Financial Status Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-white/5 to-transparent border-white/10">
+        <Card className="bg- border-border">
           <CardContent className="p-8 space-y-4">
             <div className="flex justify-between items-center text-muted-foreground">
               <span className="text-sm font-medium uppercase tracking-wider">Total Spent</span>
@@ -126,7 +126,7 @@ export default function SpendingPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-white/5 to-transparent border-white/10">
+        <Card className="bg- border-border">
           <CardContent className="p-8 space-y-4">
             <div className="flex justify-between items-center text-muted-foreground">
               <span className="text-sm font-medium uppercase tracking-wider">Remaining Budget</span>
@@ -144,7 +144,7 @@ export default function SpendingPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-white/5 to-transparent border-white/10">
+        <Card className="bg- border-border">
           <CardContent className="p-8 space-y-4">
             <div className="flex justify-between items-center text-muted-foreground">
               <span className="text-sm font-medium uppercase tracking-wider">Daily Average</span>
@@ -169,7 +169,7 @@ export default function SpendingPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Add Expense Form and Categories */}
         <div className="md:col-span-1 space-y-6">
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-white/5 border-border">
             <CardHeader>
               <CardTitle className="text-xl">Add Expense</CardTitle>
             </CardHeader>
@@ -182,7 +182,7 @@ export default function SpendingPage() {
                     value={newTxTitle}
                     onChange={(e) => setNewTxTitle(e.target.value)}
                     placeholder="e.g. 'Coffee', 'Gym'"
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -193,7 +193,7 @@ export default function SpendingPage() {
                     value={newTxAmount}
                     onChange={(e) => setNewTxAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -201,7 +201,7 @@ export default function SpendingPage() {
                   <select
                     value={newTxCategory}
                     onChange={(e) => setNewTxCategory(e.target.value)}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors text-foreground"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors text-foreground"
                   >
                     {spending.categories.map((cat) => (
                       <option key={cat.name} value={cat.name} className="bg-[#09090b]">
@@ -218,7 +218,7 @@ export default function SpendingPage() {
           </Card>
 
           {/* Categories card */}
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-white/5 border-border">
             <CardHeader>
               <CardTitle className="text-xl">Categories</CardTitle>
             </CardHeader>
@@ -240,8 +240,8 @@ export default function SpendingPage() {
 
         {/* Transactions List */}
         <div className="md:col-span-2">
-          <Card className="bg-white/5 border-white/10 h-full">
-            <CardHeader className="border-b border-white/5 pb-6">
+          <Card className="bg-white/5 border-border h-full">
+            <CardHeader className="border-b border-border pb-6">
               <CardTitle className="text-xl">Recent Transactions</CardTitle>
             </CardHeader>
             <CardContent className="p-0">

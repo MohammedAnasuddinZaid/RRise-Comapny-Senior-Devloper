@@ -110,7 +110,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-background backdrop-blur-sm z-50"
           />
 
           {/* Modal */}
@@ -147,7 +147,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border border-border hover:border-border bg-white/5 hover:bg-white/10 transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Globe className="w-5 h-5" />
                   <span>Continue with Google</span>
@@ -175,7 +175,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Your name"
                           required
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                         />
                       </div>
                     </div>
@@ -193,7 +193,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         placeholder="••••••••"
                         required
                         minLength={6}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         id="terms"
                         checked={acceptTerms}
                         onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 focus:ring-primary focus:ring-offset-0"
+                        className="mt-1 w-4 h-4 rounded border-border bg-white/5 focus:ring-primary focus:ring-offset-0"
                       />
                       <label htmlFor="terms" className="text-sm text-muted-foreground">
                         I agree to the{' '}
@@ -261,7 +261,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           onClick={() => setShowTerms(false)}
-                          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+                          className="fixed inset-0 bg-background backdrop-blur-sm z-[60]"
                         />
                         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                           <motion.div
@@ -297,13 +297,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     setAcceptTerms(true);
                                     setShowTerms(false);
                                   }}
-                                  className="flex-1 p-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all"
+                                  className="flex-1 p-3 rounded-xl bg-primary hover:bg-primary/90 text-foreground font-semibold transition-all"
                                 >
                                   Accept Terms
                                 </button>
                                 <button
                                   onClick={() => setShowTerms(false)}
-                                  className="flex-1 p-3 rounded-xl border border-white/20 hover:bg-white/10 text-foreground font-semibold transition-all"
+                                  className="flex-1 p-3 rounded-xl border border-border hover:bg-white/10 text-foreground font-semibold transition-all"
                                 >
                                   Close
                                 </button>
@@ -318,7 +318,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <button
                     type="submit"
                     disabled={loading || (mode === 'signup' && !acceptTerms)}
-                    className="w-full p-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3 rounded-xl bg-primary hover:bg-primary/90 text-foreground font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                   </button>

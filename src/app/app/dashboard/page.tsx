@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui
 import { ProgressBar } from "../../../components/ui/ProgressBar";
 import { Mascot } from "../../../components/mascot/Mascot";
 import { LottieAnimation } from "../../../components/ui/LottieAnimation";
+import { FocusReveal } from "../../../components/focus/FocusReveal";
 import {
   Star, TrendingUp, CheckCircle, Brain, Book, Dumbbell, Wallet, Award,
   Sparkles, Check, Play, Plus, X, Pencil, Trash2, GripVertical, ChevronDown,
@@ -13,7 +14,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { Sun, Moon } from "lucide-react";
+import { ThemeSelector } from "../../../components/ui/ThemeSelector";
 import { audioManager } from "../../../lib/audioManager";
 import { useRequireAuth } from "../../../lib/authGuard";
 import { getPlanDisplayName, getPlanBadgeColor } from "../../../lib/planLogic";
@@ -142,9 +143,8 @@ function SectionHeader({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const { user, loading } = useRequireAuth();
-  const isDark = theme === "dark";
 
   const [habits,    setHabits]    = useState<any[]>([]);
   const [tasks,     setTasks]     = useState<any[]>([]);
@@ -160,6 +160,9 @@ export default function DashboardPage() {
   // ── Editable sections ──
   const [sections, setSections] = useState<DashboardSection[]>(DEFAULT_SECTIONS);
   const [savingSections, setSavingSections] = useState(false);
+
+  // ── Tab state ──
+  const [activeTab, setActiveTab] = useState<"dashboard" | "focus">("dashboard");
 
   // keep sections in sync with profile metadata
   const persistSections = useCallback(async (newSections: DashboardSection[]) => {
@@ -293,8 +296,8 @@ export default function DashboardPage() {
     );
   }
 
-  const cardBg  = isDark ? "bg-[#070709] border-white/5"      : "bg-white border-green-500/20";
-  const hdrBdr  = isDark ? "border-white/5"                   : "border-green-500/20";
+  const cardBg  = "bg-card border-border";
+  const hdrBdr  = "border-border";
 
   // ── Render a single section card ──
   const renderSectionCard = (section: DashboardSection) => {
@@ -328,11 +331,11 @@ export default function DashboardPage() {
               <div
                 key={habit.id}
                 className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                  habit.completed ? "bg-primary/[0.02] border-primary/20" : "bg-white/[0.01] border-white/5 hover:border-white/10"
+                  habit.completed ? "bg-primary/[0.02] border-primary/20" : "bg-white/[0.01] border-border hover:border-border"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-xl border transition-colors ${habit.completed ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-white/5 text-muted-foreground"}`}>
+                  <div className={`p-2.5 rounded-xl border transition-colors ${habit.completed ? "bg-primary/20 border-primary/30 text-primary" : "bg-white/5 border-border text-muted-foreground"}`}>
                     {iconMap[habit.icon] || <CheckCircle className="w-4 h-4" />}
                   </div>
                   <div>
@@ -384,7 +387,7 @@ export default function DashboardPage() {
               </div>
               <ProgressBar value={0} max={100} className="mt-2 h-1.5 bg-white/5" />
             </div>
-            <div className="space-y-2.5 border-t border-white/5 pt-4 mt-auto">
+            <div className="space-y-2.5 border-t border-border pt-4 mt-auto">
               <div className="flex justify-between items-center text-xs font-light">
                 <span className="text-muted-foreground">No recent transactions</span>
                 <span className="font-medium text-foreground">-</span>
@@ -422,7 +425,7 @@ export default function DashboardPage() {
             <div
               key={task.id}
               className={`flex items-center gap-3.5 p-4 rounded-2xl border transition-all duration-300 ${
-                task.completed ? "bg-white/[0.01] border-white/5 opacity-60" : "bg-white/[0.01] border-white/5 hover:border-white/10"
+                task.completed ? "bg-white/[0.01] border-border opacity-60" : "bg-white/[0.01] border-border hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -456,16 +459,41 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className={`space-y-10 pb-16 relative ${isDark ? "" : "bg-white text-foreground"}`}>
+    <div className="space-y-10 pb-16 relative">
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-2 border-b border-border pb-4">
+        <button
+          onClick={() => setActiveTab("dashboard")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "dashboard"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={() => setActiveTab("focus")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "focus"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          Focus Reveal
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "dashboard" ? (
+        <>
       {/* Optimised bird animation header */}
       <div className="absolute top-0 left-0 right-0 h-32 overflow-hidden pointer-events-none z-0">
         {/* Gradient painted by GPU, no blur pass */}
         <div
           className="absolute inset-0"
           style={{
-            background: isDark
-              ? "linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)"
-              : "linear-gradient(to bottom, rgba(34,197,94,0.07), transparent)",
+            background: "linear-gradient(to bottom, var(--muted), transparent)",
           }}
         />
         <LottieAnimation animationData={blueBirdsFlying} loop className="w-full h-full opacity-60" />
@@ -478,7 +506,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -50 }}
-            className={`fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 ${isDark ? "bg-black/40 border-primary/20" : "bg-white/80 border-green-500/30"} backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]`}
+className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-card border-border backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]"
           >
             <LottieAnimation animationData={xpAnimation} loop={false} className="w-16 h-16" />
             <span className="text-primary font-bold text-sm -mt-2">+{lastXpAmount} XP</span>
@@ -492,9 +520,9 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setStreakCelebration(false)}
-            className={`fixed inset-0 ${isDark ? "bg-black/70" : "bg-black/50"} backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer`}
+className="fixed inset-0 bg-background backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer"
           >
-            <div className={`max-w-md w-full ${isDark ? "bg-[#070709] border-white/10" : "bg-white border-green-500/20"} p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]`}>
+<div className="max-w-md w-full bg-card border-border p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]">
               <LottieAnimation animationData={successTrophy} loop={false} className="w-48 h-48 mx-auto" />
               <h3 className="font-playfair text-3xl font-bold">Milestone Unlocked</h3>
               <p className="text-muted-foreground font-light">Congratulations! You reached a new productivity peak.</p>
@@ -509,18 +537,13 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 flex flex-col justify-between space-y-6 py-2">
           <div className="space-y-4">
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-border text-primary text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
                 <Sparkles className="w-4 h-4" /> Focus Mode Active
               </div>
               <div className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-md border ${getPlanBadgeColor(userData?.plan || "free")}`}>
                 {getPlanDisplayName(userData?.plan || "free")}
               </div>
-              <button
-                onClick={() => { audioManager.play("click"); toggleTheme(); }}
-                className={`p-2 rounded-full ${isDark ? "bg-white/5 border-white/10 hover:border-primary/30" : "bg-green-500/10 border-green-500/30 hover:border-green-500"} border transition-all duration-300`}
-              >
-                {isDark ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
-              </button>
+              <ThemeSelector />
             </div>
             <h1 className="font-playfair text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
               Good morning, {userData?.full_name || "User"}.
@@ -534,7 +557,7 @@ export default function DashboardPage() {
             <button
               data-streak-button
               onClick={() => { audioManager.play("click"); setStreakCelebration(true); }}
-              className={`flex items-center gap-3 ${isDark ? "bg-white/5 border-white/5 hover:border-primary/20" : "bg-green-500/5 border-green-500/20 hover:border-green-500"} border rounded-2xl px-5 py-3 transition-all duration-300 text-left hover:-translate-y-0.5`}
+className="flex items-center gap-3 bg-surface border-border hover:border-primary/30 border rounded-2xl px-5 py-3 transition-all duration-300 text-left hover:-translate-y-0.5"
             >
               <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
                 <LottieAnimation animationData={fireStreak} loop className="w-full h-full" />
@@ -548,9 +571,9 @@ export default function DashboardPage() {
             <div
               data-companion
               onClick={() => audioManager.play("click")}
-              className={`flex items-center gap-3 ${isDark ? "bg-white/5 border-white/5 hover:border-primary/20" : "bg-green-500/5 border-green-500/20 hover:border-green-500"} border rounded-2xl px-5 py-3 transition-all duration-300 cursor-pointer hover:-translate-y-0.5`}
+className="flex items-center gap-3 bg-surface border-border hover:border-primary/30 border rounded-2xl px-5 py-3 transition-all duration-300 cursor-pointer hover:-translate-y-0.5"
             >
-              <div className={`w-12 h-12 rounded-xl ${isDark ? "bg-primary/10 border-primary/20" : "bg-green-500/10 border-green-500/30"} border flex items-center justify-center text-primary`}>
+<div className="w-12 h-12 rounded-xl bg-primary/10 border-primary/20 border flex items-center justify-center text-primary">
                 <Star className="w-5 h-5 fill-current" />
               </div>
               <div>
@@ -562,8 +585,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Companion panel */}
-        <div className={`relative rounded-3xl border ${isDark ? "border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent" : "border-green-500/20 bg-gradient-to-b from-green-500/5 to-transparent"} p-8 flex flex-col items-center justify-center text-center overflow-hidden`}>
-          <div className={`absolute top-2 right-3 px-3 py-1 ${isDark ? "bg-white/5 border-white/5" : "bg-green-500/10 border-green-500/30"} border rounded-full text-[10px] text-muted-foreground font-mono uppercase tracking-widest`}>
+<div className="relative rounded-3xl border border-border bg- p-8 flex flex-col items-center justify-center text-center overflow-hidden">
+<div className="absolute top-2 right-3 px-3 py-1 bg-surface border-border border rounded-full text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
             Companion Specimen
           </div>
           {/* Static gradient instead of blur-[60px] radial — cheaper, visually equivalent */}
@@ -592,7 +615,7 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">{percentage}% complete</p>
             </div>
           </div>
-          <ProgressBar value={percentage} max={100} className={`h-2.5 ${isDark ? "bg-white/5" : "bg-green-500/10"}`} />
+<ProgressBar value={percentage} max={100} className="h-2.5 bg-muted" />
           <div className="flex justify-between text-xs text-muted-foreground mt-2">
             {getParrotStages().map((stage, i) => (
               <span key={i} className={i <= getCurrentStageIndex(percentage) ? "text-primary font-semibold" : ""}>{stage}</span>
@@ -633,33 +656,37 @@ export default function DashboardPage() {
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? "rgba(255,255,255,0.02)" : "rgba(0,200,83,0.1)"}
+stroke="var(--border)"
                 vertical={false}
               />
               <XAxis
                 dataKey="name"
-                stroke={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,200,83,0.3)"}
-                tick={{ fill: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,200,83,0.6)", fontSize: 11 }}
+                stroke="var(--muted-foreground)"
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                 axisLine={false} tickLine={false} dy={10}
               />
               <YAxis
-                stroke={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,200,83,0.3)"}
-                tick={{ fill: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,200,83,0.6)", fontSize: 11 }}
+                stroke="var(--muted-foreground)"
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                 axisLine={false} tickLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: isDark ? "#070709" : "#ffffff",
-                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,200,83,0.2)",
+backgroundColor: "var(--card)",
+                  borderColor: "var(--border)",
                   borderRadius: "12px",
                 }}
-                itemStyle={{ color: isDark ? "#00e575" : "#00c853" }}
+itemStyle={{ color: "var(--primary)" }}
               />
-              <Area type="monotone" dataKey="score" stroke={isDark ? "#00e575" : "#00c853"} strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
+<Area type="monotone" dataKey="score" stroke="var(--primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
+    </>
+      ) : (
+        <FocusReveal />
+      )}
     </div>
   );
 }

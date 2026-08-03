@@ -22,7 +22,7 @@ const CONTACT_METHODS = [
     icon: "map",
     label: "Based in",
     value: "Sydney, Australia",
-    color: "border-white/10 bg-white/3",
+    color: "border-border bg-white/3",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function ContactPage() {
     `w-full px-4 py-3.5 rounded-xl font-inter text-sm text-foreground placeholder:text-muted-foreground/50 bg-white/3 border transition-all duration-300 outline-none resize-none ${
       focused === name
         ? "border-primary/50 bg-white/5 shadow-[0_0_20px_rgba(0,255,135,0.08)]"
-        : "border-white/8 hover:border-white/15"
+        : "border-border hover:border-border"
     }`;
 
   return (
@@ -113,7 +113,7 @@ export default function ContactPage() {
                   transition={{ delay: 0.3 + i * 0.1 }}
                   className={`flex items-center gap-4 p-4 rounded-2xl border ${m.color}`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg- flex items-center justify-center flex-shrink-0">
                     <span className="text-lg font-bold text-primary">{m.label.charAt(0)}</span>
                   </div>
                   <div>
@@ -127,7 +127,7 @@ export default function ContactPage() {
             </div>
 
             {/* Message types */}
-            <div className="p-6 rounded-2xl glass border border-white/8">
+            <div className="p-6 rounded-2xl glass border border-border">
               <h3
                 className="font-clash text-sm font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -159,7 +159,7 @@ export default function ContactPage() {
             className="lg:col-span-3"
           >
             <div
-              className="p-8 rounded-3xl glass border border-white/8"
+              className="p-8 rounded-3xl glass border border-border"
               style={{ boxShadow: "0 12px 80px rgba(0,229,255,0.06)" }}
             >
               <AnimatePresence mode="wait">
@@ -247,8 +247,8 @@ export default function ContactPage() {
                       className="relative w-full py-4 rounded-xl font-clash font-semibold text-sm overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed group"
                       style={{ fontFamily: "'Clash Display', sans-serif" }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-2xl opacity-0 group-hover:opacity-60 transition-opacity" />
+                      <div className="absolute inset-0 bg- transition-opacity" />
+                      <div className="absolute inset-0 bg- blur-2xl opacity-0 group-hover:opacity-60 transition-opacity" />
                       <span className="relative z-10 flex items-center justify-center gap-2 text-[#020408] font-bold">
                         {status === "sending" ? (
                           <>

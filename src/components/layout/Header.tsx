@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { AuthModal } from "../auth/AuthModal";
+import { ThemeSelector } from "../ui/ThemeSelector";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -22,13 +23,12 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
       <header className="fixed top-0 w-full z-50">
         {/* Enhanced glassmorphic backdrop */}
-        <div className="absolute inset-0 glass-enhanced border-b border-white/5" />
+        <div className="absolute inset-0 glass-enhanced border-b border-border" />
 
         <div className="relative flex items-center justify-between px-6 md:px-12 h-20">
           {/* Wordmark */}
@@ -84,40 +84,10 @@ export function Header() {
             })}
           </nav>
 
-          {/* Right side — theme toggle + CTA */}
+          {/* Right side — theme selector + CTA */}
           <div className="flex items-center gap-4">
-            {/* Theme toggle */}
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 15 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full glass-enhanced border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-300"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait">
-                {theme === "dark" ? (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Sun className="w-4 h-4" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Moon className="w-4 h-4" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            {/* Theme selector */}
+            <ThemeSelector />
 
             {/* Sign In CTA */}
             <motion.button
@@ -126,8 +96,8 @@ export function Header() {
               onClick={() => setIsAuthModalOpen(true)}
               className="hidden md:block relative px-6 py-2.5 text-sm font-semibold rounded-full overflow-hidden group premium-glow"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary transition-opacity" />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
+              <div className="absolute inset-0 bg- transition-opacity" />
+              <div className="absolute inset-0 bg- blur-xl opacity-0 group-hover:opacity-60 transition-opacity" />
               <span className="relative z-10 font-bold text-[#020408]">Sign In</span>
             </motion.button>
 
@@ -135,7 +105,7 @@ export function Header() {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="md:hidden p-2.5 rounded-full glass-enhanced text-foreground border border-white/10"
+              className="md:hidden p-2.5 rounded-full glass-enhanced text-foreground border border-border"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
             >
@@ -153,7 +123,7 @@ export function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-20 inset-x-0 z-40 glass-enhanced border-b border-white/5 px-6 py-6 flex flex-col gap-2 md:hidden"
+            className="fixed top-20 inset-x-0 z-40 glass-enhanced border-b border-border px-6 py-6 flex flex-col gap-2 md:hidden"
           >
             {navLinks.map((link) => (
               <Link
@@ -174,7 +144,7 @@ export function Header() {
                 setMobileOpen(false);
                 setIsAuthModalOpen(true);
               }}
-              className="mt-3 px-5 py-3 rounded-full text-sm font-bold text-center bg-gradient-to-r from-primary to-secondary text-[#020408]"
+              className="mt-3 px-5 py-3 rounded-full text-sm font-bold text-center bg- text-[#020408]"
             >
               Sign In
             </motion.button>

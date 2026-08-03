@@ -32,16 +32,16 @@ export function AnimatedButton({
   };
   
   const variantClasses = {
-    primary: "bg-gradient-to-r from-primary to-secondary text-[#020408] shadow-lg shadow-primary/25 hover:shadow-primary/40",
-    secondary: "glass border border-white/20 text-foreground hover:border-primary/40 hover:bg-white/10",
-    glass: "glass border border-white/10 text-foreground/80 hover:text-foreground hover:border-white/20 hover:bg-white/5",
+    primary: "bg- text-[#020408] shadow-lg shadow-primary/25 hover:shadow-primary/40",
+    secondary: "glass border border-border text-foreground hover:border-primary/40 hover:bg-white/10",
+    glass: "glass border border-border text-foreground/80 hover:text-foreground hover:border-border hover:bg-white/5",
   };
   
   const ButtonContent = (
     <>
       {/* Shine effect */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        className="absolute inset-0 bg-"
         initial={{ x: "-100%" }}
         whileHover={{ x: "100%" }}
         transition={{ duration: 0.6 }}
@@ -50,7 +50,7 @@ export function AnimatedButton({
       {/* Glow effect for primary variant */}
       {variant === "primary" && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-primary to-secondary blur-xl opacity-0"
+          className="absolute inset-0 bg- blur-xl opacity-0"
           whileHover={{ opacity: 0.6 }}
           transition={{ duration: 0.3 }}
         />

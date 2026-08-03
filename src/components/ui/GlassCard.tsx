@@ -50,7 +50,7 @@ export function GlassCard({ children, className, hover = true, glow = true, ...p
       )}
       
       {/* Soft inner highlight */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.08] via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 rounded-3xl bg-transparent pointer-events-none" />
       
       {/* Edge lighting */}
       <div className="absolute inset-0 rounded-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-none" />
@@ -58,7 +58,7 @@ export function GlassCard({ children, className, hover = true, glow = true, ...p
       {/* Subtle shimmer effect - hidden on mobile for performance */}
       {!isMobile && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent pointer-events-none"
+          className="absolute inset-0 bg-transparent pointer-events-none"
           initial={{ x: "-100%" }}
           whileHover={{ x: "100%" }}
           transition={{ duration: 1, ease: "easeInOut" }}
@@ -67,7 +67,7 @@ export function GlassCard({ children, className, hover = true, glow = true, ...p
       
       {/* Inner glow */}
       {glow && (
-        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/[0.03] via-transparent to-secondary/[0.02] pointer-events-none" />
+        <div className="absolute inset-0 rounded-3xl bg-transparent pointer-events-none" />
       )}
       
       {children}

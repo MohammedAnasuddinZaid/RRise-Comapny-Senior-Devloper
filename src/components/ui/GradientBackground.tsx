@@ -2,11 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function GradientBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { theme, mounted } = useTheme();
 
   useEffect(() => {
+    if (!mounted) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -29,6 +33,36 @@ export function GradientBackground() {
     // Golden ratio for even distribution on a sphere
     const phi = Math.PI * (3 - Math.sqrt(5));
 
+    // Theme-specific colors (solid colors, no gradients)
+    const themeColors = {
+      default: {
+        primary: '#00ff87',
+        secondary: '#ffffff',
+        grid: '#ffffff',
+        connection: '#ffffff'
+      },
+      sky: {
+        primary: '#3b82f6',
+        secondary: '#60a5fa',
+        grid: '#93c5fd',
+        connection: '#93c5fd'
+      },
+      diva: {
+        primary: '#ec4899',
+        secondary: '#f472b6',
+        grid: '#f9a8d4',
+        connection: '#f9a8d4'
+      },
+      manga: {
+        primary: '#ffffff',
+        secondary: '#cccccc',
+        grid: '#ffffff',
+        connection: '#ffffff'
+      }
+    };
+
+    const colors = themeColors[theme as keyof typeof themeColors] || themeColors.default;
+
     for (let i = 0; i < particleCount; i++) {
       const y = 1 - (i / (particleCount - 1)) * 2; // y goes from 1 to -1
       const radiusAtY = Math.sqrt(1 - y * y); // radius at y
@@ -49,7 +83,7 @@ export function GradientBackground() {
         baseY: y * radius * fuzz,
         baseZ: z * radius * fuzz,
         size: Math.random() * 2 + 0.5,
-        color: Math.random() > 0.8 ? 'rgba(0, 255, 135, 1)' : 'rgba(255, 255, 255, 0.7)' // Use primary color for some
+        color: Math.random() > 0.8 ? colors.primary : colors.secondary
       });
     }
 
@@ -80,26 +114,11 @@ export function GradientBackground() {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Grid background
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-      ctx.lineWidth = 1;
-      const gridSize = 50;
-      for (let x = 0; x < width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
+      // Grid background (removed as requested)
 
-      // Smooth mouse rotation interaction
-      autoRotateX += (mouseY - autoRotateX) * 0.05 + 0.001;
-      autoRotateY += (mouseX - autoRotateY) * 0.05 + 0.002;
+      // Smooth mouse rotation interaction - slowed down
+      autoRotateX += (mouseY - autoRotateX) * 0.02 + 0.0003;
+      autoRotateY += (mouseX - autoRotateY) * 0.02 + 0.0006;
 
       const cosX = Math.cos(autoRotateX);
       const sinX = Math.sin(autoRotateX);
@@ -164,7 +183,7 @@ export function GradientBackground() {
           const px2d = centerX + px2 * pscale;
           const py2d = centerY + py1 * pscale;
           
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+          ctx.strokeStyle = colors.connection;
           ctx.lineWidth = 0.5;
           ctx.moveTo(finalX, finalY);
           ctx.lineTo(px2d, py2d);
@@ -188,16 +207,14 @@ export function GradientBackground() {
       window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [theme, mounted]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden bg-[#0a0a0a]">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
       <canvas
         ref={canvasRef}
         className="w-full h-full"
       />
-      {/* Vignette effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent pointer-events-none"></div>
     </div>
   );
 }

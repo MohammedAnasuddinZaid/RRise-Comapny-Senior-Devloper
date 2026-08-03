@@ -37,7 +37,7 @@ export default function TermsPage() {
 
           {/* Content */}
           <div className="prose prose-invert max-w-none font-inter text-foreground/85 leading-relaxed">
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -52,7 +52,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -78,7 +78,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -114,7 +114,7 @@ export default function TermsPage() {
               </ul>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -146,7 +146,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -174,7 +174,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -195,7 +195,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -210,7 +210,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -222,7 +222,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -248,7 +248,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -266,7 +266,7 @@ export default function TermsPage() {
               </ul>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -286,7 +286,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -298,7 +298,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -313,7 +313,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8 mb-8">
+            <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -325,7 +325,7 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="p-8 rounded-3xl glass border border-white/8">
+            <section className="p-8 rounded-3xl glass border border-border">
               <h2
                 className="font-clash text-2xl font-semibold text-foreground mb-4"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}

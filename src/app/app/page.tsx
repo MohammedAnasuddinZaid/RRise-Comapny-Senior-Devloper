@@ -142,7 +142,7 @@ export default function AppEntryPage() {
 
         <form onSubmit={handlePromptSubmit} className="relative group">
           <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-all duration-500 opacity-50 group-hover:opacity-80"></div>
-          <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
+          <div className="relative bg-background backdrop-blur-xl border border-border rounded-2xl p-2 flex items-center shadow-2xl">
             <input 
               type="text" 
               value={prompt}
@@ -164,7 +164,7 @@ export default function AppEntryPage() {
             <button 
               key={chip}
               onClick={() => setPrompt(chip)}
-              className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all backdrop-blur-sm hover:-translate-y-0.5"
+              className="px-5 py-2.5 rounded-full bg-white/5 border border-border text-sm font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all backdrop-blur-sm hover:-translate-y-0.5"
             >
               {chip}
             </button>
@@ -190,9 +190,9 @@ export default function AppEntryPage() {
             onClick={() => handlePlanClick(plan.id)}
             className={`cursor-pointer ${startingPlan === plan.id ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            <Card className="h-full bg-white/5 hover:bg-white/10 transition-colors border border-white/10 group">
+            <Card className="h-full bg-white/5 hover:bg-white/10 transition-colors border border-border group">
               <CardContent className="p-8 flex items-start gap-5">
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
+                <div className="p-4 rounded-xl bg-white/5 border border-border group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
                   {iconMap[plan.icon]}
                 </div>
                 <div className="flex-1">

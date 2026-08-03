@@ -45,7 +45,7 @@ const PLAN_DEFS = [
     period: "forever",
     tagline: "Everything you need to start",
     features: ["goals", "habits", "tasks", "dashboards", "streaks", "mascot", "Free & BYOK chat usage"],
-    accent: "text-white",
+    accent: "text-foreground",
   },
   {
     id: "pro",
@@ -64,7 +64,7 @@ const PLAN_DEFS = [
     period: "per month",
     tagline: "The full system, plus human touch",
     features: ["everything in pro", "human accountability", "accountability check-ins", "personalised feedback", "future community access"],
-    accent: "text-white",
+    accent: "text-foreground",
   },
 ];
 
@@ -83,7 +83,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="relative min-h-screen bg-[#0a0a0a] text-foreground overflow-hidden">
       <GradientBackground />
       <Header />
 
@@ -92,20 +92,20 @@ export default function PricingPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-24 mt-12 border-b border-white/10 pb-12"
+          className="mb-24 mt-12 border-b border-border pb-12"
         >
-          <div className="inline-flex items-center gap-2 text-xs font-space text-white/50 tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 text-xs font-space text-foreground/50 tracking-widest uppercase mb-8">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> Simple Pricing
           </div>
-          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-white">
+          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground">
             Choose your
             <br />
-            <span className="text-white/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">Level.</span>
+            <span className="text-foreground/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">Level.</span>
           </h1>
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-white/10 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border mb-32">
           {PLAN_DEFS.map((plan, i) => {
             const displayPrice = getPriceOverride(plan.id) ? `$${getPriceOverride(plan.id)}` : plan.price;
             return (
@@ -114,7 +114,7 @@ export default function PricingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: i * 0.15 }}
-                className={`p-10 border-b md:border-b-0 md:border-r border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md transition-colors hover:bg-white/[0.02] flex flex-col ${i === PLAN_DEFS.length - 1 ? 'md:border-r-0' : ''}`}
+                className={`p-10 border-b md:border-b-0 md:border-r border-border bg-[#0a0a0a]/80 backdrop-blur-md transition-colors hover:bg-white/[0.02] flex flex-col ${i === PLAN_DEFS.length - 1 ? 'md:border-r-0' : ''}`}
               >
                 {plan.badge && (
                   <div className="text-primary font-space text-xs tracking-widest uppercase mb-4 border border-primary/20 px-3 py-1 inline-block self-start">
@@ -123,27 +123,27 @@ export default function PricingPage() {
                 )}
                 {!plan.badge && <div className="h-[28px] mb-4"></div>}
                 
-                <h3 className="font-monument text-2xl uppercase tracking-widest text-white/50 mb-4">{plan.name}</h3>
+                <h3 className="font-monument text-2xl uppercase tracking-widest text-foreground/50 mb-4">{plan.name}</h3>
                 
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className={`font-monument text-5xl ${plan.accent}`}>{displayPrice}</span>
                 </div>
-                <span className="font-space text-sm tracking-widest uppercase text-white/40 mb-8">{plan.period}</span>
+                <span className="font-space text-sm tracking-widest uppercase text-foreground/40 mb-8">{plan.period}</span>
                 
-                <p className="font-inter text-white/60 mb-8">{plan.tagline}</p>
+                <p className="font-inter text-foreground/60 mb-8">{plan.tagline}</p>
 
                 <div className="h-px w-full bg-white/10 mb-8"></div>
 
                 <ul className="space-y-4 mb-12 flex-1">
                   {plan.features.map(feat => (
-                    <li key={feat} className="flex items-center gap-3 text-sm font-space tracking-widest uppercase text-white/80">
+                    <li key={feat} className="flex items-center gap-3 text-sm font-space tracking-widest uppercase text-foreground/80">
                       <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0"></span>
                       {feat}
                     </li>
                   ))}
                 </ul>
 
-                <Link href={getCtaHref(plan.id)} className={`block text-center w-full px-8 py-4 font-space text-sm tracking-widest uppercase transition-colors ${plan.id === 'pro' ? 'bg-primary text-black hover:bg-white' : 'border border-white/20 text-white hover:bg-white hover:text-black'}`}>
+                <Link href={getCtaHref(plan.id)} className={`block text-center w-full px-8 py-4 font-space text-sm tracking-widest uppercase transition-colors ${plan.id === 'pro' ? 'bg-primary text-black hover:bg-white' : 'border border-border text-foreground hover:bg-white hover:text-black'}`}>
                   Select {plan.name}
                 </Link>
               </motion.div>
@@ -157,10 +157,10 @@ export default function PricingPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="border-t border-white/10 pt-16 max-w-4xl mx-auto"
+          className="border-t border-border pt-16 max-w-4xl mx-auto"
         >
-          <h2 className="font-monument text-3xl md:text-4xl text-white mb-12">Common Questions.</h2>
-          <div className="space-y-0 border border-white/10">
+          <h2 className="font-monument text-3xl md:text-4xl text-foreground mb-12">Common Questions.</h2>
+          <div className="space-y-0 border border-border">
             {[
               {
                 q: "Can I change plans anytime?",
@@ -181,12 +181,12 @@ export default function PricingPage() {
             ].map((faq, i) => (
               <div
                 key={i}
-                className={`p-8 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-white/10 last:border-b-0 hover:bg-white/[0.02] transition-colors`}
+                className={`p-8 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-border last:border-b-0 hover:bg-white/[0.02] transition-colors`}
               >
-                <h3 className="font-space text-lg text-white mb-4 tracking-widest uppercase">
+                <h3 className="font-space text-lg text-foreground mb-4 tracking-widest uppercase">
                   {faq.q}
                 </h3>
-                <p className="font-inter text-white/60 leading-relaxed">{faq.a}</p>
+                <p className="font-inter text-foreground/60 leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>

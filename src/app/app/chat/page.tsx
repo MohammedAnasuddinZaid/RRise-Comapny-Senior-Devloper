@@ -256,31 +256,24 @@ export default function ChatPage() {
   };
 
   // ── render ───────────────────────────────────────────────────────────────
-  const isDark = theme === "dark";
-
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#030303]" : "bg-white"} text-foreground relative overflow-hidden flex flex-col`}>
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col">
       {/* 
         Performance-optimised background: 
         replaced heavy blur-[150px] with a static radial-gradient painted once by the GPU.
         Visually identical but no per-frame blur compositing cost.
       */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: isDark
-            ? "radial-gradient(ellipse 60% 50% at 60% -10%, rgba(0,229,117,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 110% 80%, rgba(0,229,117,0.03) 0%, transparent 70%)"
-            : "radial-gradient(ellipse 60% 50% at 60% -10%, rgba(0,200,83,0.10) 0%, transparent 70%)",
-        }}
+          className="absolute inset-0 opacity-10 pointer-events-none"
       />
 
       {/* Header */}
       <header
-        className={`flex items-center justify-between p-4 md:px-8 backdrop-blur-xl ${isDark ? "bg-black/30 border-white/5" : "bg-white/70 border-green-500/20"} border-b sticky top-0 z-40`}
+        className="flex items-center justify-between p-4 md:px-8 backdrop-blur-xl bg-card border-border border-b sticky top-0 z-40"
       >
         <div className="flex items-center gap-4">
           <Link href="/app/dashboard">
-            <Button variant="glass" size="icon" className={`border-white/5 hover:border-primary/30 ${!isDark ? "border-green-500/30 hover:border-green-500" : ""}`}>
+            <Button variant="glass" size="icon" className="border-border hover:border-primary/30">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
@@ -341,7 +334,7 @@ export default function ChatPage() {
                   className={`max-w-[80%] p-4 rounded-2xl ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
-                      : `${isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"} text-foreground`
+                      : "bg-card border-border text-foreground"
                   }`}
                 >
                   <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -394,7 +387,7 @@ export default function ChatPage() {
                         <button
                           key={qi}
                           onClick={() => setInput(q)}
-                          className="block w-full text-left p-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                          className="block w-full text-left p-2 bg-white/5 border border-border rounded-lg text-sm hover:bg-white/10 transition-colors"
                         >
                           {q}
                         </button>
@@ -413,9 +406,7 @@ export default function ChatPage() {
           {/* Ambient glow: CSS box-shadow instead of blur-xl div (much cheaper) */}
           <form
             onSubmit={handleSend}
-            className={`relative flex items-center rounded-2xl border p-2 shadow-[0_0_30px_rgba(0,229,117,0.08)] ${
-              isDark ? "bg-black/60 border-white/10" : "bg-white/90 border-green-500/20"
-            }`}
+className="relative flex items-center rounded-2xl border p-2 shadow-[0_0_30px_rgba(0,229,117,0.08)] bg-card border-border"
           >
             <input
               type="text"
@@ -443,7 +434,7 @@ export default function ChatPage() {
               </button>
 
               {showAPIDropdown && (
-                <div className={`absolute bottom-full right-0 mb-2 w-44 rounded-xl border shadow-xl z-50 overflow-hidden ${isDark ? "bg-black/90 border-white/10" : "bg-white/90 border-green-500/20"} backdrop-blur-xl`}>
+<div className="absolute bottom-full right-0 mb-2 w-44 rounded-xl border shadow-xl z-50 overflow-hidden bg-card border-border backdrop-blur-xl">
                   <div className="p-1.5 space-y-0.5">
                     {[
                       { key: "free", label: "FREE MODE", color: "green" },

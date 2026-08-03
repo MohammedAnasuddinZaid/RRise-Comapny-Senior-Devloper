@@ -22,8 +22,8 @@ const FEATURES = [
     title: "Alex: AI Companion",
     desc: "Your always-on AI coach that helps you reflect, plan, and push through when motivation fades.",
     back: "Alex uses your personal data to give tailored insights, spot patterns, and suggest exactly when to push harder.",
-    accentClass: "text-white",
-    borderHover: "hover:border-white/30",
+    accentClass: "text-foreground",
+    borderHover: "hover:border-border",
   },
   {
     icon: "03",
@@ -38,8 +38,8 @@ const FEATURES = [
     title: "Finance Tracking",
     desc: "Monitor spending, set budgets, and receive AI-powered insights to build financial discipline.",
     back: "Link categories, set limits, and watch Alex flag patterns that are silently draining your future.",
-    accentClass: "text-white",
-    borderHover: "hover:border-white/30",
+    accentClass: "text-foreground",
+    borderHover: "hover:border-border",
   },
   {
     icon: "05",
@@ -54,8 +54,8 @@ const FEATURES = [
     title: "Mascot Evolution",
     desc: "Your parrot companion grows as you do , visible proof that your consistency is paying off.",
     back: "Four evolution tiers. The longer your streak, the more powerful and vibrant your companion becomes.",
-    accentClass: "text-white",
-    borderHover: "hover:border-white/30",
+    accentClass: "text-foreground",
+    borderHover: "hover:border-border",
   },
 ];
 
@@ -88,17 +88,17 @@ function FeatureFlipCard({
       >
         {/* FRONT */}
         <div
-          className={`absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 ${borderHover} transition-all duration-300 p-8 flex flex-col justify-between`}
+          className={`absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-md border border-border ${borderHover} transition-all duration-300 p-8 flex flex-col justify-between`}
           style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
         >
           <div>
-            <div className="font-space text-xs tracking-widest text-white/50 mb-6">{icon}</div>
-            <h3 className="font-monument text-xl md:text-2xl text-white mb-4 leading-tight">{title}</h3>
-            <p className="font-inter text-sm text-white/60 leading-relaxed">{desc}</p>
+            <div className="font-space text-xs tracking-widest text-foreground/50 mb-6">{icon}</div>
+            <h3 className="font-monument text-xl md:text-2xl text-foreground mb-4 leading-tight">{title}</h3>
+            <p className="font-inter text-sm text-foreground/60 leading-relaxed">{desc}</p>
           </div>
           <div className="flex items-center gap-2 mt-4">
             <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-            <p className="text-[10px] font-space uppercase tracking-widest text-white/40">
+            <p className="text-[10px] font-space uppercase tracking-widest text-foreground/40">
               Flip for details
             </p>
           </div>
@@ -115,7 +115,7 @@ function FeatureFlipCard({
         >
           <div className="relative z-10">
             <div className="font-monument text-4xl mb-4 text-primary opacity-50">{icon}</div>
-            <p className="font-inter text-sm text-white/90 leading-relaxed">{back}</p>
+            <p className="font-inter text-sm text-foreground/90 leading-relaxed">{back}</p>
           </div>
         </div>
       </motion.div>
@@ -125,7 +125,7 @@ function FeatureFlipCard({
 
 export default function FeaturesPage() {
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="relative min-h-screen bg-[#0a0a0a] text-foreground overflow-hidden">
       <GradientBackground />
       <Header />
 
@@ -134,15 +134,15 @@ export default function FeaturesPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-24 mt-12 border-b border-white/10 pb-12"
+          className="mb-24 mt-12 border-b border-border pb-12"
         >
-          <div className="inline-flex items-center gap-2 text-xs font-space text-white/50 tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 text-xs font-space text-foreground/50 tracking-widest uppercase mb-8">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> Features Overview
           </div>
-          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-white">
+          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground">
             Unstoppable
             <br />
-            <span className="text-white/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">System.</span>
+            <span className="text-foreground/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">System.</span>
           </h1>
         </motion.div>
 
@@ -160,28 +160,28 @@ export default function FeaturesPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 hover:border-primary/20 transition-all duration-300"
+            className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-border hover:border-primary/20 transition-all duration-300"
           >
             <div className="flex-1 text-left space-y-6">
               <div className="text-xs font-space text-primary uppercase tracking-widest border border-primary/20 px-4 py-2 inline-block">
                 Core System
               </div>
-              <h2 className="font-monument text-3xl md:text-5xl text-white leading-tight">
+              <h2 className="font-monument text-3xl md:text-5xl text-foreground leading-tight">
                 Your Growth <br/> Operating System
               </h2>
-              <p className="font-inter text-white/60 leading-relaxed text-lg">
+              <p className="font-inter text-foreground/60 leading-relaxed text-lg">
                 RRise isn't just another productivity app. It's a comprehensive operating system for personal growth. AI-powered habit tracking, intelligent finance management, and an evolving mascot companion.
               </p>
               <ul className="space-y-4 mt-8">
                 {["Daily habit loops", "AI weekly reviews", "Goal decomposition", "Personalised push"].map(item => (
-                  <li key={item} className="flex items-center gap-4 text-sm font-space tracking-widest uppercase text-white/80">
+                  <li key={item} className="flex items-center gap-4 text-sm font-space tracking-widest uppercase text-foreground/80">
                     <span className="w-1.5 h-1.5 bg-primary" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="flex-1 flex items-center justify-center p-8 border border-white/5 bg-white/[0.01]">
+            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-white/[0.01]">
               <LottieAnimation animationData={manWithRobot} loop={true} className="w-full max-w-sm h-auto opacity-80" />
             </div>
           </motion.div>
@@ -191,28 +191,28 @@ export default function FeaturesPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row-reverse items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 hover:border-white/30 transition-all duration-300"
+            className="flex flex-col md:flex-row-reverse items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-border hover:border-border transition-all duration-300"
           >
             <div className="flex-1 text-left space-y-6">
-              <div className="text-xs font-space text-white uppercase tracking-widest border border-white/20 px-4 py-2 inline-block">
+              <div className="text-xs font-space text-foreground uppercase tracking-widest border border-border px-4 py-2 inline-block">
                 Finance Module
               </div>
-              <h2 className="font-monument text-3xl md:text-5xl text-white leading-tight">
+              <h2 className="font-monument text-3xl md:text-5xl text-foreground leading-tight">
                 Smart Finance. <br/> Real Results.
               </h2>
-              <p className="font-inter text-white/60 leading-relaxed text-lg">
+              <p className="font-inter text-foreground/60 leading-relaxed text-lg">
                 Take control of your finances with RRise's intelligent tracking system. Monitor spending, set budgets, and receive personalised insights, watch your financial health improve alongside your personal growth.
               </p>
               <ul className="space-y-4 mt-8">
                 {["Category breakdowns", "AI alerts on overspending", "Budget goal setting", "Financial health score"].map(item => (
-                  <li key={item} className="flex items-center gap-4 text-sm font-space tracking-widest uppercase text-white/80">
+                  <li key={item} className="flex items-center gap-4 text-sm font-space tracking-widest uppercase text-foreground/80">
                     <span className="w-1.5 h-1.5 bg-white" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="flex-1 flex items-center justify-center p-8 border border-white/5 bg-white/[0.01]">
+            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-white/[0.01]">
               <LottieAnimation animationData={manManagingFinances} loop={true} className="w-full max-w-sm h-auto opacity-80" />
             </div>
           </motion.div>

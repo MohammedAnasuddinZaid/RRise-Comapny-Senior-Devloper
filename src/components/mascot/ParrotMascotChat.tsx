@@ -149,14 +149,8 @@ export function ParrotMascotChat() {
             className="absolute inset-[-16px] rounded-full pointer-events-none"
             animate={
               glowing
-                ? {
-                    background: [
-                      "radial-gradient(circle, rgba(0,255,135,0.25) 0%, transparent 70%)",
-                      "radial-gradient(circle, rgba(0,229,255,0.25) 0%, transparent 70%)",
-                      "radial-gradient(circle, rgba(0,255,135,0.25) 0%, transparent 70%)",
-                    ],
-                  }
-                : { background: "radial-gradient(circle, rgba(0,255,135,0.06) 0%, transparent 70%)" }
+                ? { }
+                : { }
             }
             transition={{ duration: 1.8, repeat: Infinity }}
           />
@@ -188,7 +182,7 @@ export function ParrotMascotChat() {
         >
           <motion.div
             whileHover={{ scale: 1.04 }}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-secondary shadow-[0_4px_30px_rgba(0,255,135,0.3)] group-hover:shadow-[0_8px_50px_rgba(0,255,135,0.5)] transition-all duration-300"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg- shadow-[0_4px_30px_rgba(0,255,135,0.3)] group-hover:shadow-[0_8px_50px_rgba(0,255,135,0.5)] transition-all duration-300"
           >
             <span
               className="font-clash font-bold text-sm text-[#020408]"
