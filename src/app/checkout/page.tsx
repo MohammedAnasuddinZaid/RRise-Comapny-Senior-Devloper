@@ -211,8 +211,8 @@ function CheckoutContent() {
               <div className="text-sm">
                 <p className="font-medium text-yellow-500">Stripe Not Configured</p>
                 <p className="text-muted-foreground mt-1">
-                  Add <code className="bg-white/10 px-1 rounded">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> and{" "}
-                  <code className="bg-white/10 px-1 rounded">STRIPE_SECRET_KEY</code> to your environment to enable payments.
+                  Add <code className="bg-surface px-1 rounded">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> and{" "}
+                  <code className="bg-surface px-1 rounded">STRIPE_SECRET_KEY</code> to your environment to enable payments.
                 </p>
               </div>
             </div>

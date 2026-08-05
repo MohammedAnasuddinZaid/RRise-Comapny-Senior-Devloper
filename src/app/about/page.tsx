@@ -20,7 +20,7 @@ const VALUES = [
 
 export default function AboutPage() {
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-foreground overflow-hidden">
+    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       <GradientBackground />
       <Header />
 
@@ -31,13 +31,13 @@ export default function AboutPage() {
           transition={{ duration: 0.8 }}
           className="mb-24 mt-12 border-b border-border pb-12"
         >
-          <div className="inline-flex items-center gap-2 text-xs font-space text-foreground/50 tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 text-xs text-foreground/50 tracking-widest uppercase mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> The Story
           </div>
-          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground">
+          <h1 className="text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>
             Built by someone
             <br />
-            <span className="text-foreground/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">who gets it.</span>
+            <span className="text-foreground/40 italic font-light text-[8vw] md:text-[6vw] tracking-normal" style={{ fontFamily: 'var(--font-body), "Clash Display", sans-serif' }}>who gets it.</span>
           </h1>
         </motion.div>
 
@@ -47,24 +47,24 @@ export default function AboutPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9 }}
-          className="relative p-8 md:p-16 border border-border bg-[#0a0a0a]/80 backdrop-blur-md mb-32"
+          className="relative p-8 md:p-16 border border-border bg-surface backdrop-blur-md mb-32"
         >
           <div className="flex flex-col lg:flex-row gap-16">
             <div className="lg:w-1/3">
               <div className="sticky top-32">
-                <div className="w-24 h-24 bg-primary text-black flex items-center justify-center text-4xl font-monument mb-6">
+                <div className="w-24 h-24 bg-primary text-black flex items-center justify-center text-4xl mb-6" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>
                   R
                 </div>
-                <h3 className="font-monument text-2xl mb-2">Revathy Rajeswaran</h3>
-                <p className="font-space text-xs tracking-widest uppercase text-foreground/50 mb-8">Founder · Sydney, Australia</p>
+                <h3 className="text-2xl mb-2" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>Revathy Rajeswaran</h3>
+                <p className="text-xs tracking-widest uppercase text-foreground/50 mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>Founder · Sydney, Australia</p>
                 <div className="h-px w-full bg-white/10 mb-8"></div>
-                <p className="font-clash text-2xl text-primary italic leading-tight">
+                <p className="text-2xl text-primary italic leading-tight" style={{ fontFamily: 'var(--font-body), "Clash Display", sans-serif' }}>
                   "the goal was never to be productive. the goal is to become the person who doesn't need to be reminded."
                 </p>
               </div>
             </div>
 
-            <div className="lg:w-2/3 space-y-8 font-inter text-lg text-foreground/70 leading-relaxed">
+            <div className="lg:w-2/3 space-y-8 text-lg text-foreground/70 leading-relaxed" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
               <p>
                 built by <span className="text-foreground font-semibold">revathy rajeswaran</span>, a high school student from australia who became obsessed with solving the gap between knowing what to do and actually doing it.
               </p>
@@ -89,7 +89,7 @@ export default function AboutPage() {
           transition={{ duration: 0.7 }}
           className="mb-32"
         >
-          <h2 className="font-monument text-4xl md:text-5xl text-foreground mb-16 border-b border-border pb-8">Values.</h2>
+          <h2 className="text-4xl md:text-5xl text-foreground mb-16 border-b border-border pb-8" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>Values.</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border">
             {VALUES.map((v, i) => (
               <motion.div
@@ -97,9 +97,9 @@ export default function AboutPage() {
                 whileHover={{ backgroundColor: "rgba(255,255,255,0.03)" }}
                 className={`p-10 border-b md:border-b-0 md:border-r border-border transition-colors ${i === VALUES.length - 1 ? 'md:border-r-0' : ''}`}
               >
-                <div className="text-primary font-space text-sm tracking-widest mb-8">{v.num}</div>
-                <h3 className="font-monument text-xl text-foreground mb-4 leading-snug">{v.title}</h3>
-                <p className="font-inter text-foreground/60 leading-relaxed">{v.desc}</p>
+                <div className="text-primary text-sm tracking-widest mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>{v.num}</div>
+                <h3 className="text-xl mb-4" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>{v.title}</h3>
+                <p className="text-foreground/60 leading-relaxed" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>{v.desc}</p>
               </motion.div>
             ))}
           </div>

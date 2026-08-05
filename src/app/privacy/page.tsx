@@ -21,26 +21,26 @@ export default function PrivacyPage() {
         >
           {/* Header */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs font-space text-primary tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs text-primary tracking-widest uppercase mb-6" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
               Privacy Policy
             </div>
             <h1
-              className="font-clash text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
+              className="text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
+              style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
             >
               Privacy Policy
             </h1>
-            <p className="font-inter text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
               Last Updated: July 3, 2026
             </p>
           </div>
 
           {/* Content */}
-          <div className="prose prose-invert max-w-none font-inter text-foreground/85 leading-relaxed">
+          <div className="prose prose-invert max-w-none text-foreground/85 leading-relaxed" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 1. Introduction
               </h2>
@@ -54,8 +54,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 2. Information We Collect
               </h2>
@@ -84,8 +84,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 3. How We Use Your Information
               </h2>
@@ -106,8 +106,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 4. Information Sharing and Disclosure
               </h2>
@@ -128,8 +128,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 5. Data Security
               </h2>
@@ -150,8 +150,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 6. Data Retention
               </h2>
@@ -171,8 +171,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 7. Your Rights
               </h2>
@@ -195,8 +195,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 8. Children's Privacy
               </h2>
@@ -207,8 +207,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 9. International Data Transfers
               </h2>
@@ -219,8 +219,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 10. Changes to This Privacy Policy
               </h2>
@@ -231,8 +231,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 11. California Consumer Privacy Act (CCPA)
               </h2>
@@ -251,8 +251,8 @@ export default function PrivacyPage() {
 
             <section className="p-8 rounded-3xl glass border border-border">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 12. Contact Us
               </h2>

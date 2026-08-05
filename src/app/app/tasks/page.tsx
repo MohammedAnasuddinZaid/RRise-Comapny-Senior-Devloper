@@ -140,25 +140,28 @@ export default function TasksPage() {
       </div>
 
       {/* Task Creation Form */}
-      <Card className="bg-white/5 border-border">
+      <Card className="bg-surface border-border">
         <CardContent className="p-8">
           <form onSubmit={handleAddTask} className="flex gap-4">
             <input
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="What task needs your attention today?"
-              className="flex-1 bg-background border border-border rounded-xl px-6 py-4 text-base placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 transition-colors"
+              placeholder="Add a new task..."
+              className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors text-foreground"
             />
-            <Button type="submit" className="rounded-xl h-full py-4 px-6">
-              <Plus className="w-5 h-5 mr-2" /> Add Task
-            </Button>
+            <button
+              type="submit"
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+            >
+              Add Task
+            </button>
           </form>
         </CardContent>
       </Card>
 
       {/* Tasks List */}
-      <Card className="bg-white/5 border-border">
+      <Card className="bg-surface border-border">
         <CardHeader className="border-b border-border pb-6">
           <CardTitle className="text-xl flex items-center justify-between">
             <span>Tasks</span>
@@ -177,7 +180,7 @@ export default function TasksPage() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between p-6 hover:bg-white/[0.01] transition-colors group"
+                  className="flex items-center justify-between p-6 hover:bg-surface-hover transition-colors group"
                 >
                   {editingTask === task.id ? (
                     <div className="flex items-center gap-4 flex-1">

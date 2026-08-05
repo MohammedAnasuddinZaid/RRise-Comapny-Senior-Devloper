@@ -126,14 +126,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {/* Close button */}
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-surface transition-colors text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 {/* Header */}
                 <div className="mb-8">
-                  <h2 className="font-clash text-3xl font-bold text-foreground mb-2">
+                  <h2 className="text-3xl font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}>
                     {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                   </h2>
                   <p className="text-muted-foreground">
@@ -147,17 +147,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border border-border hover:border-border bg-white/5 hover:bg-white/10 transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border border-border hover:border-border bg-surface hover:bg-surface-hover transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
                 >
                   <Globe className="w-5 h-5" />
-                  <span>Continue with Google</span>
+                  <span className="text-foreground">Continue with Google</span>
                 </button>
 
                 {/* Divider */}
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="flex-1 h-px bg-border" />
                   <span className="text-sm text-muted-foreground">or</span>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 {/* Form */}
@@ -175,7 +175,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Your name"
                           required
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
                         />
                       </div>
                     </div>
@@ -193,7 +193,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         placeholder="••••••••"
                         required
                         minLength={6}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         id="terms"
                         checked={acceptTerms}
                         onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className="mt-1 w-4 h-4 rounded border-border bg-white/5 focus:ring-primary focus:ring-offset-0"
+                        className="mt-1 w-4 h-4 rounded border-border bg-surface focus:ring-primary focus:ring-offset-0"
                       />
                       <label htmlFor="terms" className="text-sm text-muted-foreground">
                         I agree to the{' '}
@@ -274,11 +274,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             <GlassCard className="p-6 relative">
                               <button
                                 onClick={() => setShowTerms(false)}
-                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+                                className="absolute top-4 right-4 p-2 rounded-full hover:bg-surface transition-colors text-foreground"
                               >
                                 <X className="w-5 h-5" />
                               </button>
-                              <h3 className="font-clash text-2xl font-bold text-foreground mb-4">
+                              <h3 className="text-2xl font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}>
                                 Terms of Service
                               </h3>
                               <div className="text-sm text-muted-foreground space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -297,13 +297,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     setAcceptTerms(true);
                                     setShowTerms(false);
                                   }}
-                                  className="flex-1 p-3 rounded-xl bg-primary hover:bg-primary/90 text-foreground font-semibold transition-all"
+                                  className="flex-1 p-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all"
                                 >
                                   Accept Terms
                                 </button>
                                 <button
                                   onClick={() => setShowTerms(false)}
-                                  className="flex-1 p-3 rounded-xl border border-border hover:bg-white/10 text-foreground font-semibold transition-all"
+                                  className="flex-1 p-3 rounded-xl border border-border hover:bg-surface text-foreground font-semibold transition-all"
                                 >
                                   Close
                                 </button>
@@ -318,7 +318,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <button
                     type="submit"
                     disabled={loading || (mode === 'signup' && !acceptTerms)}
-                    className="w-full p-3 rounded-xl bg-primary hover:bg-primary/90 text-foreground font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                   </button>

@@ -2,9 +2,9 @@
 @import url('https://fonts.cdnfonts.com/css/monument-extended');
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Jim+Nightshade&family=Yellowtail&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Updock&family=Send+Flowers&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&family=Short+Stack&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,400;1,6..96,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
 
 @import "tailwindcss";
 
@@ -117,8 +117,8 @@
   --surface: rgba(240, 249, 255, 0.6);
   --surface-hover: rgba(255, 255, 255, 0.8);
   --surface-border: rgba(147, 197, 253, 0.5);
-  --font-heading: 'Jim Nightshade', cursive;
-  --font-body: 'Yellowtail', cursive;
+  --font-heading: 'Marcellus', serif;
+  --font-body: 'Marcellus', serif;
 }
 
 .theme-sky body {
@@ -147,8 +147,8 @@
   --surface: rgba(253, 242, 248, 0.6);
   --surface-hover: rgba(255, 255, 255, 0.8);
   --surface-border: rgba(249, 168, 212, 0.5);
-  --font-heading: 'Updock', cursive;
-  --font-body: 'Send Flowers', cursive;
+  --font-heading: 'Bodoni Moda', serif;
+  --font-body: 'Cormorant Garamond', serif;
 }
 
 .theme-diva body {
@@ -193,16 +193,16 @@
   --muted-foreground: #999999;
   --accent: #333333;
   --accent-foreground: #ffffff;
-  --border: #ffffff;
+  --border: #333333;
   --radius: 0.5rem;
-  --glow-green: 0 0 20px rgba(255, 255, 255, 0.8);
-  --glow-blue: 0 0 20px rgba(255, 255, 255, 0.8);
-  --glow-both: 0 0 30px rgba(255, 255, 255, 1);
-  --surface: #000000;
-  --surface-hover: #111111;
-  --surface-border: #ffffff;
-  --font-heading: 'Shadows Into Light', cursive;
-  --font-body: 'Short Stack', cursive;
+  --glow-green: 0 0 40px rgba(255, 255, 255, 0.4);
+  --glow-blue: 0 0 50px rgba(255, 255, 255, 0.5);
+  --glow-both: 0 0 60px rgba(255, 255, 255, 0.35), 0 0 100px rgba(255, 255, 255, 0.25);
+  --surface: #1a1a1a;
+  --surface-hover: #2a2a2a;
+  --surface-border: #333333;
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Poppins', sans-serif;
 }
 
 .theme-manga body {
@@ -279,12 +279,11 @@ body {
 .font-clash    { font-family: 'Clash Display', sans-serif !important; }
 .font-inter    { font-family: var(--font-body), 'Inter', sans-serif !important; }
 .font-space    { font-family: var(--font-heading), 'Space Grotesk', sans-serif !important; }
-.font-jim      { font-family: 'Jim Nightshade', cursive !important; }
-.font-yellowtail { font-family: 'Yellowtail', cursive !important; }
-.font-updock   { font-family: 'Updock', cursive !important; }
-.font-sendflowers { font-family: 'Send Flowers', cursive !important; }
-.font-shadows  { font-family: 'Shadows Into Light', cursive !important; }
-.font-shortstack { font-family: 'Short Stack', cursive !important; }
+.font-cormorant { font-family: 'Cormorant Garamond', serif !important; }
+.font-bodoni   { font-family: 'Bodoni Moda', serif !important; }
+.font-cinzel   { font-family: 'Cinzel', serif !important; }
+.font-poppins  { font-family: 'Poppins', sans-serif !important; }
+.font-marcellus { font-family: 'Marcellus', serif !important; }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading), 'Clash Display', sans-serif;

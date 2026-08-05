@@ -22,7 +22,7 @@ const CONTACT_METHODS = [
     icon: "map",
     label: "Based in",
     value: "Sydney, Australia",
-    color: "border-border bg-white/3",
+    color: "border-border bg-surface",
   },
 ];
 
@@ -59,9 +59,9 @@ export default function ContactPage() {
   };
 
   const inputClass = (name: string) =>
-    `w-full px-4 py-3.5 rounded-xl font-inter text-sm text-foreground placeholder:text-muted-foreground/50 bg-white/3 border transition-all duration-300 outline-none resize-none ${
+    `w-full px-4 py-3.5 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 bg-surface border transition-all duration-300 outline-none resize-none ${
       focused === name
-        ? "border-primary/50 bg-white/5 shadow-[0_0_20px_rgba(0,255,135,0.08)]"
+        ? "border-primary/50 bg-surface-hover shadow-[0_0_20px_rgba(0,255,135,0.08)]"
         : "border-border hover:border-border"
     }`;
 
@@ -81,17 +81,17 @@ export default function ContactPage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-secondary/20 text-xs font-space text-secondary tracking-widest uppercase mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-secondary/20 text-xs text-secondary tracking-widest uppercase mb-6" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
             Let's connect
           </div>
           <h1
-            className="font-clash text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            className="text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
+            style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
           >
             Say{" "}
             <span className="gradient-text">hello</span>
           </h1>
-          <p className="font-inter text-lg text-muted-foreground max-w-xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
             Have a question, a collab idea, or just want to share feedback? I read every message personally.
           </p>
         </motion.div>
@@ -117,10 +117,10 @@ export default function ContactPage() {
                     <span className="text-lg font-bold text-primary">{m.label.charAt(0)}</span>
                   </div>
                   <div>
-                    <p className="font-space text-xs text-muted-foreground uppercase tracking-widest">
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
                       {m.label}
                     </p>
-                    <p className="font-inter text-sm text-foreground">{m.value}</p>
+                    <p className="text-sm text-foreground" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>{m.value}</p>
                   </div>
                 </motion.div>
               ))}
@@ -129,8 +129,8 @@ export default function ContactPage() {
             {/* Message types */}
             <div className="p-6 rounded-2xl glass border border-border">
               <h3
-                className="font-clash text-sm font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-sm font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 What can I help with?
               </h3>
@@ -142,7 +142,7 @@ export default function ContactPage() {
                   "Press or media inquiries",
                   "Just saying hello",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm font-inter text-muted-foreground">
+                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                     {item}
                   </li>
@@ -178,12 +178,12 @@ export default function ContactPage() {
                       <CheckCircle className="w-16 h-16 text-primary" />
                     </motion.div>
                     <h3
-                      className="font-clash text-2xl font-semibold text-foreground"
-                      style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      className="text-2xl font-semibold text-foreground"
+                      style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
                     >
                       Message sent!
                     </h3>
-                    <p className="font-inter text-muted-foreground max-w-xs">
+                    <p className="text-muted-foreground max-w-xs" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
                       Thanks for reaching out. Revathy will get back to you within 24 hours.
                     </p>
                   </motion.div>
@@ -196,7 +196,7 @@ export default function ContactPage() {
                     className="space-y-5"
                   >
                     <div>
-                      <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
+                      <label className="block text-xs text-muted-foreground mb-1.5 uppercase tracking-wider" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
                         Name *
                       </label>
                       <input
@@ -212,7 +212,7 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label className="block font-inter text-xs text-muted-foreground mb-1.5 uppercase tracking-wider">
+                      <label className="block text-xs text-muted-foreground mb-1.5 uppercase tracking-wider" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
                         Issue *
                       </label>
                       <textarea
@@ -244,16 +244,16 @@ export default function ContactPage() {
                       disabled={status === "sending"}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
-                      className="relative w-full py-4 rounded-xl font-clash font-semibold text-sm overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed group"
-                      style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      className="relative w-full py-4 rounded-xl font-semibold text-sm overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed group"
+                      style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
                     >
-                      <div className="absolute inset-0 bg- transition-opacity" />
-                      <div className="absolute inset-0 bg- blur-2xl opacity-0 group-hover:opacity-60 transition-opacity" />
-                      <span className="relative z-10 flex items-center justify-center gap-2 text-[#020408] font-bold">
+                      <div className="absolute inset-0 bg-primary transition-opacity" />
+                      <div className="absolute inset-0 bg-primary blur-2xl opacity-0 group-hover:opacity-60 transition-opacity" />
+                      <span className="relative z-10 flex items-center justify-center gap-2 text-primary-foreground font-bold">
                         {status === "sending" ? (
                           <>
                             <motion.div
-                              className="w-4 h-4 border-2 border-[#020408]/30 border-t-[#020408] rounded-full"
+                              className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
                               animate={{ rotate: 360 }}
                               transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                             />
@@ -268,7 +268,7 @@ export default function ContactPage() {
                       </span>
                     </motion.button>
 
-                    <p className="font-inter text-xs text-muted-foreground/50 text-center">
+                    <p className="text-xs text-muted-foreground/50 text-center" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
                       Opens LinkedIn messaging to send your issue directly
                     </p>
                   </motion.form>

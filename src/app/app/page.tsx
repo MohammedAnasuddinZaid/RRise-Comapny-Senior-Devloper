@@ -164,7 +164,7 @@ export default function AppEntryPage() {
             <button 
               key={chip}
               onClick={() => setPrompt(chip)}
-              className="px-5 py-2.5 rounded-full bg-white/5 border border-border text-sm font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all backdrop-blur-sm hover:-translate-y-0.5"
+              className="px-5 py-2.5 rounded-full bg-surface border border-border text-sm font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-all backdrop-blur-sm hover:-translate-y-0.5"
             >
               {chip}
             </button>
@@ -190,9 +190,9 @@ export default function AppEntryPage() {
             onClick={() => handlePlanClick(plan.id)}
             className={`cursor-pointer ${startingPlan === plan.id ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            <Card className="h-full bg-white/5 hover:bg-white/10 transition-colors border border-border group">
+            <Card className="h-full bg-surface hover:bg-surface-hover transition-colors border border-border group">
               <CardContent className="p-8 flex items-start gap-5">
-                <div className="p-4 rounded-xl bg-white/5 border border-border group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
+                <div className="p-4 rounded-xl bg-surface border border-border group-hover:bg-primary/20 group-hover:border-primary/30 transition-colors">
                   {iconMap[plan.icon]}
                 </div>
                 <div className="flex-1">

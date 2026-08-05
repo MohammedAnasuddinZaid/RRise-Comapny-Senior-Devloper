@@ -88,7 +88,7 @@ function FeatureFlipCard({
       >
         {/* FRONT */}
         <div
-          className={`absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-md border border-border ${borderHover} transition-all duration-300 p-8 flex flex-col justify-between`}
+          className={`absolute inset-0 bg-surface backdrop-blur-md border border-border ${borderHover} transition-all duration-300 p-8 flex flex-col justify-between`}
           style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
         >
           <div>
@@ -125,7 +125,7 @@ function FeatureFlipCard({
 
 export default function FeaturesPage() {
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-foreground overflow-hidden">
+    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       <GradientBackground />
       <Header />
 
@@ -160,7 +160,7 @@ export default function FeaturesPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-border hover:border-primary/20 transition-all duration-300"
+            className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-16 bg-surface backdrop-blur-md border border-border hover:border-primary/20 transition-all duration-300"
           >
             <div className="flex-1 text-left space-y-6">
               <div className="text-xs font-space text-primary uppercase tracking-widest border border-primary/20 px-4 py-2 inline-block">
@@ -181,7 +181,7 @@ export default function FeaturesPage() {
                 ))}
               </ul>
             </div>
-            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-white/[0.01]">
+            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-surface">
               <LottieAnimation animationData={manWithRobot} loop={true} className="w-full max-w-sm h-auto opacity-80" />
             </div>
           </motion.div>
@@ -191,7 +191,7 @@ export default function FeaturesPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row-reverse items-center gap-12 p-8 md:p-16 bg-[#0a0a0a]/80 backdrop-blur-md border border-border hover:border-border transition-all duration-300"
+            className="flex flex-col md:flex-row-reverse items-center gap-12 p-8 md:p-16 bg-surface backdrop-blur-md border border-border hover:border-border transition-all duration-300"
           >
             <div className="flex-1 text-left space-y-6">
               <div className="text-xs font-space text-foreground uppercase tracking-widest border border-border px-4 py-2 inline-block">
@@ -212,7 +212,7 @@ export default function FeaturesPage() {
                 ))}
               </ul>
             </div>
-            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-white/[0.01]">
+            <div className="flex-1 flex items-center justify-center p-8 border border-border bg-surface">
               <LottieAnimation animationData={manManagingFinances} loop={true} className="w-full max-w-sm h-auto opacity-80" />
             </div>
           </motion.div>

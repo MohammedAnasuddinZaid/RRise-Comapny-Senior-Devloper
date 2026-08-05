@@ -83,7 +83,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-foreground overflow-hidden">
+    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       <GradientBackground />
       <Header />
 
@@ -94,13 +94,13 @@ export default function PricingPage() {
           transition={{ duration: 0.8 }}
           className="mb-24 mt-12 border-b border-border pb-12"
         >
-          <div className="inline-flex items-center gap-2 text-xs font-space text-foreground/50 tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 text-xs text-foreground/50 tracking-widest uppercase mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> Simple Pricing
           </div>
-          <h1 className="font-monument text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground">
+          <h1 className="text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>
             Choose your
             <br />
-            <span className="text-foreground/40 italic font-clash font-light text-[8vw] md:text-[6vw] tracking-normal">Level.</span>
+            <span className="text-foreground/40 italic font-light text-[8vw] md:text-[6vw] tracking-normal" style={{ fontFamily: 'var(--font-body), "Clash Display", sans-serif' }}>Level.</span>
           </h1>
         </motion.div>
 
@@ -114,36 +114,36 @@ export default function PricingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: i * 0.15 }}
-                className={`p-10 border-b md:border-b-0 md:border-r border-border bg-[#0a0a0a]/80 backdrop-blur-md transition-colors hover:bg-white/[0.02] flex flex-col ${i === PLAN_DEFS.length - 1 ? 'md:border-r-0' : ''}`}
+                className={`p-10 border-b md:border-b-0 md:border-r border-border bg-surface backdrop-blur-md transition-colors hover:bg-surface-hover flex flex-col ${i === PLAN_DEFS.length - 1 ? 'md:border-r-0' : ''}`}
               >
                 {plan.badge && (
-                  <div className="text-primary font-space text-xs tracking-widest uppercase mb-4 border border-primary/20 px-3 py-1 inline-block self-start">
+                  <div className="text-primary text-xs tracking-widest uppercase mb-4 border border-primary/20 px-3 py-1 inline-block self-start" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
                     {plan.badge}
                   </div>
                 )}
                 {!plan.badge && <div className="h-[28px] mb-4"></div>}
                 
-                <h3 className="font-monument text-2xl uppercase tracking-widest text-foreground/50 mb-4">{plan.name}</h3>
+                <h3 className="text-2xl uppercase tracking-widest text-foreground/50 mb-4" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>{plan.name}</h3>
                 
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className={`font-monument text-5xl ${plan.accent}`}>{displayPrice}</span>
+                  <span className={`text-5xl ${plan.accent}`} style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>{displayPrice}</span>
                 </div>
-                <span className="font-space text-sm tracking-widest uppercase text-foreground/40 mb-8">{plan.period}</span>
+                <span className="text-sm tracking-widest uppercase text-foreground/40 mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>{plan.period}</span>
                 
-                <p className="font-inter text-foreground/60 mb-8">{plan.tagline}</p>
+                <p className="text-foreground/60 mb-8" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>{plan.tagline}</p>
 
-                <div className="h-px w-full bg-white/10 mb-8"></div>
+                <div className="h-px w-full bg-border mb-8"></div>
 
                 <ul className="space-y-4 mb-12 flex-1">
                   {plan.features.map(feat => (
-                    <li key={feat} className="flex items-center gap-3 text-sm font-space tracking-widest uppercase text-foreground/80">
+                    <li key={feat} className="flex items-center gap-3 text-sm tracking-widest uppercase text-foreground/80" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
                       <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0"></span>
                       {feat}
                     </li>
                   ))}
                 </ul>
 
-                <Link href={getCtaHref(plan.id)} className={`block text-center w-full px-8 py-4 font-space text-sm tracking-widest uppercase transition-colors ${plan.id === 'pro' ? 'bg-primary text-black hover:bg-white' : 'border border-border text-foreground hover:bg-white hover:text-black'}`}>
+                <Link href={getCtaHref(plan.id)} className={`block text-center w-full px-8 py-4 text-sm tracking-widest uppercase transition-colors ${plan.id === 'pro' ? 'bg-primary text-black hover:bg-white' : 'border border-border text-foreground hover:bg-white hover:text-black'}`} style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
                   Select {plan.name}
                 </Link>
               </motion.div>
@@ -159,7 +159,7 @@ export default function PricingPage() {
           transition={{ duration: 0.7 }}
           className="border-t border-border pt-16 max-w-4xl mx-auto"
         >
-          <h2 className="font-monument text-3xl md:text-4xl text-foreground mb-12">Common Questions.</h2>
+          <h2 className="text-3xl md:text-4xl text-foreground mb-12" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>Common Questions.</h2>
           <div className="space-y-0 border border-border">
             {[
               {
@@ -181,12 +181,12 @@ export default function PricingPage() {
             ].map((faq, i) => (
               <div
                 key={i}
-                className={`p-8 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-border last:border-b-0 hover:bg-white/[0.02] transition-colors`}
+                className={`p-8 bg-surface backdrop-blur-md border-b border-border last:border-b-0 hover:bg-surface-hover transition-colors`}
               >
-                <h3 className="font-space text-lg text-foreground mb-4 tracking-widest uppercase">
+                <h3 className="text-lg text-foreground mb-4 tracking-widest uppercase" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
                   {faq.q}
                 </h3>
-                <p className="font-inter text-foreground/60 leading-relaxed">{faq.a}</p>
+                <p className="text-foreground/60 leading-relaxed" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>{faq.a}</p>
               </div>
             ))}
           </div>

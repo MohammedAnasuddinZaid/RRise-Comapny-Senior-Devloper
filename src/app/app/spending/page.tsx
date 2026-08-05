@@ -169,7 +169,7 @@ export default function SpendingPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Add Expense Form and Categories */}
         <div className="md:col-span-1 space-y-6">
-          <Card className="bg-white/5 border-border">
+          <Card className="bg-surface border-border">
             <CardHeader>
               <CardTitle className="text-xl">Add Expense</CardTitle>
             </CardHeader>
@@ -204,7 +204,7 @@ export default function SpendingPage() {
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary/50 transition-colors text-foreground"
                   >
                     {spending.categories.map((cat) => (
-                      <option key={cat.name} value={cat.name} className="bg-[#09090b]">
+                      <option key={cat.name} value={cat.name} className="bg-background">
                         {cat.name}
                       </option>
                     ))}
@@ -218,7 +218,7 @@ export default function SpendingPage() {
           </Card>
 
           {/* Categories card */}
-          <Card className="bg-white/5 border-border">
+          <Card className="bg-surface border-border">
             <CardHeader>
               <CardTitle className="text-xl">Categories</CardTitle>
             </CardHeader>
@@ -240,7 +240,7 @@ export default function SpendingPage() {
 
         {/* Transactions List */}
         <div className="md:col-span-2">
-          <Card className="bg-white/5 border-border h-full">
+          <Card className="bg-surface border-border h-full">
             <CardHeader className="border-b border-border pb-6">
               <CardTitle className="text-xl">Recent Transactions</CardTitle>
             </CardHeader>
@@ -253,7 +253,7 @@ export default function SpendingPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="flex items-center justify-between p-6 hover:bg-white/[0.01] transition-colors group"
+                      className="flex items-center justify-between p-6 hover:bg-surface-hover transition-colors group"
                     >
                       <div>
                         <p className="font-medium text-base text-foreground/90">{tx.title}</p>

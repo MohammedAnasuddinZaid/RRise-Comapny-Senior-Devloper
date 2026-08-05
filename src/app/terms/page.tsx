@@ -21,26 +21,26 @@ export default function TermsPage() {
         >
           {/* Header */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs font-space text-primary tracking-widest uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 text-xs text-primary tracking-widest uppercase mb-6" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
               Terms & Conditions
             </div>
             <h1
-              className="font-clash text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
+              className="text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
+              style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
             >
               Terms of Service
             </h1>
-            <p className="font-inter text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
               Last Updated: July 3, 2026
             </p>
           </div>
 
           {/* Content */}
-          <div className="prose prose-invert max-w-none font-inter text-foreground/85 leading-relaxed">
+          <div className="prose prose-invert max-w-none text-foreground/85 leading-relaxed" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 1. Acceptance of Terms
               </h2>
@@ -54,8 +54,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 2. Account Registration and Security
               </h2>
@@ -80,8 +80,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 3. Service Description and Usage
               </h2>
@@ -116,8 +116,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 4. Subscription Plans and Payments
               </h2>
@@ -148,8 +148,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 5. AI Services and BYOK
               </h2>
@@ -176,8 +176,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 6. Intellectual Property Rights
               </h2>
@@ -197,8 +197,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 7. User Content
               </h2>
@@ -212,8 +212,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 8. Privacy and Data Protection
               </h2>
@@ -224,8 +224,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 9. Termination and Suspension
               </h2>
@@ -250,8 +250,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 10. Disclaimers and Warranties
               </h2>
@@ -268,8 +268,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 11. Limitation of Liability
               </h2>
@@ -288,8 +288,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 12. Indemnification
               </h2>
@@ -300,8 +300,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 13. Governing Law and Dispute Resolution
               </h2>
@@ -315,8 +315,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border mb-8">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 14. Modifications to Terms
               </h2>
@@ -327,8 +327,8 @@ export default function TermsPage() {
 
             <section className="p-8 rounded-3xl glass border border-border">
               <h2
-                className="font-clash text-2xl font-semibold text-foreground mb-4"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-2xl font-semibold text-foreground mb-4"
+                style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
               >
                 15. Contact Us
               </h2>

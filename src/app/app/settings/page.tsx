@@ -797,7 +797,7 @@ export default function SettingsPage() {
 
           {activeSection === "danger" && (
             <>
-              <Card className="bg-white/5 border-red-500/20">
+              <Card className="bg-surface border-red-500/20">
                 <CardHeader className="border-b border-red-500/20 pb-6">
                   <CardTitle className="text-xl flex items-center gap-2 text-red-500">
                     <AlertTriangle className="w-5 h-5" />
