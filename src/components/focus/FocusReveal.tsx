@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, RotateCcw, Edit2, Check } from "lucide-react";
+import { Play, Pause, RotateCcw, Edit2, Check, Volume2, VolumeX } from "lucide-react";
 
 const FOCUS_IMAGES = Array.from({ length: 10 }, (_, i) => `/focus/${i + 1}.webp`);
 const STROKE_SRC = `/strokes/1.png`;
@@ -15,6 +15,8 @@ interface StrokeDef {
   scale: number;
   flipX: boolean;
   flipY: boolean;
+  opacity: number; // For smooth fade-in
+  targetOpacity: number;
 }
 
 export function FocusReveal() {
@@ -29,9 +31,10 @@ export function FocusReveal() {
 
   // Timer state
   const [totalTime, setTotalTime] = useState(DEFAULT_TIME);
-  const [timeLeft,  setTimeLeft]  = useState(DEFAULT_TIME);
+  const [timeLeft, setTimeLeft]  = useState(DEFAULT_TIME);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(false);
 
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -116,6 +119,30 @@ export function FocusReveal() {
     const mctx = mask.getContext("2d");
     if (mctx) { mctx.clearRect(0, 0, W, H); }
 
+    // Calculate image aspect ratio to prevent stretching
+    const img = paintImgRef.current;
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+    const canvasAspect = W / H;
+    
+    let drawWidth, drawHeight, offsetX, offsetY;
+    
+    if (imgAspect > canvasAspect) {
+      // Image is wider than canvas - fit to width
+      drawWidth = W;
+      drawHeight = W / imgAspect;
+      offsetX = 0;
+      offsetY = (H - drawHeight) / 2;
+    } else {
+      // Image is taller than canvas - fit to height
+      drawHeight = H;
+      drawWidth = H * imgAspect;
+      offsetX = (W - drawWidth) / 2;
+      offsetY = 0;
+    }
+
+    // Store draw dimensions for rendering
+    (canvas as any)._drawDims = { drawWidth, drawHeight, offsetX, offsetY };
+
     // Generate stroke defs at this resolution
     const sw = strokeImgRef.current!.naturalWidth;
     const sh = strokeImgRef.current!.naturalHeight;
@@ -126,6 +153,7 @@ export function FocusReveal() {
       // Scale stroke so it covers a patch roughly 8–25% of the canvas short side
       const patchFraction = 0.08 + Math.random() * 0.17;
       const scale = (Math.min(W, H) * patchFraction) / avgDim;
+      const targetOpacity = 0.85 + Math.random() * 0.15;
       defs.push({
         x: Math.random() * W,
         y: Math.random() * H,
@@ -133,6 +161,8 @@ export function FocusReveal() {
         scale,
         flipX: Math.random() > 0.5,
         flipY: Math.random() > 0.5,
+        opacity: 0, // Start at 0 for fade-in
+        targetOpacity,
       });
     }
     // Shuffle for random reveal order
@@ -164,48 +194,64 @@ export function FocusReveal() {
 
     const W = canvas.width;
     const H = canvas.height;
+    const dims = (canvas as any)._drawDims || { drawWidth: W, drawHeight: H, offsetX: 0, offsetY: 0 };
+    const { drawWidth, drawHeight, offsetX, offsetY } = dims;
 
-    // --- 1. Update mask canvas ---
+    // --- 1. Update mask canvas with smooth fade-in ---
     // Number of strokes to reveal matches progress exactly
     const targetStrokes = Math.floor(progress * strokeDefsRef.current.length);
     const currentStrokes = (mask as any)._drawnStrokes ?? 0;
 
-    if (targetStrokes > currentStrokes) {
-      // Paint new strokes onto the mask (accumulative — we NEVER clear the mask)
-      for (let i = currentStrokes; i < targetStrokes; i++) {
-        const d = strokeDefsRef.current[i];
-        mctx.save();
-        mctx.translate(d.x, d.y);
-        mctx.rotate((d.rotation * Math.PI) / 180);
-        const sx = d.scale * (d.flipX ? -1 : 1);
-        const sy = d.scale * (d.flipY ? -1 : 1);
-        mctx.scale(sx, sy);
-        mctx.globalAlpha = 0.85 + Math.random() * 0.15;
-        mctx.drawImage(
-          strokeImg,
-          -strokeImg.naturalWidth / 2,
-          -strokeImg.naturalHeight / 2,
-          strokeImg.naturalWidth,
-          strokeImg.naturalHeight
-        );
-        mctx.restore();
-      }
-      (mask as any)._drawnStrokes = targetStrokes;
+    // Smooth fade-in: interpolate opacity for strokes that are currently revealing
+    // We redraw the mask each frame to animate opacity transitions
+    mctx.clearRect(0, 0, W, H);
+    
+    for (let i = 0; i < targetStrokes; i++) {
+      const d = strokeDefsRef.current[i];
+      
+      // Calculate fade-in progress based on stroke index and overall progress
+      // Each stroke fades in over a small portion of the total progress
+      const strokeProgress = (progress * strokeDefsRef.current.length - i) / 10; // 10 strokes fade-in window
+      const clampedProgress = Math.max(0, Math.min(1, strokeProgress));
+      
+      // Smooth easing function (ease-out cubic)
+      const easedProgress = 1 - Math.pow(1 - clampedProgress, 3);
+      
+      // Interpolate opacity
+      d.opacity = easedProgress * d.targetOpacity;
+      
+      mctx.save();
+      mctx.translate(d.x, d.y);
+      mctx.rotate((d.rotation * Math.PI) / 180);
+      const sx = d.scale * (d.flipX ? -1 : 1);
+      const sy = d.scale * (d.flipY ? -1 : 1);
+      mctx.scale(sx, sy);
+      mctx.globalAlpha = d.opacity;
+      mctx.drawImage(
+        strokeImg,
+        -strokeImg.naturalWidth / 2,
+        -strokeImg.naturalHeight / 2,
+        strokeImg.naturalWidth,
+        strokeImg.naturalHeight
+      );
+      mctx.restore();
     }
+    
+    (mask as any)._drawnStrokes = targetStrokes;
 
     // --- 2. Compose output canvas ---
     ctx.clearRect(0, 0, W, H);
 
     if (progress >= 1) {
-      // Full reveal — draw painting directly at full HD
-      ctx.drawImage(paintImg, 0, 0, W, H);
+      // Full reveal — draw painting directly at correct aspect ratio
+      ctx.drawImage(paintImg, offsetX, offsetY, drawWidth, drawHeight);
       return;
     }
 
     // ── Base layer: always-visible dimmed image ──
     // Draw the painting at low opacity so the scene is always recognisable
     ctx.globalAlpha = 0.25;
-    ctx.drawImage(paintImg, 0, 0, W, H);
+    ctx.drawImage(paintImg, offsetX, offsetY, drawWidth, drawHeight);
     ctx.globalAlpha = 1;
 
     // ── Masked layer: full-quality image revealed through brush strokes ──
@@ -214,7 +260,7 @@ export function FocusReveal() {
     tmp.width  = W;
     tmp.height = H;
     const tctx = tmp.getContext("2d")!;
-    tctx.drawImage(paintImg, 0, 0, W, H);
+    tctx.drawImage(paintImg, offsetX, offsetY, drawWidth, drawHeight);
 
     // 2. Clip that buffer to only where strokes have been painted
     tctx.globalCompositeOperation = "destination-in";
@@ -292,7 +338,9 @@ export function FocusReveal() {
     }
     lastRafTs.current = 0;
     setIsRunning(true);
-    musicRef.current?.play().catch(() => {});
+    if (musicEnabled) {
+      musicRef.current?.play().catch(() => {});
+    }
   };
 
   const handlePause = () => {
@@ -311,6 +359,19 @@ export function FocusReveal() {
     resetMask();
     if (musicRef.current) { musicRef.current.pause(); musicRef.current.currentTime = 0; }
     renderFrame(0);
+  };
+
+  const handleMusicToggle = () => {
+    playClick();
+    setMusicEnabled(prev => {
+      const newState = !prev;
+      if (newState && isRunning) {
+        musicRef.current?.play().catch(() => {});
+      } else {
+        musicRef.current?.pause();
+      }
+      return newState;
+    });
   };
 
   const handleEditOpen = () => {
@@ -460,6 +521,14 @@ export function FocusReveal() {
 
         {/* Controls */}
         <div className="pointer-events-auto flex items-center gap-3">
+          <button
+            onClick={handleMusicToggle}
+            disabled={isEditing}
+            className="p-4 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xl"
+            title={musicEnabled ? "Music On" : "Music Off"}
+          >
+            {musicEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+          </button>
           <button
             onClick={handleStart}
             disabled={isRunning || isEditing}
