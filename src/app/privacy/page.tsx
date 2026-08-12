@@ -1,17 +1,11 @@
 "use client";
 
-import { Header } from "../../components/layout/Header";
+import { RrisePageShell } from "../../components/rrise/RrisePageShell";
 import { motion } from "framer-motion";
 
 export default function PrivacyPage() {
   return (
-    <div className="relative min-h-screen bg-background">
-      {/* Ambient glows */}
-      <div className="dark:block hidden absolute top-[-10%] left-[10%] w-[600px] h-[600px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
-      <div className="dark:block hidden absolute bottom-[10%] right-[5%] w-[500px] h-[500px] rounded-full bg-secondary/4 blur-[140px] pointer-events-none" />
-
-      <Header />
-
+    <RrisePageShell>
       <main className="relative z-10 px-6 md:px-12 pt-32 pb-24 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -25,8 +19,7 @@ export default function PrivacyPage() {
               Privacy Policy
             </div>
             <h1
-              className="text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-              style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
+              className="rrise-title rrise-title-shadow text-[clamp(40px,8vw,96px)] text-white mb-4 leading-tight"
             >
               Privacy Policy
             </h1>
@@ -270,6 +263,6 @@ export default function PrivacyPage() {
           </div>
         </motion.div>
       </main>
-    </div>
+    </RrisePageShell>
   );
 }

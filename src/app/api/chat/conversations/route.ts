@@ -1,28 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUser } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
+  const user = await getAuthUser(request);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    // Fetch user's conversations
-    const { data: conversations, error } = await supabase
+    const { data: conversations, error } = await getSupabaseAdmin()
       .from('chat_conversations')
       .select('*')
       .eq('user_id', user.id)
@@ -39,26 +24,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const user = await getAuthUser(request);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
     const { title } = await request.json();
 
-    // Create new conversation
-    const { data: conversation, error } = await supabase
+    const { data: conversation, error } = await getSupabaseAdmin()
       .from('chat_conversations')
       .insert({
         user_id: user.id,
@@ -78,36 +50,17 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const user = await getAuthUser(request);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
     const { conversationId } = await request.json();
 
     if (!conversationId) {
       return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
     }
 
-    // Delete conversation (messages should cascade delete if database schema has cascade foreign keys, or we can delete them manually)
-    // First delete messages
-    await supabase
-      .from('chat_messages')
-      .delete()
-      .eq('conversation_id', conversationId);
-
-    const { error } = await supabase
+    const { error } = await getSupabaseAdmin()
       .from('chat_conversations')
       .delete()
       .eq('id', conversationId)

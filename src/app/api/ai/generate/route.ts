@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUser } from '@/lib/api-auth';
+import { createServerComponentClient } from '@/lib/supabase-server';
 
 // Default models per provider
 const DEFAULT_MODELS: Record<string, string> = {
@@ -19,15 +16,34 @@ export async function POST(request: Request) {
   try {
     const { userId, userMessage, userPreferences, userGoals } = await request.json();
 
-    if (!userId || !userMessage) {
-      return NextResponse.json({ error: 'Missing required fields (userId, userMessage)' }, { status: 400 });
+    if (!userMessage) {
+      return NextResponse.json({ error: 'Missing required field (userMessage)' }, { status: 400 });
     }
 
+    // Resolve the authenticated user (Bearer token first, then session cookies).
+    let user = await getAuthUser(request);
+    if (!user) {
+      const supabase = await createServerComponentClient();
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Never trust a client-provided userId; enforce the authenticated user.
+    if (userId && userId !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const admin = getSupabaseAdmin();
+
     // Get user's active API keys from database
-    const { data: apiKeys, error: keysError } = await supabaseAdmin
+    const { data: apiKeys, error: keysError } = await admin
       .from('ai_keys')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
@@ -37,9 +53,12 @@ export async function POST(request: Request) {
     }
 
     if (!apiKeys || apiKeys.length === 0) {
-      return NextResponse.json({ 
-        error: 'No active API keys found. Please add an API key in Settings.' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'No active API keys found. Please add an API key in Settings.',
+        },
+        { status: 400 }
+      );
     }
 
     // Use the newest active key
@@ -83,7 +102,7 @@ Keep responses concise, encouraging, and actionable. If you suggest a plan, desc
     }
 
     // Update usage stats
-    await supabaseAdmin
+    await admin
       .from('ai_keys')
       .update({
         last_used: new Date().toISOString(),
@@ -91,12 +110,11 @@ Keep responses concise, encouraging, and actionable. If you suggest a plan, desc
       })
       .eq('id', activeKey.id);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       response: response.content,
       model: response.model,
       provider: response.provider,
     });
-
   } catch (error: any) {
     console.error('[AI API] Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -109,10 +127,10 @@ async function callGeminiAPI(apiKey: string, model: string, prompt: string, syst
       {
         parts: [
           {
-            text: systemPrompt ? `${systemPrompt}\n\nUser: ${prompt}` : prompt
-          }
-        ]
-      }
+            text: systemPrompt ? `${systemPrompt}\n\nUser: ${prompt}` : prompt,
+          },
+        ],
+      },
     ],
     generationConfig: {
       maxOutputTokens: 500,
@@ -183,7 +201,7 @@ async function callOpenAIAPI(apiKey: string, model: string, prompt: string, syst
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
-  
+
   if (!content) {
     throw new Error('OpenAI returned no content');
   }
@@ -222,7 +240,7 @@ async function callAnthropicAPI(apiKey: string, model: string, prompt: string, s
 
   const data = await response.json();
   const content = data.content?.[0]?.text;
-  
+
   if (!content) {
     throw new Error('Anthropic returned no content');
   }
@@ -263,7 +281,7 @@ async function callGroqAPI(apiKey: string, model: string, prompt: string, system
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
-  
+
   if (!content) {
     throw new Error('Groq returned no content');
   }
@@ -304,7 +322,7 @@ async function callOpenRouterAPI(apiKey: string, model: string, prompt: string, 
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
-  
+
   if (!content) {
     throw new Error('OpenRouter returned no content');
   }

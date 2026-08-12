@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Header } from "../../components/layout/Header";
-import { GradientBackground } from "../../components/ui/GradientBackground";
+import { RrisePageShell } from "../../components/rrise/RrisePageShell";
 import Link from "next/link";
 
 const DEFAULT_PRICES = { pro: "20", ultra: "40" };
@@ -83,10 +82,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-      <GradientBackground />
-      <Header />
-
+    <RrisePageShell>
       <main className="relative z-10 px-6 md:px-12 pt-32 pb-32 max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -94,13 +90,13 @@ export default function PricingPage() {
           transition={{ duration: 0.8 }}
           className="mb-24 mt-12 border-b border-border pb-12"
         >
-          <div className="inline-flex items-center gap-2 text-xs text-foreground/50 tracking-widest uppercase mb-8" style={{ fontFamily: 'var(--font-heading), "Space Grotesk", sans-serif' }}>
-            <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> Simple Pricing
+          <div className="inline-flex items-center gap-2 text-xs font-mono-space text-white/45 tracking-[0.25em] uppercase mb-8">
+            <span className="eyebrow-dot"></span> Simple Pricing
           </div>
-          <h1 className="text-[10vw] md:text-[8vw] leading-[0.85] tracking-tighter uppercase text-foreground" style={{ fontFamily: 'var(--font-heading), "Monument Extended", sans-serif' }}>
+          <h1 className="rrise-title rrise-title-shadow text-[clamp(48px,12vw,160px)] text-white">
             Choose your
             <br />
-            <span className="text-foreground/40 italic font-light text-[8vw] md:text-[6vw] tracking-normal" style={{ fontFamily: 'var(--font-body), "Clash Display", sans-serif' }}>Level.</span>
+            <span className="saffron-gradient-text italic font-mono-space text-[clamp(30px,7vw,90px)] tracking-normal">Level.</span>
           </h1>
         </motion.div>
 
@@ -192,6 +188,6 @@ export default function PricingPage() {
           </div>
         </motion.div>
       </main>
-    </div>
+    </RrisePageShell>
   );
 }

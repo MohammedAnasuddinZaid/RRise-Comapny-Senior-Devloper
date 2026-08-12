@@ -1,10 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { AuthProvider } from "../contexts/AuthContext";
-import { CustomCursor } from "../components/ui/CustomCursor";
-import { CinematicLoader } from "../components/ui/CinematicLoader";
+import { RouteEffects } from "../components/ui/RouteEffects";
+import { ServiceWorkerRegister } from "../components/ui/ServiceWorkerRegister";
+import { InstallPrompt } from "../components/ui/InstallPrompt";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 const inter = Inter({
   variable: "--font-inter-next",
@@ -27,6 +35,20 @@ export const metadata: Metadata = {
     title: "RRise | Rise. Build. Become.",
     description: "Track habits, smash goals, and level up — with RRise.",
     type: "website",
+    siteName: "RRise",
+    images: [{ url: "/icons/icon-512.png", width: 512, height: 512, alt: "RRise" }],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "RRise",
+    statusBarStyle: "black-translucent",
   },
 };
 
@@ -38,14 +60,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <CinematicLoader />
-        <CustomCursor />
+        <RouteEffects />
+        <ServiceWorkerRegister />
         <AuthProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </AuthProvider>
+        <InstallPrompt />
       </body>
     </html>
   );

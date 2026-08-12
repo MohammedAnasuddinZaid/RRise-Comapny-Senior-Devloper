@@ -1,44 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-async function verifyAdmin(request: Request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return false;
-  
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
-  if (error || !user) return false;
-
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  return profile?.is_admin === true;
-}
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { requireAdmin, getAuthUser } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
   const key = searchParams.get('key');
 
-  let query = supabaseAdmin.from('content').select('*').order('updated_at', { ascending: false });
-  
+  let query = getSupabaseAdmin().from('content').select('*').order('updated_at', { ascending: false });
+
   if (type) {
     query = query.eq('type', type);
   }
-  
+
   if (key) {
     query = query.eq('key', key);
   }
@@ -53,9 +30,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
+  const user = await getAuthUser(request);
 
   try {
     const { key, type, title, content, metadata, is_published } = await request.json();
@@ -64,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('content')
       .insert({
         key,
@@ -73,7 +51,7 @@ export async function POST(request: Request) {
         content,
         metadata: metadata || {},
         is_published: is_published !== undefined ? is_published : true,
-        created_by: (await supabaseAdmin.auth.getUser()).data.user?.id,
+        created_by: user?.id || null,
       })
       .select()
       .single();
@@ -89,9 +67,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { id, key, type, title, content, metadata, is_published } = await request.json();
@@ -108,7 +85,7 @@ export async function PUT(request: Request) {
     if (metadata !== undefined) updates.metadata = metadata;
     if (is_published !== undefined) updates.is_published = is_published;
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('content')
       .update(updates)
       .eq('id', id)
@@ -126,9 +103,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { id } = await request.json();
@@ -137,10 +113,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Content ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
-      .from('content')
-      .delete()
-      .eq('id', id);
+    const { error } = await getSupabaseAdmin().from('content').delete().eq('id', id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/api-auth';
 
-// Setup Supabase admin client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SENSITIVE_KEY_PATTERN = /secret|key|token|password|credential|private/i;
 
+/**
+ * Public GET returns settings for display (pricing page), but never exposes
+ * sensitive values such as Stripe webhook secrets or API keys.
+ */
 export async function GET() {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return NextResponse.json({ error: 'Supabase credentials missing' }, { status: 500 });
-  }
-
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
   try {
-    const { data: settings, error } = await supabaseAdmin
+    const { data: settings, error } = await getSupabaseAdmin()
       .from('system_settings')
       .select('*')
       .order('key');
@@ -23,33 +20,35 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ settings });
+    const safeSettings = (settings || []).filter((setting: any) => {
+      const key = setting.key || '';
+      return !SENSITIVE_KEY_PATTERN.test(key);
+    });
+
+    return NextResponse.json({ settings: safeSettings });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return NextResponse.json({ error: 'Supabase credentials missing' }, { status: 500 });
-  }
-
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { key, value, description } = await request.json();
 
-    if (!key || !value) {
+    if (!key || value === undefined) {
       return NextResponse.json({ error: 'Key and value are required' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('system_settings')
-      .upsert({ 
-        key, 
-        value, 
+      .upsert({
+        key,
+        value: String(value),
         description,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

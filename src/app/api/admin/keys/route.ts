@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/api-auth';
 
 // Default model fallbacks per provider
 const DEFAULT_MODELS: Record<string, string> = {
@@ -15,28 +11,9 @@ const DEFAULT_MODELS: Record<string, string> = {
   openrouter: 'openai/gpt-4o-mini',
 };
 
-async function verifyAdmin(request: Request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return false;
-  
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
-  if (error || !user) return false;
-
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  return profile?.is_admin === true;
-}
-
 export async function POST(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { userId, provider, keyName, key, keyData, model } = await request.json();
@@ -45,13 +22,18 @@ export async function POST(request: Request) {
     const actualKey = keyData ? Buffer.from(keyData, 'base64').toString('utf-8') : key;
 
     if (!userId || !provider || !keyName || !actualKey) {
-      return NextResponse.json({ error: 'Missing required fields (userId, provider, keyName, key/keyData)' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing required fields (userId, provider, keyName, key/keyData)' },
+        { status: 400 }
+      );
     }
 
     const resolvedModel = model || DEFAULT_MODELS[provider] || 'gemini-2.5-flash';
 
+    const admin = getSupabaseAdmin();
+
     // Deactivate all existing active keys for this user+provider
-    await supabaseAdmin
+    await admin
       .from('ai_keys')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
@@ -59,7 +41,7 @@ export async function POST(request: Request) {
       .eq('is_active', true);
 
     // Insert the new key with selected_model
-    const { error } = await supabaseAdmin
+    const { error } = await admin
       .from('ai_keys')
       .insert({
         user_id: userId,
@@ -76,15 +58,14 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, provider, model: resolvedModel });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 });
   }
 }
 
 export async function DELETE(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { keyId } = await request.json();
@@ -94,17 +75,14 @@ export async function DELETE(request: Request) {
     }
 
     // Delete the key from ai_keys table
-    const { error } = await supabaseAdmin
-      .from('ai_keys')
-      .delete()
-      .eq('id', keyId);
+    const { error } = await getSupabaseAdmin().from('ai_keys').delete().eq('id', keyId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 });
   }
 }

@@ -36,10 +36,10 @@ export function GradientBackground() {
     // Theme-specific colors (solid colors, no gradients)
     const themeColors = {
       default: {
-        primary: '#00ff87',
-        secondary: '#ffffff',
+        primary: '#8052ff',
+        secondary: '#ffb829',
         grid: '#ffffff',
-        connection: '#ffffff'
+        connection: '#8052ff'
       },
       sky: {
         primary: '#3b82f6',

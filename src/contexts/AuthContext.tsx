@@ -101,10 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } as AuthError };
     }
+    // Stay on the same page after Google sign-in — the header switches to
+    // "Dashboard / Sign out" instead of the whole site changing to the app.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/app/dashboard`,
+        redirectTo: window.location.href,
       },
     });
     return { error };
@@ -122,16 +124,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       return { error: { message: 'Supabase not configured' } as AuthError };
     }
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
-    if (!error && data.user) {
-      // Redirect to dashboard after successful login
-      window.location.href = '/app/dashboard';
-    }
-    
+    // Keep the user on the same page after login — no forced navigation.
+    // The header now shows "Dashboard" so they can enter the app whenever.
     return { error };
   };
 
@@ -165,8 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Initialize user data after successful signup
       await initializeUser(data.user.id, email, name, termsAccepted);
       
-      // Redirect to dashboard after successful signup
-      window.location.href = '/app/dashboard';
+      // Keep the user on the same page — no forced navigation.
+      // The header now shows "Dashboard" so they can enter the app whenever.
     }
 
     return { error };

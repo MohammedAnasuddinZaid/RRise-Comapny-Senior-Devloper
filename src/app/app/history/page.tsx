@@ -204,8 +204,8 @@ export default function HistoryPage() {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00e575" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#00e575" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8052ff" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#8052ff" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -215,7 +215,7 @@ export default function HistoryPage() {
                 contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: '12px' }}
                 itemStyle={{ color: "var(--primary)" }}
               />
-              <Area type="monotone" dataKey="total" stroke="#00e575" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
+              <Area type="monotone" dataKey="total" stroke="#8052ff" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
             </AreaChart>
           </ResponsiveContainer>
         </motion.div>

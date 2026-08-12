@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUser } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
   try {
@@ -13,23 +11,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
     }
 
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await getAuthUser(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    const admin = getSupabaseAdmin();
 
     // Verify user owns this conversation
-    const { data: conversation } = await supabase
+    const { data: conversation } = await admin
       .from('chat_conversations')
       .select('user_id')
       .eq('id', conversationId)
@@ -40,7 +28,7 @@ export async function GET(request: Request) {
     }
 
     // Fetch messages
-    const { data: messages, error } = await supabase
+    const { data: messages, error } = await admin
       .from('chat_messages')
       .select('*')
       .eq('conversation_id', conversationId)
@@ -64,23 +52,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await getAuthUser(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    const admin = getSupabaseAdmin();
 
     // Verify user owns this conversation
-    const { data: conversation } = await supabase
+    const { data: conversation } = await admin
       .from('chat_conversations')
       .select('user_id')
       .eq('id', conversation_id)
@@ -91,7 +69,7 @@ export async function POST(request: Request) {
     }
 
     // Insert message
-    const { data: message, error } = await supabase
+    const { data: message, error } = await admin
       .from('chat_messages')
       .insert({
         conversation_id,

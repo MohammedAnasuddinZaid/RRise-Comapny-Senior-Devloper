@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Header } from "../../components/layout/Header";
+import { RrisePageShell } from "../../components/rrise/RrisePageShell";
 import { Send, CheckCircle, AlertCircle } from "lucide-react";
 
 const CONTACT_METHODS = [
@@ -66,13 +66,7 @@ export default function ContactPage() {
     }`;
 
   return (
-    <div className="relative min-h-screen bg-background">
-      {/* Ambient */}
-      <div className="dark:block hidden absolute top-[-10%] right-[10%] w-[600px] h-[600px] rounded-full bg-secondary/4 blur-[160px] pointer-events-none" />
-      <div className="dark:block hidden absolute bottom-[5%] left-[-5%] w-[500px] h-[400px] rounded-full bg-primary/4 blur-[140px] pointer-events-none" />
-
-      <Header />
-
+    <RrisePageShell>
       <main className="relative z-10 px-6 md:px-12 pt-32 pb-24 max-w-5xl mx-auto">
         {/* Heading */}
         <motion.div
@@ -85,11 +79,10 @@ export default function ContactPage() {
             Let's connect
           </div>
           <h1
-            className="text-5xl md:text-6xl font-semibold text-foreground mb-4 leading-tight"
-            style={{ fontFamily: 'var(--font-heading), "Clash Display", sans-serif' }}
+            className="rrise-title rrise-title-shadow text-[clamp(48px,10vw,120px)] text-white mb-4 leading-tight"
           >
             Say{" "}
-            <span className="gradient-text">hello</span>
+            <span className="iris-gradient-text">hello</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body), "Inter", sans-serif' }}>
             Have a question, a collab idea, or just want to share feedback? I read every message personally.
@@ -278,6 +271,6 @@ export default function ContactPage() {
           </motion.div>
         </div>
       </main>
-    </div>
+    </RrisePageShell>
   );
 }

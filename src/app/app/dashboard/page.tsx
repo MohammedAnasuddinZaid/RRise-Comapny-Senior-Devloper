@@ -506,7 +506,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.5, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -50 }}
-className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-card border-border backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,229,117,0.2)]"
+className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-card border-border backdrop-blur-xl rounded-full flex flex-col items-center justify-center shadow-[0_0_30px_rgba(128,82,255,0.2)]"
           >
             <LottieAnimation animationData={xpAnimation} loop={false} className="w-16 h-16" />
             <span className="text-primary font-bold text-sm -mt-2">+{lastXpAmount} XP</span>
@@ -522,7 +522,7 @@ className="fixed bottom-10 right-10 z-50 pointer-events-none w-32 h-32 bg-card b
             onClick={() => setStreakCelebration(false)}
 className="fixed inset-0 bg-background backdrop-blur-md z-50 flex items-center justify-center p-6 cursor-pointer"
           >
-<div className="max-w-md w-full bg-card border-border p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(0,229,117,0.1)]">
+<div className="max-w-md w-full bg-card border-border p-10 rounded-3xl text-center space-y-6 shadow-[0_0_50px_rgba(128,82,255,0.1)]">
               <LottieAnimation animationData={successTrophy} loop={false} className="w-48 h-48 mx-auto" />
               <h3 className="font-playfair text-3xl font-bold">Milestone Unlocked</h3>
               <p className="text-muted-foreground font-light">Congratulations! You reached a new productivity peak.</p>
@@ -592,7 +592,7 @@ className="flex items-center gap-3 bg-surface border-border hover:border-primary
           {/* Static gradient instead of blur-[60px] radial — cheaper, visually equivalent */}
           <div
             className="absolute inset-0 rounded-3xl"
-            style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(0,229,117,0.05) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(128,82,255,0.06) 0%, transparent 70%)" }}
           />
           <Mascot level={getCurrentStageIndex(percentage) + 1} className="relative z-10 w-44 h-44 mb-4" />
           <div className="space-y-1 z-10">
@@ -650,8 +650,8 @@ className="flex items-center gap-3 bg-surface border-border hover:border-primary
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#00e575" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#00e575" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#8052ff" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#8052ff" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid

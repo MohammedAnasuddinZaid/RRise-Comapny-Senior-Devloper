@@ -1,305 +1,299 @@
 /**
  * Stripe Webhook Handler
- * 
- * This API route handles Stripe webhook events to update user plan state in Supabase.
- * 
- * IMPORTANT SECURITY NOTES:
- * - This endpoint uses the service role key to bypass RLS for plan updates
- * - Webhook signature verification is required to prevent fraudulent requests
- * - Plan state must always come from Supabase, never from frontend values
- * - Stripe webhooks are the only trusted source for billing state changes
- * 
- * Supported Events:
- * - checkout.session.completed: Initial subscription purchase
- * - customer.subscription.created: New subscription created
- * - customer.subscription.updated: Subscription plan changed or renewed
- * - customer.subscription.deleted: Subscription cancelled
- * - invoice.payment_failed: Payment failed (may need to downgrade plan)
- * 
- * Plan Mapping:
- * - price_id starting with 'price_pro_' -> pro plan
- * - price_id starting with 'price_ultra_' -> ultra plan
- * - free plan is default
+ *
+ * Single source of truth for billing state changes. Stripe webhooks are the
+ * ONLY place that writes plan state (profiles.plan) and subscription records.
+ *
+ * Security notes:
+ * - Webhook signature is verified with STRIPE_WEBHOOK_SECRET (env), falling
+ *   back to `stripe_webhook_secret` in system_settings.
+ * - Uses the service role key (bypasses RLS) for trusted writes.
+ *
+ * Supported events:
+ * - checkout.session.completed  → record payment, sync subscription
+ * - customer.subscription.created → sync subscription + plan
+ * - customer.subscription.updated → sync subscription + plan (incl. cancel_at_period_end)
+ * - customer.subscription.deleted → downgrade plan to free
+ * - invoice.paid                 → record payment
+ * - invoice.payment_failed       → log + mark subscription past_due
  */
 
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import type Stripe from 'stripe';
+import { getStripe } from '@/lib/stripe';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { stripeConfig } from '@/lib/env';
 
-// Initialize Stripe with secret key (with fallback check)
-let stripe: Stripe | null = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-}
+const DEFAULT_PRICE_PRO = 'price_1ToJGuIaxTgHtJYBAFVh6s4M';
+const DEFAULT_PRICE_ULTRA = 'price_1ToJJVIaxTgHtJYBa2rkDBDo';
 
-// Initialize Supabase with service role key for admin operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+type Plan = 'free' | 'pro' | 'ultra';
 
 /**
- * Map Stripe price ID to plan type
- * Checks system_settings table first, then falls back to environment variables
+ * Fetch price ID → plan mapping overrides from system_settings (optional).
  */
-async function getPlanFromPriceId(priceId: string): Promise<'free' | 'pro' | 'ultra'> {
+async function getPriceOverrides(): Promise<Record<string, string>> {
   try {
-    // Try to fetch from system_settings table first
-    const { data: settings } = await supabase
+    const { data } = await getSupabaseAdmin()
       .from('system_settings')
       .select('key, value')
-      .in('key', ['stripe_pro_price', 'stripe_ultra_price']);
-    
-    if (settings && settings.length > 0) {
-      const priceMap: Record<string, string> = {};
-      settings.forEach((setting: any) => {
-        priceMap[setting.key] = setting.value;
-      });
-      
-      if (priceId === priceMap['stripe_pro_price']) return 'pro';
-      if (priceId === priceMap['stripe_ultra_price']) return 'ultra';
-    }
+      .in('key', ['stripe_pro_price_id', 'stripe_ultra_price_id']);
+    const map: Record<string, string> = {};
+    (data ?? []).forEach((s: { key: string; value: string | null }) => {
+      if (s.value != null) {
+        map[s.key] = s.value;
+      }
+    });
+    return map;
   } catch (error) {
-    console.error('Error fetching price from system_settings:', error);
+    console.error('[webhook] Error fetching price overrides:', error);
+    return {};
   }
-  
-  // Fallback to environment variables
-  if (priceId === process.env.STRIPE_PRICE_PRO || priceId === 'price_1ToJGuIaxTgHtJYBAFVh6s4M') return 'pro';
-  if (priceId === process.env.STRIPE_PRICE_ULTRA || priceId === 'price_1ToJJVIaxTgHtJYBa2rkDBDo') return 'ultra';
+}
+
+/**
+ * Map a Stripe price ID to a plan, using env + optional DB overrides.
+ */
+async function resolvePlan(priceId: string | undefined | null): Promise<Plan> {
+  if (!priceId) return 'free';
+  const overrides = await getPriceOverrides();
+  const proIds = [stripeConfig.pricePro || DEFAULT_PRICE_PRO, overrides.stripe_pro_price_id].filter(Boolean);
+  const ultraIds = [stripeConfig.priceUltra || DEFAULT_PRICE_ULTRA, overrides.stripe_ultra_price_id].filter(Boolean);
+  if (proIds.includes(priceId)) return 'pro';
+  if (ultraIds.includes(priceId)) return 'ultra';
   return 'free';
 }
 
 /**
- * Handle checkout.session.completed event
- * This is triggered when a user completes a checkout session
+ * Resolve the RRise user_id from a Stripe customer (via customer metadata).
  */
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  const userId = session.metadata?.user_id;
-  const priceId = session.subscription ? 
-    (session.subscription as Stripe.Subscription).items.data[0].price.id : 
-    session.metadata?.price_id;
+async function getUserIdFromCustomer(customerId: string | null): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const customer = (await getStripe().customers.retrieve(customerId)) as Stripe.Customer;
+    return customer?.metadata?.user_id || null;
+  } catch (error) {
+    console.error('[webhook] Error retrieving customer metadata:', error);
+    return null;
+  }
+}
 
-  if (!userId || !priceId) {
-    console.error('Missing user_id or price_id in checkout session');
+/**
+ * Sync a Stripe subscription into the `subscriptions` table and update the
+ * user's plan on `profiles`.
+ */
+async function syncSubscription(subscription: Stripe.Subscription): Promise<void> {
+  const userId = await getUserIdFromCustomer(subscription.customer as string);
+  if (!userId) {
+    console.error('[webhook] Missing user_id for customer', subscription.customer);
     return;
   }
 
-  const plan = await getPlanFromPriceId(priceId);
-  
-  // Update user plan in Supabase
-  const { error } = await supabase
+  const item = subscription.items.data[0];
+  const priceId = item?.price?.id;
+  const activeStatuses = new Set(['active', 'trialing']);
+  const plan: Plan = activeStatuses.has(subscription.status)
+    ? await resolvePlan(priceId)
+    : 'free';
+
+  const now = new Date().toISOString();
+  const row = {
+    user_id: userId,
+    stripe_subscription_id: subscription.id,
+    stripe_customer_id: typeof subscription.customer === 'string' ? subscription.customer : null,
+    stripe_price_id: priceId ?? null,
+    plan,
+    status: subscription.status,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    current_period_start: item?.current_period_start
+      ? new Date(item.current_period_start * 1000).toISOString()
+      : null,
+    current_period_end: item?.current_period_end
+      ? new Date(item.current_period_end * 1000).toISOString()
+      : null,
+    updated_at: now,
+  };
+
+  const { error: subError } = await getSupabaseAdmin()
+    .from('subscriptions')
+    .upsert(row, { onConflict: 'stripe_subscription_id' });
+
+  if (subError) {
+    console.error('[webhook] Error upserting subscription:', subError);
+  }
+
+  const { error: profileError } = await getSupabaseAdmin()
     .from('profiles')
-    .update({ 
-      plan,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ plan, updated_at: now })
     .eq('id', userId);
 
-  if (error) {
-    console.error('Error updating user plan after checkout:', error);
-    throw error;
+  if (profileError) {
+    console.error('[webhook] Error updating profile plan:', profileError);
   }
 
-  console.log(`Updated user ${userId} to plan ${plan} after checkout`);
+  console.log(`[webhook] Synced user ${userId} → plan ${plan} (status ${subscription.status})`);
 }
 
 /**
- * Handle customer.subscription.created event
- * This is triggered when a new subscription is created
+ * Record a successful payment into the `payments` table.
  */
-async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
-  const customerId = subscription.customer as string;
-  
-  if (!stripe) return;
-  // Get user_id from customer metadata
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer as Stripe.Customer).metadata?.user_id;
+async function recordPayment(invoice: Stripe.Invoice): Promise<void> {
+  const userId = await getUserIdFromCustomer(invoice.customer as string);
+  if (!userId) return;
 
+  const amount = invoice.amount_paid ?? invoice.amount_due ?? 0;
+  const currency = invoice.currency || 'usd';
+
+  const { error } = await getSupabaseAdmin()
+    .from('payments')
+    .upsert(
+      {
+        user_id: userId,
+        stripe_invoice_id: invoice.id,
+        amount,
+        currency,
+        status: invoice.status === 'paid' ? 'succeeded' : invoice.status ?? 'pending',
+      },
+      { onConflict: 'stripe_invoice_id' }
+    );
+
+  if (error) {
+    console.error('[webhook] Error recording payment:', error);
+  } else {
+    console.log(`[webhook] Recorded payment of ${amount} ${currency} for user ${userId}`);
+  }
+}
+
+/**
+ * Handle `checkout.session.completed`. Records the payment and, when a
+ * subscription exists, retrieves + syncs it.
+ */
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.invoice) {
+    const invoiceId = typeof session.invoice === 'string' ? session.invoice : session.invoice.id;
+    try {
+      const invoice = await getStripe().invoices.retrieve(invoiceId);
+      await recordPayment(invoice);
+    } catch (error) {
+      console.error('[webhook] Error retrieving invoice from checkout session:', error);
+    }
+  }
+
+  if (session.subscription) {
+    const subscriptionId =
+      typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+    try {
+      const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+      await syncSubscription(subscription);
+    } catch (error) {
+      console.error('[webhook] Error retrieving subscription from checkout session:', error);
+    }
+  }
+}
+
+async function handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<void> {
+  await syncSubscription(subscription);
+}
+
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+  await syncSubscription(subscription);
+}
+
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
+  const userId = await getUserIdFromCustomer(subscription.customer as string);
   if (!userId) {
-    console.error('Missing user_id in customer metadata');
+    console.error('[webhook] Missing user_id for customer', subscription.customer);
     return;
   }
 
-  const priceId = subscription.items.data[0].price.id;
-  const plan = await getPlanFromPriceId(priceId);
-  
-  // Update user plan in Supabase
-  const { error } = await supabase
+  const now = new Date().toISOString();
+  const { error: subError } = await getSupabaseAdmin()
+    .from('subscriptions')
+    .update({ status: 'cancelled', cancel_at_period_end: false, updated_at: now })
+    .eq('stripe_subscription_id', subscription.id);
+
+  if (subError) {
+    console.error('[webhook] Error updating subscription status:', subError);
+  }
+
+  const { error: profileError } = await getSupabaseAdmin()
     .from('profiles')
-    .update({ 
-      plan,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ plan: 'free', updated_at: now })
     .eq('id', userId);
 
-  if (error) {
-    console.error('Error updating user plan after subscription created:', error);
-    throw error;
+  if (profileError) {
+    console.error('[webhook] Error downgrading user plan:', profileError);
   }
 
-  console.log(`Updated user ${userId} to plan ${plan} after subscription created`);
+  console.log(`[webhook] Downgraded user ${userId} to free (subscription deleted)`);
 }
 
-/**
- * Handle customer.subscription.updated event
- * This is triggered when a subscription is updated (plan change, renewal)
- */
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const customerId = subscription.customer as string;
-  
-  if (!stripe) {
-    console.error('Stripe client is not initialized');
-    return;
-  }
-  
-  // Get user_id from customer metadata
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer as Stripe.Customer).metadata?.user_id;
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  const userId = await getUserIdFromCustomer(invoice.customer as string);
+  if (!userId) return;
 
-  if (!userId) {
-    console.error('Missing user_id in customer metadata');
-    return;
-  }
-
-  const priceId = subscription.items.data[0].price.id;
-  const plan = await getPlanFromPriceId(priceId);
-  
-  // Update user plan in Supabase
-  const { error } = await supabase
-    .from('profiles')
-    .update({ 
-      plan,
+  const { error } = await getSupabaseAdmin()
+    .from('subscriptions')
+    .update({
+      status: 'past_due',
       updated_at: new Date().toISOString(),
     })
-    .eq('id', userId);
+    .eq('user_id', userId)
+    .eq('status', 'active');
 
   if (error) {
-    console.error('Error updating user plan after subscription updated:', error);
-    throw error;
+    console.error('[webhook] Error marking subscription past_due:', error);
   }
 
-  console.log(`Updated user ${userId} to plan ${plan} after subscription updated`);
+  console.log(`[webhook] Payment failed for user ${userId}, invoice ${invoice.id}`);
 }
 
-/**
- * Handle customer.subscription.deleted event
- * This is triggered when a subscription is cancelled
- */
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const customerId = subscription.customer as string;
-  
-  if (!stripe) {
-    console.error('Stripe client is not initialized');
-    return;
-  }
-  
-  // Get user_id from customer metadata
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer as Stripe.Customer).metadata?.user_id;
-
-  if (!userId) {
-    console.error('Missing user_id in customer metadata');
-    return;
-  }
-  
-  // Downgrade user to free plan in Supabase
-  const { error } = await supabase
-    .from('profiles')
-    .update({ 
-      plan: 'free',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId);
-
-  if (error) {
-    console.error('Error downgrading user plan after subscription deleted:', error);
-    throw error;
-  }
-
-  console.log(`Downgraded user ${userId} to free plan after subscription deleted`);
-}
-
-/**
- * Handle invoice.payment_failed event
- * This is triggered when a payment fails
- * For now, we'll just log it. In production, you might want to:
- * - Send notification to user
- * - Retry payment
- * - Downgrade plan after multiple failures
- */
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  const customerId = invoice.customer as string;
-  
-  if (!stripe) {
-    console.error('Stripe client is not initialized');
-    return;
-  }
-  
-  // Get user_id from customer metadata
-  const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer as Stripe.Customer).metadata?.user_id;
-
-  if (!userId) {
-    console.error('Missing user_id in customer metadata');
-    return;
-  }
-
-  console.log(`Payment failed for user ${userId}, invoice ${invoice.id}`);
-  
-  // TODO: Implement payment failure handling logic
-  // - Send email notification
-  // - Track failed payment count
-  // - Downgrade plan after N failures
-}
-
-/**
- * Main webhook handler
- */
 export async function POST(request: Request) {
-  if (!stripe) {
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch {
     return new NextResponse('Stripe not configured', { status: 503 });
   }
 
+  const body = await request.text();
+  const signature = (await headers()).get('stripe-signature');
+
+  if (!signature) {
+    return new NextResponse('Missing stripe-signature', { status: 400 });
+  }
+
+  let webhookSecret = stripeConfig.webhookSecret;
   try {
-    const body = await request.text();
-    const signature = (await headers()).get('stripe-signature');
-
-    if (!signature) {
-      return new NextResponse('Missing stripe-signature', { status: 400 });
+    const { data } = await getSupabaseAdmin()
+      .from('system_settings')
+      .select('key, value')
+      .eq('key', 'stripe_webhook_secret')
+      .single();
+    if (data?.value) {
+      webhookSecret = data.value;
     }
+  } catch (error) {
+    console.error('[webhook] Error fetching webhook secret from system_settings:', error);
+  }
 
-    // Get webhook secret from system_settings or environment
-    let webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    try {
-      const { data: settings } = await supabase
-        .from('system_settings')
-        .select('key, value')
-        .eq('key', 'stripe_webhook_secret')
-        .single();
-      
-      if (settings?.value) {
-        webhookSecret = settings.value;
-        console.log('Using webhook secret from system_settings');
-      }
-    } catch (error) {
-      console.error('Error fetching webhook secret from system_settings:', error);
-    }
+  if (!webhookSecret) {
+    console.error('[webhook] Webhook secret not configured (STRIPE_WEBHOOK_SECRET or system_settings)');
+    return new NextResponse('Webhook secret not configured', { status: 500 });
+  }
 
-    if (!webhookSecret) {
-      return new NextResponse('Webhook secret not configured', { status: 500 });
-    }
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (error) {
+    console.error('[webhook] Signature verification failed:', error);
+    return new NextResponse('Invalid signature', { status: 400 });
+  }
 
-    // Verify webhook signature
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
+  console.log(`[webhook] Received event: ${event.type}`);
 
-    console.log(`Received Stripe webhook: ${event.type}`);
-
-    // Handle different event types
+  try {
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
@@ -313,19 +307,19 @@ export async function POST(request: Request) {
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
+      case 'invoice.paid':
+        await recordPayment(event.data.object as Stripe.Invoice);
+        break;
       case 'invoice.payment_failed':
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`[webhook] Unhandled event type: ${event.type}`);
     }
-
-    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 400 }
-    );
+    console.error('[webhook] Handler error:', error);
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
+
+  return NextResponse.json({ received: true });
 }

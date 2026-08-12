@@ -1,40 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@/lib/supabase'; // Actually we should use server client but service role bypasses anyway
-
-// Initialize Supabase with service role key for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
-
-// We should ideally verify the requesting user is an admin.
-async function verifyAdmin(request: Request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return false;
-  
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
-  if (error || !user) return false;
-
-  // Check if user is admin
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  return profile?.is_admin === true;
-}
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
+  const admin = getSupabaseAdmin();
 
   // Fetch all users with profile data
-  const { data: profiles, error } = await supabaseAdmin
+  const { data: profiles, error } = await admin
     .from('profiles')
     .select('id, name, email, plan, token_limit, is_admin, created_at, stripe_customer_id, xp_total, streak_count')
     .order('created_at', { ascending: false });
@@ -46,19 +21,18 @@ export async function GET(request: Request) {
   // Fetch API keys and usage for each user
   const usersWithDetails = await Promise.all(
     profiles.map(async (profile: any) => {
-      // Get API keys from ai_keys table (not api_keys)
-      const { data: apiKeys } = await supabaseAdmin
+      const { data: apiKeys } = await admin
         .from('ai_keys')
         .select('*')
         .eq('user_id', profile.id);
 
-      // Get usage stats
-      const { data: usageLogs } = await supabaseAdmin
+      const { data: usageLogs } = await admin
         .from('ai_usage_logs')
         .select('tokens_used')
         .eq('user_id', profile.id);
 
-      const totalTokensUsed = usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
+      const totalTokensUsed =
+        usageLogs?.reduce((sum: number, log: any) => sum + (log.tokens_used || 0), 0) || 0;
 
       return {
         ...profile,
@@ -73,9 +47,8 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { userId, plan, token_limit } = await request.json();
@@ -90,7 +63,7 @@ export async function PATCH(request: Request) {
 
     console.log('Updating user:', userId, 'with updates:', updates);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('profiles')
       .update(updates)
       .eq('id', userId)
@@ -110,9 +83,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!await verifyAdmin(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
 
   try {
     const { userId } = await request.json();
@@ -125,7 +97,13 @@ export async function DELETE(request: Request) {
 
     // Delete all user data in correct order (respecting foreign keys)
     const tablesToDelete = [
+      'subscriptions',
+      'payments',
+      'billing_history',
+      'chat_messages',
+      'chat_conversations',
       'api_keys',
+      'ai_keys',
       'ai_usage_logs',
       'habit_logs',
       'task_logs',
@@ -142,16 +120,16 @@ export async function DELETE(request: Request) {
       'mascot_state',
       'prompt_memory',
       'app_settings',
-      'profiles'
+      'profiles',
     ];
 
     const errors: string[] = [];
     for (const table of tablesToDelete) {
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from(table)
         .delete()
         .eq('user_id', userId);
-      
+
       if (error) {
         console.error(`Error deleting from ${table}:`, error);
         errors.push(`${table}: ${error.message}`);
@@ -159,17 +137,20 @@ export async function DELETE(request: Request) {
     }
 
     // Delete auth user
-    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    const { error: authError } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
     if (authError) {
       console.error('Error deleting auth user:', authError);
       errors.push(`auth: ${authError.message}`);
     }
 
     if (errors.length > 0) {
-      return NextResponse.json({ 
-        error: 'Partial deletion completed with errors', 
-        details: errors 
-      }, { status: 207 });
+      return NextResponse.json(
+        {
+          error: 'Partial deletion completed with errors',
+          details: errors,
+        },
+        { status: 207 }
+      );
     }
 
     console.log('User deletion successful');

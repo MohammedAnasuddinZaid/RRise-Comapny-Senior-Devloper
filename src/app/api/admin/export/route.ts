@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
   try {
@@ -11,40 +8,10 @@ export async function GET(request: Request) {
     const type = searchParams.get('type') || 'all';
     const userId = searchParams.get('userId');
 
-    if (!supabaseServiceKey) {
-      return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 });
-    }
+    const denied = await requireAdmin(request);
+    if (denied) return denied;
 
-    // Verify admin authentication first
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabaseAuth
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
-    }
-
-    // Use service role client to bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabaseAdmin();
 
     let exportText = '';
 
@@ -98,7 +65,7 @@ async function exportChatHistory(supabase: any, userId?: string | null) {
     for (const conversation of conversations) {
       const userEmail = conversation.profiles?.email || 'Unknown';
       const userName = conversation.profiles?.name || '';
-      
+
       text += `\n--- Conversation ---\n`;
       text += `ID: ${conversation.id}\n`;
       text += `User: ${userEmail} ${userName ? `(${userName})` : ''}\n`;
@@ -180,7 +147,7 @@ async function exportUserData(supabase: any, userId?: string | null) {
           .from('goals')
           .select('*')
           .eq('user_id', profile.id);
-        
+
         if (!goalsError && goals && goals.length > 0) {
           text += `\nGoals (${goals.length}):\n`;
           for (const goal of goals) {
@@ -197,7 +164,7 @@ async function exportUserData(supabase: any, userId?: string | null) {
           .from('habits')
           .select('*')
           .eq('user_id', profile.id);
-        
+
         if (!habitsError && habits && habits.length > 0) {
           text += `\nHabits (${habits.length}):\n`;
           for (const habit of habits) {
@@ -214,7 +181,7 @@ async function exportUserData(supabase: any, userId?: string | null) {
           .from('tasks')
           .select('*')
           .eq('user_id', profile.id);
-        
+
         if (!tasksError && tasks && tasks.length > 0) {
           text += `\nTasks (${tasks.length}):\n`;
           for (const task of tasks) {
@@ -233,7 +200,7 @@ async function exportUserData(supabase: any, userId?: string | null) {
           .eq('user_id', profile.id)
           .order('created_at', { ascending: false })
           .limit(5);
-        
+
         if (!journalsError && journals && journals.length > 0) {
           text += `\nRecent Journal Entries (${journals.length}):\n`;
           for (const journal of journals) {

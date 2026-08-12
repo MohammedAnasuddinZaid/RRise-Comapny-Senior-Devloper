@@ -406,7 +406,7 @@ export default function ChatPage() {
           {/* Ambient glow: CSS box-shadow instead of blur-xl div (much cheaper) */}
           <form
             onSubmit={handleSend}
-className="relative flex items-center rounded-2xl border p-2 shadow-[0_0_30px_rgba(0,229,117,0.08)] bg-card border-border"
+className="relative flex items-center rounded-2xl border p-2 shadow-[0_0_30px_rgba(128,82,255,0.12)] bg-card border-border"
           >
             <input
               type="text"

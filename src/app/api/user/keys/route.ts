@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getAuthUser } from '@/lib/api-auth';
 
 // Default models per provider (fallback if API fetch fails)
 const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
@@ -35,32 +31,18 @@ const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
   ],
 };
 
-/**
- * Verify the requesting user's identity from their Supabase JWT
- */
-async function getAuthUser(request: Request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return null;
-
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-
-  if (error || !user) return null;
-  return user;
-}
+const PROVIDERS = ['openai', 'gemini', 'anthropic', 'groq', 'openrouter'];
 
 /**
  * GET /api/user/keys
- * Get all API key configs for the authenticated user (encrypted_key is excluded)
+ * Get all active API key configs for the authenticated user (encrypted_key excluded).
  */
 export async function GET(request: Request) {
   const user = await getAuthUser(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('ai_keys')
       .select('id, user_id, provider, key_name, selected_model, is_active, token_usage, last_used, created_at')
       .eq('user_id', user.id)
@@ -69,21 +51,19 @@ export async function GET(request: Request) {
 
     if (error) throw error;
     return NextResponse.json({ keys: data || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }
 
 /**
  * POST /api/user/keys
- * Save a new API key for the authenticated user
+ * Save a new API key for the authenticated user.
  * Body: { provider, model, apiKey, keyName? }
  */
 export async function POST(request: Request) {
   const user = await getAuthUser(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { provider, model, apiKey, keyName } = await request.json();
@@ -92,14 +72,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields (provider, model, apiKey)' }, { status: 400 });
     }
 
-    // Validate key format minimally
+    if (!PROVIDERS.includes(provider)) {
+      return NextResponse.json({ error: `Unsupported provider: ${provider}` }, { status: 400 });
+    }
+
     const trimmedKey = apiKey.trim();
     if (!trimmedKey || trimmedKey.length < 10) {
       return NextResponse.json({ error: 'API key appears invalid (too short)' }, { status: 400 });
     }
 
+    const admin = getSupabaseAdmin();
+
     // Deactivate existing keys for this provider
-    await supabaseAdmin
+    await admin
       .from('ai_keys')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('user_id', user.id)
@@ -107,7 +92,7 @@ export async function POST(request: Request) {
       .eq('is_active', true);
 
     // Insert new key
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await admin
       .from('ai_keys')
       .insert({
         user_id: user.id,
@@ -123,21 +108,19 @@ export async function POST(request: Request) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, key: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 });
   }
 }
 
 /**
  * DELETE /api/user/keys
- * Delete an API key for the authenticated user
+ * Delete an API key for the authenticated user.
  * Body: { keyId } or { provider }
  */
 export async function DELETE(request: Request) {
   const user = await getAuthUser(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { keyId, provider } = await request.json();
@@ -146,7 +129,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing keyId or provider' }, { status: 400 });
     }
 
-    let query = supabaseAdmin.from('ai_keys').delete().eq('user_id', user.id);
+    let query = getSupabaseAdmin().from('ai_keys').delete().eq('user_id', user.id);
 
     if (keyId) {
       query = query.eq('id', keyId);
@@ -158,21 +141,19 @@ export async function DELETE(request: Request) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 });
   }
 }
 
 /**
  * PATCH /api/user/keys
- * Test connection or fetch models (server-side to avoid CORS issues)
+ * Test connection or fetch models (server-side to avoid CORS issues).
  * Body: { action: 'test' | 'models', provider, apiKey, model? }
  */
 export async function PATCH(request: Request) {
   const user = await getAuthUser(request);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { action, provider, apiKey, model } = await request.json();
@@ -184,26 +165,24 @@ export async function PATCH(request: Request) {
     const trimmedKey = apiKey.trim();
 
     if (action === 'models') {
-      // Return default models list (provider API model lists vary and aren't always accessible)
       const models = DEFAULT_MODELS[provider] || [];
       return NextResponse.json({ models });
     }
 
     if (action === 'test') {
-      // Test the key server-side to avoid CORS
-      const testModel = model || (DEFAULT_MODELS[provider]?.[0]?.id);
+      const testModel = model || DEFAULT_MODELS[provider]?.[0]?.id;
       const result = await testAPIKey(provider, trimmedKey, testModel);
       return NextResponse.json(result);
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 });
   }
 }
 
 /**
- * Test an API key by making a minimal request to the provider
+ * Test an API key by making a minimal request to the provider.
  */
 async function testAPIKey(provider: string, apiKey: string, model: string) {
   try {
@@ -298,7 +277,7 @@ async function testAPIKey(provider: string, apiKey: string, model: string) {
     }
 
     return { success: false, error: `Unsupported provider: ${provider}` };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
   }
 }

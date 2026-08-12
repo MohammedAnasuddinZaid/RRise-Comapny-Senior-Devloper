@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import {
   Home, CheckSquare, CreditCard, Settings, MessageSquare,
   Clock, Crown, Menu, X, ChevronLeft, ChevronRight,
@@ -14,6 +15,8 @@ import { useRequireAuth } from "../../lib/authGuard";
 import { loadUserProfile } from "../../lib/dataLoader";
 import { createClientComponentClient } from "../../lib/supabase";
 import { useChatContext } from "../../contexts/ChatContext";
+
+const RriseParrot = dynamic(() => import("../rrise/RriseParrot"), { ssr: false });
 
 const NAV_ITEMS = [
   { icon: Home,         label: "Home",    href: "/app/dashboard" },
@@ -155,6 +158,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
+    // Force the Dala-void look on the whole document (black bg regardless of
+    // the saved theme) so the app matches the marketing pages after login.
+    document.body.classList.add("rrise-body");
+    return () => document.body.classList.remove("rrise-body");
+  }, []);
+
+  useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
@@ -165,21 +175,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Logo */}
       <div className={cn("mb-8 flex items-center px-2", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
-          <Link href="/" className="flex items-center gap-2 cursor-pointer">
-            <img
-              src="/images/rrise-logo.webp"
-              alt="RRise Logo"
-              className="h-9 w-auto object-contain"
-            />
+          <Link href="/" className="flex items-center gap-3 group cursor-pointer">
+            <RriseParrot size={38} className="transition-transform duration-300 group-hover:scale-110" />
+            <span
+              className="text-lg font-mono-space tracking-[0.18em] text-white uppercase transition-colors duration-300 group-hover:text-[#b9a2ff]"
+              style={{ fontWeight: 400 }}
+            >
+              RRise
+            </span>
           </Link>
         )}
         {collapsed && (
           <Link href="/" className="flex items-center cursor-pointer">
-            <img
-              src="/images/Logo.webp"
-              alt="RRise"
-              className="h-9 w-9 object-contain"
-            />
+            <RriseParrot size={36} />
           </Link>
         )}
         {!collapsed && plan !== "free" && (
@@ -202,19 +210,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   whileTap={{ scale: 0.98 }}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    "relative flex items-center rounded-none px-3 py-4 text-sm font-space uppercase tracking-widest transition-all duration-300 border-b border-border",
-                    collapsed ? "justify-center" : "gap-4 px-6",
+                    "relative flex items-center rounded-lg px-3 py-3.5 text-sm font-space uppercase tracking-widest transition-all duration-300 border-b border-border/60",
+                    collapsed ? "justify-center" : "gap-4 px-5",
                     isActive
-                      ? "bg-primary text-black"
-                      : "text-foreground/50 hover:bg-white/[0.02] hover:text-foreground"
+                      ? "bg-primary/15 text-white border-l-2 border-primary shadow-[0_0_22px_rgba(128,82,255,0.25)]"
+                      : "text-foreground/50 hover:bg-white/[0.02] hover:text-foreground border-l-2 border-transparent"
                   )}
                 >
-                  <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-black" : "text-foreground/50")} />
+                  <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "text-foreground/50")} />
                   {!collapsed && item.label}
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active"
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-background"
+                      className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary"
                     />
                   )}
                 </motion.div>
@@ -235,7 +243,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div
             title={collapsed ? "Settings" : undefined}
             className={cn(
-              "flex items-center rounded-none px-6 py-4 text-sm font-space uppercase tracking-widest text-foreground/50 hover:bg-white/[0.02] hover:text-foreground transition-colors border-t border-border",
+              "flex items-center rounded-lg px-5 py-3.5 text-sm font-space uppercase tracking-widest text-foreground/50 hover:bg-white/[0.02] hover:text-foreground transition-colors border-t border-border/60",
               collapsed ? "justify-center" : "gap-4"
             )}
           >
@@ -248,11 +256,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-inter">
+    <div className="rrise-page relative flex h-screen bg-[#000000] text-white overflow-hidden font-mono-space">
+      {/* ── Ambient void background (matches the marketing pages) ── */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="aurora-blob" style={{ width: 520, height: 520, background: "#8052ff", top: "-12%", left: "-8%" }} />
+        <div className="aurora-blob" style={{ width: 460, height: 460, background: "#ffb829", bottom: "-14%", right: "-6%", animationDelay: "-8s" }} />
+        <div className="aurora-blob" style={{ width: 420, height: 420, background: "#8052ff", top: "38%", right: "14%", animationDelay: "-14s", opacity: 0.12 }} />
+        <div className="dot-grid absolute inset-0" />
+        <div className="grain-overlay absolute inset-0" />
+      </div>
+
       {/* ── Desktop Sidebar ── */}
       <aside
         className={cn(
-          "hidden md:flex flex-col border-r border-border bg-card z-10 relative transition-all duration-300",
+          "hidden md:flex flex-col border-r border-border/60 bg-[#050505]/70 backdrop-blur-xl z-10 relative transition-all duration-300",
           sidebarCollapsed ? "w-[72px] p-4" : "w-64 p-6"
         )}
       >
@@ -275,7 +292,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ── Mobile Hamburger Button ── */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-40 w-10 h-10 rounded-xl bg-background backdrop-blur-md border border-border flex items-center justify-center text-foreground hover:border-primary/30 transition-all shadow-lg"
+        className="md:hidden fixed left-4 z-40 w-10 h-10 rounded-xl bg-[#050505]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:border-primary/40 transition-all shadow-lg"
+        style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -290,7 +308,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 z-40 bg-background backdrop-blur-sm"
+              className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
@@ -298,7 +316,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-background backdrop-blur-xl border-r border-border p-6 flex flex-col"
+              className="md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[#050505]/95 backdrop-blur-xl border-r border-white/10 p-6 flex flex-col"
+              style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}
             >
               <button
                 onClick={() => setMobileOpen(false)}
@@ -313,7 +332,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 relative z-0 min-w-0 overflow-hidden flex flex-col">
+      <main className="flex-1 relative z-10 min-w-0 overflow-hidden flex flex-col">
         {pathname === "/app/focus" ? (
           /* Focus page: full-bleed, no padding, no scroll */
           <div className="flex-1 h-full">{children}</div>

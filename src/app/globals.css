@@ -1,4 +1,6 @@
 /* ─── Premium Font Imports ───────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Anton+SC&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css');
 @import url('https://fonts.cdnfonts.com/css/monument-extended');
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
@@ -45,23 +47,23 @@
 :root,
 .dark,
 .theme-default {
-  --background: #020408;
-  --foreground: #f0f6ff;
+  --background: #000000;
+  --foreground: #ffffff;
   --card: rgba(255, 255, 255, 0.03);
-  --card-foreground: #f0f6ff;
-  --primary: #00ff87;
-  --primary-foreground: #020408;
-  --secondary: #00e5ff;
-  --secondary-foreground: #020408;
+  --card-foreground: #ffffff;
+  --primary: #8052ff;
+  --primary-foreground: #ffffff;
+  --secondary: #ffb829;
+  --secondary-foreground: #000000;
   --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: #8899aa;
-  --accent: rgba(0, 229, 255, 0.12);
+  --muted-foreground: #9a9a9a;
+  --accent: rgba(128, 82, 255, 0.14);
   --accent-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.08);
   --radius: 1.25rem;
-  --glow-green: 0 0 40px rgba(0, 255, 135, 0.35);
-  --glow-blue: 0 0 40px rgba(0, 229, 255, 0.35);
-  --glow-both: 0 0 60px rgba(0, 255, 135, 0.2), 0 0 100px rgba(0, 229, 255, 0.15);
+  --glow-green: 0 0 40px rgba(128, 82, 255, 0.35);
+  --glow-blue: 0 0 40px rgba(255, 184, 41, 0.3);
+  --glow-both: 0 0 60px rgba(128, 82, 255, 0.25), 0 0 100px rgba(255, 184, 41, 0.15);
   --surface: rgba(255, 255, 255, 0.04);
   --surface-hover: rgba(255, 255, 255, 0.07);
   --surface-border: rgba(255, 255, 255, 0.08);
@@ -216,20 +218,59 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #000000;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), 'Inter', sans-serif;
+  font-family: "Space Mono", monospace;
   min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Smooth theme transitions */
-* {
+/* Buttery native scrolling for inner scroll containers on iOS/Android. */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 82, 255, 0.45);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Smooth theme transitions — scoped to interactive & themed elements instead
+   of every element on the page (a universal `*` transition is a jank source). */
+a,
+button,
+input,
+textarea,
+select,
+summary,
+.glass-enhanced,
+.glass,
+.glass-green,
+.glass-blue,
+.pill-glass,
+.pill-iris,
+.tilt-card .tilt-inner,
+.nav-link,
+.footer-link,
+.feature-row,
+.layer-3d,
+.marquee-word,
+.border-beam {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
@@ -290,7 +331,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 body {
-  font-family: var(--font-body), 'Inter', sans-serif;
+  font-family: "Space Mono", monospace;
 }
 
 /* ─── Neon Gradient Text ─────────────────────────────────────────────── */
@@ -409,15 +450,15 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00ff87, #00e5ff);
+  background: linear-gradient(180deg, #8052ff, #ffb829);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover { background: #00ff87; }
+::-webkit-scrollbar-thumb:hover { background: #8052ff; }
 
 /* ─── Selection ──────────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(0, 255, 135, 0.2);
-  color: #00ff87;
+  background: rgba(128, 82, 255, 0.55);
+  color: #ffffff;
 }
 
 /* ─── Premium Glassmorphism Enhancements ───────────────────────────── */
@@ -587,4 +628,660 @@ input[type='number']::-webkit-outer-spin-button {
 }
 input[type='number'] {
   -moz-appearance: textfield;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SYNAPSEX — DALA VOID SYSTEM
+   Pure #000000 canvas, weightless scale-driven type, Electric Iris,
+   Saffron Spark accents, floating 3D particle constellation.
+   ════════════════════════════════════════════════════════════════════ */
+:root {
+  --color-void: #000000;
+  --color-bone-white: #ffffff;
+  --color-ash-gray: #9a9a9a;
+  --color-silver-mist: #bdbdbd;
+  --color-electric-iris: #8052ff;
+  --color-saffron-spark: #ffb829;
+  --color-deep-verdant: #15846e;
+}
+
+/* Scoped body when the SynapseX landing is active (other RRise pages
+   keep their own theme styling untouched). */
+.synapsex-body {
+  background: var(--color-void);
+  color: var(--color-bone-white);
+  font-family: "Space Mono", monospace;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: auto;
+}
+
+/* ─── Glassmorphism & Floating Utility ─────────────────────────────── */
+.glass-void {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+}
+
+.btn-electric-pill {
+  background-color: var(--color-electric-iris);
+  color: #ffffff;
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+}
+
+.btn-electric-pill:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 25px rgba(128, 82, 255, 0.5);
+  transform: scale(1.03);
+}
+
+/* ─── Saffron eyebrow tag ───────────────────────────────────────────── */
+.eyebrow-saffron {
+  color: var(--color-saffron-spark);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ─── Hero dot grid overlay ─────────────────────────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* ─── Anton SC watermark (hero background) ──────────────────────────── */
+.synapsex-watermark {
+  font-family: "Anton SC", "Space Mono", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  color: transparent;
+  background-image: radial-gradient(
+    circle,
+    rgba(142, 127, 148, 0) 0%,
+    #8e7f94 70%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─── Gradient mask used on top of video sections ───────────────────── */
+.mask-fade-top {
+  background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.mask-fade-bottom {
+  background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* ─── Parrot eye glow / float / blink keyframes ─────────────────────── */
+@keyframes parrotEyeGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px #8052ff) drop-shadow(0 0 12px rgba(128, 82, 255, 0.6)); }
+  50%      { filter: drop-shadow(0 0 14px #8052ff) drop-shadow(0 0 28px rgba(255, 184, 41, 0.4)); }
+}
+
+.parrot-eye-glow {
+  animation: parrotEyeGlow 4s ease-in-out infinite;
+}
+
+/* ─── Ambient pulsing ring ──────────────────────────────────────────── */
+@keyframes pulseRing {
+  0%   { transform: scale(0.8); opacity: 0.8; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.pulse-ring {
+  animation: pulseRing 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* ─── Slow drift used for floating UI chips ─────────────────────────── */
+@keyframes voidFloat {
+  0%, 100% { transform: translateY(0px) translateZ(0); }
+  50%      { transform: translateY(-14px) translateZ(24px); }
+}
+
+.void-float {
+  animation: voidFloat 7s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* ─── Electric iris sheen sweep for pills ───────────────────────────── */
+@keyframes irisSheen {
+  0%   { transform: translateX(-150%) skewX(-20deg); }
+  100% { transform: translateX(250%) skewX(-20deg); }
+}
+
+.iris-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.iris-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: irisSheen 3.4s ease-in-out infinite;
+}
+
+/* ─── Lenis smooth scroll helpers ───────────────────────────────────── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* ─── SynapseX scrollbar & selection ────────────────────────────────── */
+.synapsex-body::-webkit-scrollbar { width: 6px; }
+.synapsex-body::-webkit-scrollbar-track { background: #000000; }
+.synapsex-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8052ff, #ffb829);
+  border-radius: 3px;
+}
+.synapsex-body::-webkit-scrollbar-thumb:hover { background: #8052ff; }
+
+.synapsex-body ::selection {
+  background: rgba(128, 82, 255, 0.55);
+  color: #ffffff;
+}
+
+/* ─── Architecture layer 3D hover ───────────────────────────────────── */
+.layer-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease,
+    border-color 0.5s ease;
+  will-change: transform;
+}
+
+.layer-3d:hover {
+  transform: translateZ(20px);
+  border-color: rgba(128, 82, 255, 0.5);
+  box-shadow: 0 0 40px rgba(128, 82, 255, 0.45),
+    0 0 90px rgba(128, 82, 255, 0.2),
+    0 30px 60px rgba(0, 0, 0, 0.8);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RRISE — DALA 3D VOID LANDING SYSTEM
+   Ultra-modern 3D landing page system: weightless Anton/ Space-Mono
+   type, Electric Iris pills, Saffron Spark punctuation, 3D cards,
+   3D slides, floating parrot mascot with live eye-tracking.
+   ════════════════════════════════════════════════════════════════════ */
+
+.rrise-body {
+  background: #000000 !important;
+  color: #ffffff;
+  font-family: "Space Mono", monospace;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: auto;
+  color-scheme: dark;
+}
+
+.rrise-page {
+  color-scheme: dark;
+}
+
+/* ─── RRise sub-page scope ─────────────────────────────────────────────
+   Forces the Dala-void palette on marketing pages regardless of the
+   active theme so every page matches the home page look. */
+.rrise-page {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: #ffffff;
+  --primary: #8052ff;
+  --primary-foreground: #ffffff;
+  --secondary: #ffb829;
+  --secondary-foreground: #000000;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #9a9a9a;
+  --accent: rgba(128, 82, 255, 0.14);
+  --accent-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --font-heading: 'Monument Extended', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  color-scheme: dark;
+}
+
+.rrise-page ::selection {
+  background: rgba(128, 82, 255, 0.55);
+  color: #ffffff;
+}
+
+.rrise-body::-webkit-scrollbar { width: 5px; }
+.rrise-body::-webkit-scrollbar-track { background: #000000; }
+.rrise-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8052ff, #ffb829);
+  border-radius: 3px;
+}
+
+.font-anton { font-family: "Anton SC", "Space Mono", sans-serif; }
+.font-mono-space { font-family: "Space Mono", monospace; }
+
+/* ─── Weightless display type ───────────────────────────────────────── */
+.rrise-title {
+  font-family: "Anton SC", "Space Mono", sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  transform-style: preserve-3d;
+}
+
+.rrise-title-shadow {
+  text-shadow:
+    0 2px 0 rgba(128, 82, 255, 0.35),
+    0 6px 24px rgba(0, 0, 0, 0.9),
+    0 12px 60px rgba(128, 82, 255, 0.25);
+}
+
+/* ─── Gradient / glow text ──────────────────────────────────────────── */
+.iris-gradient-text {
+  background: linear-gradient(120deg, #ffffff 0%, #b9a2ff 45%, #8052ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.saffron-gradient-text {
+  background: linear-gradient(120deg, #ffffff 0%, #ffd47a 45%, #ffb829 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.iris-glow-text {
+  color: #ffffff;
+  text-shadow:
+    0 0 18px rgba(128, 82, 255, 0.85),
+    0 0 60px rgba(128, 82, 255, 0.4);
+}
+
+.saffron-glow-text {
+  color: #ffb829;
+  text-shadow: 0 0 18px rgba(255, 184, 41, 0.8), 0 0 50px rgba(255, 184, 41, 0.35);
+}
+
+/* Outlined ghost type for giant background words */
+.text-ghost {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Pills & buttons ───────────────────────────────────────────────── */
+.pill-iris {
+  background: linear-gradient(135deg, #8f66ff, #8052ff 60%, #6c3dff);
+  color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 8px 32px rgba(128, 82, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.pill-iris:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.12);
+  box-shadow: 0 12px 48px rgba(128, 82, 255, 0.65), 0 0 90px rgba(128, 82, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.pill-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.pill-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(128, 82, 255, 0.45);
+}
+
+/* ─── Hero eyebrow row ──────────────────────────────────────────────── */
+.eyebrow-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #8052ff;
+  box-shadow: 0 0 12px #8052ff, 0 0 24px rgba(128, 82, 255, 0.6);
+}
+
+/* ─── 3D perspective helpers ────────────────────────────────────────── */
+.persp-800 { perspective: 800px; }
+.persp-1000 { perspective: 1000px; }
+.persp-1400 { perspective: 1400px; }
+.preserve-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+
+/* ─── 3D tilt card ──────────────────────────────────────────────────── */
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card .tilt-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease,
+    border-color 0.5s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.tilt-card:hover .tilt-inner {
+  border-color: rgba(128, 82, 255, 0.45);
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(128, 82, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.tilt-card .tilt-float {
+  transform: translateZ(40px);
+  transform-style: preserve-3d;
+}
+
+.tilt-card .tilt-float-2 {
+  transform: translateZ(70px);
+  transform-style: preserve-3d;
+}
+
+/* ─── Saffron eyebrow label ─────────────────────────────────────────── */
+.eyebrow-saffron {
+  color: #ffb829;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 184, 41, 0.45);
+}
+
+/* ─── Infinite marquee ──────────────────────────────────────────────── */
+@keyframes marqueeX {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes marqueeXReverse {
+  0%   { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.marquee-track.fwd { animation: marqueeX 28s linear infinite; }
+.marquee-track.rev { animation: marqueeXReverse 34s linear infinite; }
+.marquee-track:hover { animation-play-state: paused; }
+
+.marquee-word {
+  font-family: "Anton SC", sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+  transition: color 0.4s ease, -webkit-text-stroke 0.4s ease, text-shadow 0.4s ease;
+}
+
+.marquee-word:hover {
+  color: #ffffff;
+  -webkit-text-stroke: 1px transparent;
+  text-shadow: 0 0 30px rgba(128, 82, 255, 0.9);
+}
+
+.marquee-star {
+  color: #8052ff;
+  text-shadow: 0 0 16px #8052ff;
+  font-size: 0.6em;
+}
+
+/* ─── Feature row 3D hover ──────────────────────────────────────────── */
+.feature-row {
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.feature-row:hover {
+  transform: translateX(14px) translateZ(30px);
+}
+
+.feature-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #8052ff, #ffb829, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.feature-row:hover::after { transform: scaleX(1); }
+
+/* ─── Ambient aurora blobs ──────────────────────────────────────────── */
+@keyframes auroraDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(4%, -6%, 40px) scale(1.15); }
+  66%      { transform: translate3d(-5%, 5%, -20px) scale(0.92); }
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.2;
+  pointer-events: none;
+  animation: auroraDrift 22s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Aurora blobs are the most expensive decoration (large blur + constant
+   motion). On small screens and for reduced-motion users, quiet them down. */
+@media (max-width: 768px) {
+  .aurora-blob {
+    filter: blur(46px);
+    opacity: 0.12;
+    animation-duration: 34s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob {
+    animation: none !important;
+  }
+}
+
+/* ─── Scanline sweep for video sections ─────────────────────────────── */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(110vh); }
+}
+
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, rgba(128, 82, 255, 0.06), transparent);
+  animation: scanline 9s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Film grain overlay ────────────────────────────────────────────── */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ─── Evolution tier chips ──────────────────────────────────────────── */
+@keyframes tierFloat {
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  50%      { transform: translateY(-8px) translateZ(30px); }
+}
+
+.tier-chip {
+  animation: tierFloat 5s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* ─── Scroll hint line ──────────────────────────────────────────────── */
+@keyframes scrollDot {
+  0%   { transform: translateY(0); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(36px); opacity: 0; }
+}
+
+.scroll-hint-dot {
+  animation: scrollDot 1.8s ease-in-out infinite;
+}
+
+/* ─── Stat 3D flip-in ───────────────────────────────────────────────── */
+@keyframes statFlip {
+  0%   { opacity: 0; transform: perspective(600px) rotateX(60deg) translateY(30px); }
+  100% { opacity: 1; transform: perspective(600px) rotateX(0) translateY(0); }
+}
+
+.stat-flip {
+  animation: statFlip 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-style: preserve-3d;
+}
+
+/* ─── Mascot orbital ring ───────────────────────────────────────────── */
+@keyframes orbitSpin {
+  from { transform: rotateX(74deg) rotateZ(0deg); }
+  to   { transform: rotateX(74deg) rotateZ(360deg); }
+}
+
+.orbit-ring {
+  animation: orbitSpin 26s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* ─── Conic gradient border for showcase cards ──────────────────────── */
+.border-beam {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.015));
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.border-beam::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(128, 82, 255, 0.0) 90deg,
+    rgba(128, 82, 255, 0.9) 180deg,
+    rgba(255, 184, 41, 0.9) 260deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: borderSpin 6s linear infinite;
+}
+
+@keyframes borderSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── 3D scroll-slide sections ──────────────────────────────────────── */
+.slide-3d {
+  transform-style: preserve-3d;
+}
+
+/* ─── Nav link underline sweep ──────────────────────────────────────── */
+.nav-link {
+  position: relative;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover { color: #ffffff; }
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: linear-gradient(90deg, #8052ff, #ffb829);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-link:hover::after { transform: scaleX(1); }
+
+/* ─── Footer hover states ───────────────────────────────────────────── */
+.footer-link {
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(128, 82, 255, 0.8);
+}
+
+/* ─── Reduced motion: tame the 3D party ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .rrise-body .marquee-track,
+  .rrise-body .aurora-blob,
+  .rrise-body .scanline,
+  .rrise-body .orbit-ring,
+  .rrise-body .tier-chip,
+  .rrise-body .pill-iris,
+  .rrise-body .tilt-card .tilt-inner {
+    animation: none !important;
+    transition: none !important;
+  }
 }
