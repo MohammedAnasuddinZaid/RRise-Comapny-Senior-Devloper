@@ -1,17 +1,19 @@
 "use client";
 
 /**
- * RRISE COMMAND CENTER
- * A terminal-style command panel pinned to the bottom-left of every page.
+ * RRISE AI ASSISTANT
+ * An interactive terminal-style command panel pinned to the bottom-left of
+ * every page.
  *
  * - Launcher pill (bottom-left) carries the RRise parrot mark + "RRISE" + ">_".
- * - Opens a retro terminal that answers questions about the website from a
- *   bundled knowledge base (no external calls). Ask anything in plain English
- *   or use slash commands.
+ * - Chat naturally: greetings, small talk, feelings, jokes and site questions
+ *   are answered by a built-in conversational engine. When the user is signed
+ *   in with a BYOK AI key, open-ended questions are answered by real AI via
+ *   /api/ai/generate; otherwise it falls back to the bundled knowledge base.
  * - Closable via the header X, the `exit`/`close`/`quit` commands, or Esc.
  *
- * Knowledge base lives in this file so the whole website's info is self-
- * contained, offline-friendly, and instantly searchable.
+ * The knowledge base lives in this file so the whole website's info is
+ * self-contained, offline-friendly, and instantly searchable.
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent, type CSSProperties } from "react";
@@ -468,40 +470,37 @@ const KB: KBEntry[] = [
 
 /* ─── Help text ────────────────────────────────────────────────────────── */
 const HELP_LINES: Line[] = [
-  { text: "RRISE COMMAND CENTER — available commands:", tone: "accent" },
-  { text: "  help        show this help", tone: "info" },
-  { text: "  about       what RRise is + who built it", tone: "info" },
-  { text: "  features    list of features", tone: "info" },
-  { text: "  pricing     plans & cost", tone: "info" },
-  { text: "  install     how to install the app (PWA)", tone: "info" },
-  { text: "  ai          Alex AI modes & BYOK", tone: "info" },
-  { text: "  contact     email / socials", tone: "info" },
-  { text: "  pages       site navigation", tone: "info" },
-  { text: "  stack       tech stack", tone: "info" },
-  { text: "  mascot      the parrot evolution", tone: "info" },
-  { text: "  crisis      crisis support resources", tone: "info" },
-  { text: "  clear       clear the screen", tone: "info" },
-  { text: "  exit        close the command center", tone: "info" },
+  { text: "RRISE — interactive AI assistant", tone: "accent" },
+  { text: "Just chat naturally — say hi, ask anything about RRise,", tone: "muted" },
+  { text: "or ask for advice. When you're signed in with an AI key,", tone: "muted" },
+  { text: "RRISE answers with real AI. Otherwise it answers from its", tone: "muted" },
+  { text: "built-in knowledge base.", tone: "muted" },
   { text: "", tone: "divider" },
-  { text: "Or just ask a question in plain English, e.g.", tone: "muted" },
-  { text: "  \"how much does rrise cost?\"", tone: "muted" },
-  { text: "  \"who made this website?\"", tone: "muted" },
-  { text: "  \"can i install the app?\"", tone: "muted" },
+  { text: "Try asking:", tone: "muted" },
+  { text: "  \"hello\"  \"who are you\"  \"make me a plan to study\"", tone: "info" },
+  { text: "  \"how much does rrise cost?\"  \"can i install the app?\"", tone: "info" },
+  { text: "  \"what features are there?\"  \"who built this?\"", tone: "info" },
+  { text: "", tone: "divider" },
+  { text: "Slash commands:", tone: "accent" },
+  { text: "  help · about · features · pricing · install · ai", tone: "info" },
+  { text: "  contact · pages · stack · mascot · crisis · clear · exit", tone: "info" },
 ];
 
 const SUGGESTIONS = [
+  "Hello!",
+  "Who are you?",
+  "How are you?",
   "What is RRise?",
   "How much does it cost?",
   "Can I install the app?",
-  "Who built this?",
-  "What features are there?",
-  "Contact email",
+  "Make me a study plan",
+  "Tell me a joke",
 ];
 
 const BOOT_LINES: Line[] = [
-  { text: "RRISE COMMAND CENTER v1.0 — rise.build.become.", tone: "boot" },
-  { text: "System online. Knowledge base loaded.", tone: "boot" },
-  { text: "Ask me anything about the website, or type 'help'.", tone: "muted" },
+  { text: "RRISE AI ASSISTANT v2.0 — rise.build.become.", tone: "boot" },
+  { text: "Neural link online. Knowledge base loaded.", tone: "boot" },
+  { text: "Say 'hello' or ask me anything — I'm listening.", tone: "muted" },
   { text: "", tone: "divider" },
 ];
 
@@ -534,6 +533,162 @@ const COMMANDS: Record<string, string[]> = {
   dashboard: ["dashboard"],
 };
 
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
+ * Lightweight conversational engine — answers small talk instantly so the
+ * terminal feels alive even without a real AI key. Returns null when the
+ * message is not conversational (caller falls back to AI / knowledge base).
+ */
+function chatReply(query: string): Line[] | null {
+  const q = query.trim().toLowerCase().replace(/[!?.]+$/g, "");
+
+  const echo: Line[] = [{ text: `> ${query}`, tone: "cmd" }];
+
+  // Greetings
+  if (
+    /^(hi+|hey+|heyy+|hello+|hii+|yo|hola|namaste|salam|sup|wassup|whats up|what's up|howdy|good morning|morning|good afternoon|good evening|gm|good day)\b/.test(q) &&
+    q.length < 24
+  ) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "Hey! Good to see you. I'm RRISE — ask me anything about the site, or just chat.",
+          "Hello! I'm RRISE, your website assistant. What can I help you with?",
+          "Hi there! I'm all ears. Ask about RRise, or tell me how your day is going.",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // How are you
+  if (/^(how are you|how r u|how are you doing|how you doing|hru|how's it going|how is it going|how have you been|how do you feel)\b/.test(q)) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "Running at full power and genuinely happy to see you. What can I do for you?",
+          "All systems green. Ready to help you rise, build, and become.",
+          "Better now that you're here. Want me to help with a goal, a habit, or a plan?",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Who/what are you + name
+  if (
+    /(^|\s)(who are you|what are you|are you (a )?(robot|ai|real|human)|your name|what is your name|what's your name|are you a bot|are you real)\b/.test(q) ||
+    /^who (are|is|am) i$/.test(q)
+  ) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "I'm RRISE — the site's interactive AI assistant, wrapped in a terminal. I know everything about this website and I love a good chat.",
+          "I'm RRISE, an AI built into this site's command center. Ask me about RRise, or talk to me like a friend.",
+          "RRISE — that's me. Part assistant, part knowledge base, part motivational parrot. What do you need?",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // What can you do
+  if (/^(what can you do|what do you do|how can you help|what are your capabilities|help me|i need help|what can i ask|what do you know)\b/.test(q)) {
+    return [
+      ...echo,
+      {
+        text: "I can answer anything about this website — features, pricing, the founder, AI modes, installing the app — and I can chat: goals, habits, study plans, motivation, even jokes. If you're signed in with an AI key, I use real AI to answer. Otherwise I draw from my built-in knowledge. Try 'help'.",
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Thanks
+  if (/^(thanks|thank you|thank u|thx|ty|appreciate|awesome thanks)\b/.test(q)) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "Anytime. Remember the motto: rise, build, become.",
+          "You're welcome. I'm here whenever you need me.",
+          "Glad I could help. Now go build something great.",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Farewell
+  if (/^(bye+|goodbye|see you|see ya|see u|good night|goodnight|gtg|got to go|gotta go|talk later|catch you later)\b/.test(q)) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "Goodbye! Come back soon — I'll be here, rising.",
+          "See you later. Stay consistent, stay strong.",
+          "Until next time. Rise. Build. Become.",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Jokes
+  if (/(^|\s)(joke|funny|make me laugh|something funny|tell me a joke)\b/.test(q)) {
+    const jokes = [
+      "Why did the habit tracker go to therapy? Too many uncommitted changes.",
+      "I told Alex my goal was to procrastinate less. Alex said: 'Let's schedule that for tomorrow.'",
+      "My parrot went to the gym. It now does a dead-lift... in its dead life.",
+      "Why do programmers prefer dark mode? Because light attracts bugs.",
+      "I asked RRise for a productivity hack. It said: close this terminal and go do it.",
+    ];
+    return [
+      ...echo,
+      {
+        text: pick(jokes),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Compliments / love
+  if (/(^|\s)(i love you|i like you|you'?re (the )?(best|cool|awesome|amazing|great)|you are (the )?(best|cool|awesome|amazing|great)|iloveyou)\b/.test(q)) {
+    return [
+      ...echo,
+      {
+        text: pick([
+          "You're making a parrot blush. Thank you — now go chase that goal.",
+          "Right back at you. You're the one doing the real work here.",
+          "Appreciate that. Now let's get you to that next streak.",
+        ]),
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  // Feeling down
+  if (
+    /(^|\s)(i'?m sad|i am sad|i feel (down|bad|low)|feeling (down|low|bad)|i'?m tired|i am tired|i'?m exhausted|i'?m stressed|i am stressed|i'?m overwhelmed|i'?m anxious|i'?m not ok|i am not ok|i'?m not okay)\b/.test(q) ||
+    /(depressed|really down|had a bad day)/.test(q)
+  ) {
+    return [
+      ...echo,
+      {
+        text: "That sounds rough, and it's okay to feel that way. A few things that genuinely help: break today into one tiny task, get some air or water, and be kind to yourself — progress isn't linear. I'm here, and RRise was built for exactly these days. Want a small plan to help you reset?",
+        tone: "info" as Tone,
+      },
+    ];
+  }
+
+  return null;
+}
+
 function matchEntry(query: string): KBEntry | null {
   const q = ` ${query.toLowerCase()} `;
   let best: KBEntry | null = null;
@@ -551,23 +706,11 @@ function matchEntry(query: string): KBEntry | null {
   return bestScore >= 6 ? best : null;
 }
 
-function entryLines(entry: KBEntry, query: string): Line[] {
-  const lines: Line[] = [
-    { text: `> ${query}`, tone: "cmd" },
-    { text: `» ${entry.title}`, tone: "accent" },
-    { text: "", tone: "divider" },
-    ...entry.answer.map((t) => ({ text: t, tone: "info" as Tone })),
-  ];
-  return lines;
-}
-
-function unknownLines(query: string): Line[] {
+function unknownLines(): Line[] {
   return [
-    { text: `> ${query}`, tone: "cmd" },
-    { text: "No direct answer found in the knowledge base.", tone: "error" },
-    { text: "Try one of these instead:", tone: "muted" },
-    { text: "  help · about · features · pricing · install · ai", tone: "info" },
-    { text: "  contact · pages · stack · mascot · crisis", tone: "info" },
+    { text: "Hmm, I don't have a ready answer for that one yet.", tone: "error" },
+    { text: "Try asking about: pricing, features, install, contact,", tone: "muted" },
+    { text: "  the founder, AI modes, the mascot, or just say 'hello'.", tone: "muted" },
   ];
 }
 
@@ -576,9 +719,11 @@ export function RriseCommandPanel() {
   const [lines, setLines] = useState<Line[]>([]);
   const [input, setInput] = useState("");
   const [hint, setHint] = useState("");
+  const [thinking, setThinking] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bootedRef = useRef(false);
+  const aiBusyRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -593,15 +738,49 @@ export function RriseCommandPanel() {
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [lines, open]);
+  }, [lines, open, thinking]);
 
   const appendLines = (next: Line[]) => {
     setLines((prev) => [...prev, ...next]);
   };
 
-  const handleSubmit = (raw?: string) => {
+  /**
+   * Try the real AI endpoint. Uses the signed-in session + BYOK key when
+   * available; returns null on any failure so the caller can fall back to the
+   * built-in knowledge base.
+   */
+  const askAI = async (message: string): Promise<string | null> => {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 25000);
+      const res = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userMessage: message }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data || typeof data.response !== "string" || !data.response.trim()) return null;
+      return data.response.trim();
+    } catch {
+      return null;
+    }
+  };
+
+  const answerFromText = (text: string) => {
+    const paragraphs = text.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+    appendLines(
+      paragraphs.length
+        ? paragraphs.map((p) => ({ text: p, tone: "info" as Tone }))
+        : [{ text, tone: "info" as Tone }]
+    );
+  };
+
+  const handleSubmit = async (raw?: string) => {
     const query = (raw ?? input).trim();
-    if (!query) return;
+    if (!query || aiBusyRef.current) return;
     setInput("");
     setHint("");
 
@@ -624,6 +803,13 @@ export function RriseCommandPanel() {
       return;
     }
 
+    // Fast conversational replies (greetings, small talk, feelings, jokes…)
+    const chat = chatReply(query);
+    if (chat) {
+      appendLines(chat);
+      return;
+    }
+
     // Slash-style commands
     const cmdKey = lower.replace(/^\/+/, "").split(/\s+/)[0];
     if (COMMANDS[cmdKey]) {
@@ -641,12 +827,29 @@ export function RriseCommandPanel() {
       return;
     }
 
-    const entry = matchEntry(lower);
-    if (entry) {
-      appendLines(entryLines(entry, query));
+    // Everything else → try the real AI, then fall back to the knowledge base.
+    aiBusyRef.current = true;
+    setThinking(true);
+    appendLines([{ text: `> ${query}`, tone: "cmd" }]);
+    const aiText = await askAI(query);
+    aiBusyRef.current = false;
+    setThinking(false);
+
+    if (aiText) {
+      answerFromText(aiText);
       return;
     }
-    appendLines(unknownLines(query));
+
+    const entry = matchEntry(lower);
+    if (entry) {
+      appendLines([
+        { text: `» ${entry.title}`, tone: "accent" },
+        { text: "", tone: "divider" },
+        ...entry.answer.map((t) => ({ text: t, tone: "info" as Tone })),
+      ]);
+      return;
+    }
+    appendLines(unknownLines());
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -765,8 +968,21 @@ export function RriseCommandPanel() {
                   </div>
                 ))}
 
+                {/* Thinking indicator */}
+                {thinking && (
+                  <div className="mt-1 flex items-center gap-1.5 text-[12px]" style={{ color: "#28c840" }}>
+                    <span>RRise is thinking</span>
+                    <span className="thinking-dots" aria-hidden>
+                      <span>.</span>
+                      <span>.</span>
+                      <span>.</span>
+                    </span>
+                    <span className="cmd-cursor" />
+                  </div>
+                )}
+
                 {/* Suggestion chips */}
-                {lines.length === 0 && (
+                {lines.length === 0 && !thinking && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {SUGGESTIONS.map((s) => (
                       <button
