@@ -1,14 +1,26 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { supabaseConfig } from '@/lib/env';
 
-const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!supabaseConfig.url || !supabaseConfig.anonKey) {
+    throw new Error('Supabase is not configured (missing NEXT_PUBLIC_SUPABASE_URL or anon key)');
+  }
+  if (!_supabase) {
+    _supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+  }
+  return _supabase;
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');
     const type = searchParams.get('type');
+
+    const supabase = getSupabase();
 
     let query = supabase
       .from('content')
