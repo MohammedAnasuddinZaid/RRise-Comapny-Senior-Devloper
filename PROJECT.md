@@ -325,6 +325,7 @@ RRise is a personal growth and productivity platform with AI-powered habit track
 - [ ] NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 - [ ] STRIPE_SECRET_KEY
 - [ ] STRIPE_WEBHOOK_SECRET
+- [ ] BYOK_ENC_KEY (server-only, 64+ char secret — encrypts BYOK API keys at rest)
 
 ### Supabase Setup
 - [ ] Create Supabase project

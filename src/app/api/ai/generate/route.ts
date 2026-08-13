@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getAuthUser } from '@/lib/api-auth';
 import { createServerComponentClient } from '@/lib/supabase-server';
+import { decryptSecret } from '@/lib/keyCrypto';
 
 // Default models per provider
 const DEFAULT_MODELS: Record<string, string> = {
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     const activeKey = apiKeys[0];
     const provider = activeKey.provider;
     const model = activeKey.selected_model || DEFAULT_MODELS[provider] || 'gemini-2.5-flash';
-    const apiKey = activeKey.encrypted_key;
+    const apiKey = decryptSecret(activeKey.encrypted_key);
 
     console.log('[AI API] Using provider:', provider, 'model:', model, 'key length:', apiKey?.length);
 

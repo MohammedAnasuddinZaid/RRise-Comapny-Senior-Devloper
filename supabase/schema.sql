@@ -408,7 +408,9 @@ CREATE INDEX IF NOT EXISTS xp_logs_created_at_idx ON xp_logs(created_at);
 -- ============================================
 -- AI KEYS TABLE
 -- ============================================
--- Stores user's AI API keys (encrypted in production)
+-- Stores user's AI API keys. encrypted_key is AES-256-GCM encrypted at rest
+-- server-side (BYOK_ENC_KEY) via src/lib/keyCrypto.ts. Legacy plaintext rows
+-- (no "v1:" prefix) remain readable for backward compatibility.
 CREATE TABLE IF NOT EXISTS ai_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -423,7 +425,10 @@ CREATE TABLE IF NOT EXISTS ai_keys (
 -- Enable RLS on ai_keys
 ALTER TABLE ai_keys ENABLE ROW LEVEL SECURITY;
 
--- AI keys policies (strict - users can only see their own keys)
+-- AI keys policies (strict - users can only see their own keys).
+-- NOTE: clients must NOT be able to read encrypted_key. Prefer the server API
+-- (/api/user/keys) for reads, and consider a column-level GRANT revoke:
+--   REVOKE SELECT (encrypted_key) ON ai_keys FROM authenticated;
 CREATE POLICY "Users can view own ai keys" ON ai_keys
   FOR SELECT USING (auth.uid() = user_id);
 
