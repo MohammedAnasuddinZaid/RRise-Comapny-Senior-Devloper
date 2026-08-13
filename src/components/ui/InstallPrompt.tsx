@@ -8,16 +8,16 @@ import { usePWAInstall } from "@/hooks/usePWAInstall";
 const SESSION_KEY = "rrise-install-seen";
 
 /**
- * PWA install card. On Android/Chrome/Edge/desktop it uses the
- * `beforeinstallprompt` event to trigger a native install dialog. On iOS
- * (which has no install prompt event) it shows step-by-step "Add to Home
- * Screen" instructions. Appears once per session, hidden once installed.
- * Shares install state with the header InstallButton via usePWAInstall.
+ * PWA install card. A single "Install App" tap triggers the native install
+ * dialog directly on Android/Chrome/Edge/desktop. On iOS (which has no
+ * install prompt event) it shows a single-line hint instead of a multi-step
+ * card. Appears once per session, hidden once installed.
  */
 export function InstallPrompt() {
   const { platform, installed, canInstall, install } = usePWAInstall();
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -49,15 +49,19 @@ export function InstallPrompt() {
 
   const handleInstall = async () => {
     setBusy(true);
+    setInstalling(true);
     try {
       const outcome = await install();
-      if (outcome === "accepted" || outcome === "dismissed") {
-        // Prompt was shown (native dialog) — hide the card either way.
+      if (outcome === "accepted") {
         setShow(false);
-        if (outcome === "dismissed") dismiss();
+      } else if (outcome === "dismissed") {
+        dismiss();
+      } else if (outcome === "unavailable" && platform !== "ios") {
+        setShow(false);
       }
     } finally {
       setBusy(false);
+      setInstalling(false);
     }
   };
 
@@ -113,56 +117,36 @@ export function InstallPrompt() {
                   Install RRise
                 </h3>
                 <p className="mt-1 font-mono-space text-xs leading-relaxed text-white/50">
-                  {platform === "ios"
-                    ? "Add RRise to your Home Screen for the full app experience."
-                    : "Install the app on your device — works offline, opens fullscreen."}
+                  {canInstallDirectly
+                    ? "One tap installs the app on your device — fullscreen and offline."
+                    : "Installs like a real app — fullscreen and offline."}
                 </p>
               </div>
             </div>
 
-            {canInstallDirectly ? (
-              <div className="mt-5 flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleInstall}
-                  disabled={busy}
-                  className="pill-iris flex h-12 flex-1 items-center justify-center gap-2 font-mono-space text-sm uppercase tracking-[0.12em]"
-                >
-                  <Download className="h-4 w-4" />
-                  {busy ? "Installing…" : "Install App"}
-                </motion.button>
-                <button
-                  onClick={dismiss}
-                  className="flex h-12 flex-1 items-center justify-center rounded-full border border-white/10 font-mono-space text-sm uppercase tracking-[0.12em] text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  Not now
-                </button>
-              </div>
-            ) : (
-              <div className="mt-5 space-y-2.5">
-                {[
-                  { step: "1", text: "Tap the Share button in your browser" },
-                  { step: "2", text: 'Scroll down and tap "Add to Home Screen"' },
-                  { step: "3", text: 'Tap "Add" — RRise is now installed' },
-                ].map((s) => (
-                  <div key={s.step} className="flex items-center gap-3 font-mono-space text-xs text-white/70">
-                    <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px]"
-                      style={{ background: "rgba(128,82,255,0.25)", border: "1px solid rgba(128,82,255,0.45)", color: "#fff" }}
-                    >
-                      {s.step}
-                    </span>
-                    {s.text}
-                  </div>
-                ))}
-                <button
-                  onClick={dismiss}
-                  className="mt-3 flex h-11 w-full items-center justify-center rounded-full border border-white/10 font-mono-space text-xs uppercase tracking-[0.12em] text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  Got it
-                </button>
-              </div>
+            <div className="mt-5 flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleInstall}
+                disabled={busy}
+                className="pill-iris flex h-12 flex-1 items-center justify-center gap-2 font-mono-space text-sm uppercase tracking-[0.12em]"
+              >
+                <Download className="h-4 w-4" />
+                {busy ? "Installing…" : "Install App"}
+              </motion.button>
+              <button
+                onClick={dismiss}
+                className="flex h-12 flex-1 items-center justify-center rounded-full border border-white/10 font-mono-space text-sm uppercase tracking-[0.12em] text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                Not now
+              </button>
+            </div>
+
+            {installing && (
+              <p className="mt-3 text-center font-mono-space text-[11px] text-white/45">
+                Starting install…
+              </p>
             )}
           </motion.div>
         </motion.div>

@@ -1299,6 +1299,18 @@ html.lenis, html.lenis body { height: auto; }
   pointer-events: none;
 }
 
+@keyframes thinkingDot {
+  0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+  30%           { opacity: 1; transform: translateY(-2px); }
+}
+
+.thinking-dots span {
+  display: inline-block;
+  animation: thinkingDot 1.2s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
 .cmd-body::-webkit-scrollbar { width: 5px; }
 .cmd-body::-webkit-scrollbar-track { background: transparent; }
 .cmd-body::-webkit-scrollbar-thumb {
