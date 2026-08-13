@@ -1272,6 +1272,40 @@ html.lenis, html.lenis body { height: auto; }
   text-shadow: 0 0 16px rgba(128, 82, 255, 0.8);
 }
 
+/* ─── RRISE Command Center terminal ─────────────────────────────────── */
+@keyframes cmdBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.cmd-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: #28c840;
+  box-shadow: 0 0 10px rgba(40, 200, 64, 0.8);
+  animation: cmdBlink 1s step-end infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cmdScan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(420px); }
+}
+
+.cmd-scan {
+  background: linear-gradient(180deg, transparent, rgba(128, 82, 255, 0.07), transparent);
+  animation: cmdScan 5s linear infinite;
+  pointer-events: none;
+}
+
+.cmd-body::-webkit-scrollbar { width: 5px; }
+.cmd-body::-webkit-scrollbar-track { background: transparent; }
+.cmd-body::-webkit-scrollbar-thumb {
+  background: rgba(128, 82, 255, 0.45);
+  border-radius: 999px;
+}
+
 /* ─── Reduced motion: tame the 3D party ─────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .rrise-body .marquee-track,

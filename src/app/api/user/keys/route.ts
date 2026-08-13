@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getAuthUser } from '@/lib/api-auth';
+import { encryptSecret } from '@/lib/keyCrypto';
 
 // Default models per provider (fallback if API fetch fails)
 const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
       .eq('provider', provider)
       .eq('is_active', true);
 
-    // Insert new key
+    // Insert new key (encrypted at rest)
     const { data, error } = await admin
       .from('ai_keys')
       .insert({
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
         provider,
         selected_model: model,
         key_name: keyName || `${provider} Key`,
-        encrypted_key: trimmedKey,
+        encrypted_key: encryptSecret(trimmedKey),
         is_active: true,
         token_usage: 0,
       })

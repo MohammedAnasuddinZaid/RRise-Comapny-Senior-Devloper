@@ -32,6 +32,9 @@ export const appConfig = {
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
 };
 
+/** Server-only secret used to encrypt BYOK API keys at rest. */
+export const byokEncKey = process.env.BYOK_ENC_KEY || '';
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 }

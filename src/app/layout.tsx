@@ -6,6 +6,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { RouteEffects } from "../components/ui/RouteEffects";
 import { ServiceWorkerRegister } from "../components/ui/ServiceWorkerRegister";
 import { InstallPrompt } from "../components/ui/InstallPrompt";
+import { RriseCommandPanel } from "../components/rrise/RriseCommandPanel";
 
 export const viewport: Viewport = {
   themeColor: "#000000",
@@ -70,6 +71,7 @@ export default function RootLayout({
           <ThemeProvider>{children}</ThemeProvider>
         </AuthProvider>
         <InstallPrompt />
+        <RriseCommandPanel />
       </body>
     </html>
   );
